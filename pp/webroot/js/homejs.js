@@ -1,0 +1,2 @@
+jQuery(window).load(function(){"use strict";jQuery("#preloader").delay(350).fadeOut(function(){jQuery("body").delay(350).css({overflow:"visible"})})}),jQuery(document).ready(function(){"use strict";jQuery(".select2").select2({width:"100%",minimumResultsForSearch:-1})});
+$("#fv").click(function(){$("#food").slideToggle(200)});

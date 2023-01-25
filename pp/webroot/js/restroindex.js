@@ -1,0 +1,1 @@
+function fetchloc(e){$("#num"+e).popover({html:"true",placement:"top",content:function(){return $("#popover-content"+e).html()}})}jQuery(document).ready(function(){"use strict";jQuery("#table1").dataTable(),jQuery("select").select2({minimumResultsForSearch:-1}),jQuery("select").removeClass("form-control")});

@@ -1,0 +1,3798 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <meta name="description" content="">
+  <meta name="author" content="">
+  <link rel="shortcut icon" href="<?php echo base_url(); ?>webroot/images/favicon.png" type="image/png">
+  <title>Add ManPower</title>
+   <link rel="stylesheet" href="<?php echo base_url(); ?>webroot/css/style.default.css" />
+
+   <link rel="stylesheet" href="<?php echo base_url(); ?>webroot/css/bootstrap-timepicker.min.css" />
+   <link href="//cdn.rawgit.com/Eonasdan/bootstrap-datetimepicker/e8bddc60e73c1ec2475f827be36e1957af72e2ea/build/css/bootstrap-datetimepicker.css" rel="stylesheet">
+  </head>
+<body>
+<!-- Preloader -->
+<div id="preloader">
+    <div id="status"><i class="fa fa-spinner fa-spin"></i></div>
+</div>
+
+<section>
+<?php $this->load->view('Btalion/html/navbar'); ?>
+  <div class="mainpanel">
+<?php $this->load->view('Btalion/html/headbar'); ?>
+    <div class="pageheader">
+      <h3> &nbsp; &nbsp; Add ManPower</h3>
+    </div>
+
+    <div class="contentpanel">
+      <div class="row">
+                <div class="col-md-12">   
+                 <?php if($this->session->flashdata('success_msg')): ?>
+        <div class="alert alert-success alert-dismissible" id="warning" role="alert">
+  <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+  <strong>Success!</strong> <?php echo $this->session->flashdata('success_msg'); ?>
+</div>
+      <?php  endif; ?>      
+      <?php if($this->session->flashdata('error_msg')): ?>
+        <div class="alert alert-warning alert-dismissible" id="warning" role="alert">
+  <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+  <strong>Warning!</strong> <?php echo $this->session->flashdata('error_msg'); ?>
+</div>
+      <?php  endif; ?>
+<?php 
+ /*Form Validation set*/
+ $this->form_validation->set_error_delimiters('<div class="text-danger">', '</div>');
+  /*----End Form Validation----*/
+  
+ /*Create HTML form*/
+ $attributes = array(
+      'name'        => 'basicForm4',
+      'id'        => 'basicForm4',
+      'accept-charset'  => 'utf-8',
+      'autocomplete'    =>'off', 
+      );
+ echo form_open_multipart("", $attributes);
+?>
+          <div class="panel panel-default">
+                <div class="panel-body">
+        <ul class="nav nav-tabs nav-justified" id="scroll">
+          <li class="active"><a data-toggle="tab" href="#one"><strong>Permanent Address</strong></a></li>
+          <li class=""><a data-toggle="tab" href="#two"><strong>Present Address</strong></a></li>
+          <li class=""><a data-toggle="tab" href="#three"><strong>Educational Details</strong></a></li>
+          <li class=""><a data-toggle="tab" href="#four"><strong>Enlistment Details</strong></a></li>
+          <li class=""><a data-toggle="tab" href="#five"><strong>Present Service Details</strong></a></li>
+          <li class=""><a data-toggle="tab" href="#six"><strong>Basic Training Course Detail</strong></a></li>
+          <li class=""><a data-toggle="tab" href="#seven"><strong>Professional Course Details</strong></a></li>
+          <li class=""><a data-toggle="tab" href="#eight"><strong>Annual Firing Practice</strong></a></li>
+
+          <li class=""><a data-toggle="tab" href="#nine"><strong>Health Status</strong></a></li>
+
+        <li class=""><a data-toggle="tab" href="#ten"><strong>Posting Detail</strong></a></li>
+
+        </ul>
+
+        <div class="tab-content">
+          <div id="one" class="tab-pane active">
+                         <div class="form-group">
+                  <label class="col-sm-3 control-label">Name of Official</label>
+                  <div class="col-sm-9">
+<?php
+$name = array('type' => 'text','name' => 'name','id' => 'name','class' => 'form-control','placeholder' =>'Name of Official','value' => set_value('name'));
+echo form_input($name);
+echo form_error('name');
+?>
+                    <label for="name" class="error"></label>
+                  </div>
+                </div>
+
+                <div class="form-group">
+                  <label class="col-sm-3 control-label">Father Name</label>
+                  <div class="col-sm-9">
+<?php
+$fname = array('type' => 'text','name' => 'fname','id' => 'fname','class' => 'form-control','placeholder' =>'Father Name','value' => set_value('fname'));
+echo form_input($fname);
+echo form_error('fname');
+?>
+                    <label for="fname" class="error"></label>
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label class="col-sm-3 control-label">House No.</label>
+                  <div class="col-sm-9">
+<?php
+$hno = array('type' => 'text','name' => 'hno','id' => 'hno','class' => 'form-control','placeholder' =>'House No.','value' => set_value('hno'));
+echo form_input($hno);
+echo form_error('hno');
+?>
+                    <label for="hno" class="error"></label>
+                  </div>
+                </div>
+
+                          <div class="form-group">
+                  <label class="col-sm-3 control-label">Street No.</label>
+                  <div class="col-sm-9">
+<?php
+$sno = array('type' => 'text','name' => 'sno','id' => 'sno','class' => 'form-control','placeholder' =>'Street No.','value' => set_value('sno'));
+echo form_input($sno);
+echo form_error('sno');
+?>
+                    <label for="sno" class="error"></label>
+                  </div>
+                </div>
+
+                <div class="form-group">
+                  <label class="col-sm-3 control-label">Village/Mohalla</label>
+                  <div class="col-sm-9">
+<?php
+$vm = array('type' => 'text','name' => 'vm','id' => 'vm','class' => 'form-control','placeholder' =>'Village/Mohalla','value' => set_value('vm'));
+echo form_input($vm);
+echo form_error('vm');
+?>
+                    <label for="vm" class="error"></label>
+                  </div>
+                </div>
+
+                <div class="form-group">
+                  <label class="col-sm-3 control-label">Ward no.</label>
+                  <div class="col-sm-9">
+<?php
+$wardno = array('type' => 'text','name' => 'wardno','id' => 'wardno','class' => 'form-control','placeholder' =>'ward no.','value' => set_value('wardno'));
+echo form_input($wardno);
+echo form_error('wardno');
+?>
+                    <label for="wardno" class="error"></label>
+                  </div>
+                </div>
+
+                <div class="form-group">
+                  <label class="col-sm-3 control-label">City</label>
+                  <div class="col-sm-9">
+<?php
+$ct = array('type' => 'text','name' => 'ct','id' => 'ct','class' => 'form-control','placeholder' =>'City','value' => set_value('ct'));
+echo form_input($ct);
+echo form_error('ct');
+?>
+                    <label for="ct" class="error"></label>
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label class="col-sm-3 control-label">Post Office</label>   
+                  <div class="col-sm-9">
+<?php
+$po = array('type' => 'text','name' => 'po','id' => 'po','class' => 'form-control','placeholder' =>'Post Office','value' => set_value('po'));
+echo form_input($po);
+echo form_error('po');
+?>
+                    <label for="po" class="error"></label>
+                  </div>
+                </div>
+                                <div class="form-group">
+                  <label class="col-sm-3 control-label">Police Station</label>
+                  <div class="col-sm-9">
+<?php
+$ps = array('type' => 'text','name' => 'ps','id' => 'ps','class' => 'form-control','placeholder' =>'Police Station','value' => set_value('ps'));
+echo form_input($ps);
+echo form_error('ps');
+?>
+                    <label for="ps" class="error"></label>
+                  </div>
+                </div>
+
+                <div class="form-group">
+                  <label class="col-sm-3 control-label">Tehsil</label>
+                  <div class="col-sm-9">
+<?php
+$tl = array('type' => 'text','name' => 'tl','id' => 'tl','class' => 'form-control','placeholder' =>'Tehsil','value' => set_value('tl'));
+echo form_input($tl);
+echo form_error('tl');
+?>
+                    <label for="tl" class="error"></label>
+                  </div>
+                </div>
+                  <div class="form-group">
+                  <label class="col-sm-3 control-label">State</label>
+                  <div class="col-sm-9">
+                                     <?php 
+                 $state = array();
+                  $state[''] = '--Select--'; 
+                 foreach ($statelist as $value) {
+                   $state[$value->state] = $value->state;
+                 }
+
+ ?>
+                 <?php  
+/*newarea Textfield*/
+ echo form_dropdown('state', $state, set_value('state',354),'id="state" data-placeholder="Choose One" title="Please select at least 1 area" class="select2"'); 
+ echo form_error('state');
+/*----End newarea Textfield----*/
+ ?>
+                    <label for="state" class="error"></label>
+                  </div>
+                </div>
+               <div id="listing"></div>
+            </div>
+          <div id="two" class="tab-pane">
+            <div class="form-group">
+                  <label class="col-sm-3 control-label">Same as permanent address</label>
+                  <div class="col-sm-9">
+<input type="radio" name="peradd" id="peradd" value="yes">
+                    <label for="peradd">Yes</label> 
+                     <input type="radio" name="peradd" id="peraddi" value="no">
+                    <label for="peraddi">No</label>
+                  </div>
+
+                 
+                  </div>
+
+                <div class="form-group" id="pfpart1">
+                  <label class="col-sm-3 control-label">House No.</label>
+                  <div class="col-sm-9">
+<?php
+$phouseno = array('type' => 'text','name' => 'phouseno','id' => 'phouseno','class' => 'form-control','placeholder' =>'House No.','value' => set_value('phouseno'));
+echo form_input($phouseno);
+echo form_error('phouseno');
+?>
+                    <label for="phouseno" class="error"></label>
+                  </div>
+                </div>
+
+                <div class="form-group" id="pfpart2">
+                  <label class="col-sm-3 control-label">Street No.</label>
+                  <div class="col-sm-9">
+<?php
+$pstreetno = array('type' => 'text','name' => 'pstreetno','id' => 'pstreetno','class' => 'form-control','placeholder' =>'Street No.','value' => set_value('pstreetno'));
+echo form_input($pstreetno);
+echo form_error('pstreetno');
+?>
+                    <label for="pstreetno" class="error"></label>
+                  </div>
+                </div>
+                <div class="form-group" id="pfpart3">
+                  <label class="col-sm-3 control-label">Village/Mohalla</label>
+                  <div class="col-sm-9">
+<?php
+$pvillmoh = array('type' => 'text','name' => 'pvillmoh','id' => 'pvillmoh','class' => 'form-control','placeholder' =>'Village/Mohalla','value' => set_value('pvillmoh'));
+echo form_input($pvillmoh);
+echo form_error('pvillmoh');
+?>
+                    <label for="pvillmoh" class="error"></label>
+                  </div>
+                </div> 
+
+                <div class="form-group" id="pfpart4">
+                  <label class="col-sm-3 control-label">City</label>
+                  <div class="col-sm-9">
+<?php
+$postcity = array('type' => 'text','name' => 'postcity','id' => 'postcity','class' => 'form-control','placeholder' =>'City Post Office','value' => set_value('postcity'));
+echo form_input($postcity);
+echo form_error('postcity');
+?>
+                    <label for="postcity" class="error"></label>
+                  </div>
+                </div>
+
+                <div class="form-group" id="pfpart5">
+                  <label class="col-sm-3 control-label">Post Office</label>
+                  <div class="col-sm-9">
+<?php
+$pcitypostoff = array('type' => 'text','name' => 'pcitypostoff','id' => 'pcitypostoff','class' => 'form-control','placeholder' =>'City Post Office','value' => set_value('pcitypostoff'));
+echo form_input($pcitypostoff);
+echo form_error('pcitypostoff');
+?>
+                    <label for="pcitypostoff" class="error"></label>
+                  </div>
+                </div>
+                                <div class="form-group" id="pfpart6">
+                  <label class="col-sm-3 control-label">Police Station</label>
+                  <div class="col-sm-9">
+<?php
+$ppolicestation = array('type' => 'text','name' => 'ppolicestation','id' => 'ppolicestation','class' => 'form-control','placeholder' =>'Police Station','value' => set_value('ppolicestation'));
+echo form_input($ppolicestation);
+echo form_error('ppolicestation');
+?>
+                    <label for="ppolicestation" class="error"></label>
+                  </div>
+                </div>
+                                <div class="form-group" id="pfpart7">
+                  <label class="col-sm-3 control-label">Tehsil</label>
+                  <div class="col-sm-9">
+<?php
+$ptehsil = array('type' => 'text','name' => 'ptehsil','id' => 'ptehsil','class' => 'form-control','placeholder' =>'Tehsil','value' => set_value('ptehsil'));
+echo form_input($ptehsil);
+echo form_error('ptehsil');
+?>
+                    <label for="ptehsil" class="error"></label>
+                  </div>
+                </div> 
+
+ <div class="form-group" id="pfpart8"> 
+                  <label class="col-sm-3 control-label">State</label>
+                  <div class="col-sm-9">
+
+                       <?php 
+                 $postate = array();
+                  $postate[''] = '--Select--'; 
+                 foreach ($statelist as $value) {
+                   $postate[$value->state] = $value->state;
+                 }
+
+ ?>
+            <?php  
+/*newarea Textfield*/
+ echo form_dropdown('postate', $postate, set_value('postate',354),'id="postate" data-placeholder="Choose One" title="Please select at least 1 area" class="select2"'); 
+ echo form_error('postate');
+/*----End newarea Textfield----*/
+ ?>
+                    <label for="postate" class="error"></label>
+                  </div>
+                </div>
+
+         <div id="listing2"></div>
+
+                 <div class="form-group">
+                  <label class="col-sm-3 control-label">Gender</label>
+                  <div class="col-sm-9">
+<label class="radio-inline"><input type="radio" name="gender" checked value="Male">Male</label>
+                <label class="radio-inline"><input type="radio" name="gender" value="Female">Female</label>
+                  </div>
+                </div>
+
+
+                 <div class="form-group">
+                  <label class="col-sm-3 control-label">Marital Status</label>
+                  <div class="col-sm-9">
+                 <?php  
+$mstatus = array('' => '--Select--',  'Single' => 'Single','Married' => 'Married');
+/*newarea Textfield*/
+ echo form_dropdown('mstatus', $mstatus, set_value('mstatus',1),'id="mstatus" data-placeholder="Choose One" title="Please select at least 1 value" class="select2"'); 
+ echo form_error('mstatus');
+/*----End newarea Textfield----*/
+ ?>
+                    <label for="mstatus" class="error"></label>
+                  </div>
+                </div>
+
+                  <div class="form-group" id="Single1" style="display:none">
+                  <label class="col-sm-3 control-label">Single</label>
+                  <div class="col-sm-9">
+
+                   <?php  
+$Single = array('' => '--Select--',  'Unmarried' => 'Unmarried','Divorced' => 'Divorced', 'Widow/ Widower' => 'Widow/ Widower');
+/*newarea Textfield*/
+ echo form_dropdown('Single', $Single, set_value('Single',1),'id="Single" data-placeholder="Choose One" title="Please select at least 1 value" class="select2"'); 
+ echo form_error('Single');
+/*----End newarea Textfield----*/
+ ?>
+
+                    <label for="Single" class="error"></label>
+                  </div>
+                </div>
+
+        
+
+                <div class="form-group">
+                 <label class="col-sm-3 control-label">Date of birth</label>
+                  <div class="col-sm-9">
+                <div class='input-group'>
+                    <input type='text' name="dob" class="form-control"  id='datetimepicker1' />
+                    <span class="input-group-addon">
+                        <span class="glyphicon glyphicon-calendar"></span>
+                    </span>
+                </div>
+            </div></div>
+
+                  <div class="form-group">
+                  <label class="col-sm-3 control-label">Caste</label>
+                  <div class="col-sm-9">
+<?php
+$casting = array('type' => 'text','name' => 'casting','id' => 'casting','class' => 'form-control','placeholder' =>'Caste','value' => set_value('casting'));
+echo form_input($casting);
+echo form_error('casting');
+?>
+                    <label for="casting" class="error"></label>
+                  </div>
+                </div>
+
+                 <div class="form-group">
+                  <label class="col-sm-3 control-label">Category</label>
+                  <div class="col-sm-9">
+                 <?php  
+$catii = array('' => '--Select--',  'GEN' => 'GEN', 'SCM' => 'SCM','SCO' => 'SCO', 'BC' => 'BC','OBC' => 'OBC', 'ST' => 'ST','SCBM' => 'SCBM');
+/*newarea Textfield*/
+ echo form_dropdown('catii', $catii, set_value('catii',1),'id="catii" data-placeholder="Choose One" title="Please select at least 1 value" class="select2"'); 
+ echo form_error('catii');
+/*----End newarea Textfield----*/
+ ?>
+                    <label for="catii" class="error"></label>
+                  </div>
+                </div>
+                <h4 class="page-header">Contacts</h4>
+                  <div class="form-group">
+                  <label class="col-sm-3 control-label">Phone No</label>
+                  <div class="col-sm-9">
+<?php
+$conphno = array('type' => 'text','name' => 'conphno','id' => 'conphno','class' => 'form-control','placeholder' =>'Phone No','value' => set_value('conphno'));
+echo form_input($conphno);
+echo form_error('conphno');
+?>
+                    <label for="conphno" class="error"></label>
+                  </div>
+                </div>
+
+                <div class="form-group">
+                  <label class="col-sm-3 control-label">Phone No 2</label>
+                  <div class="col-sm-9">
+<?php
+$conphnot = array('type' => 'text','name' => 'conphnot','id' => 'conphnot','class' => 'form-control','placeholder' =>'Phone No 2','value' => set_value('conphnot'));
+echo form_input($conphnot);
+echo form_error('conphnot');
+?>
+                    <label for="conphnot" class="error"></label>
+                  </div>
+                </div>
+
+                <div class="form-group">
+                  <label class="col-sm-3 control-label">Email ID</label>
+                  <div class="col-sm-9">
+<?php
+$pemailid = array('type' => 'email','name' => 'pemailid','id' => 'pemailid','class' => 'form-control','placeholder' =>'Email ID','value' => set_value('pemailid'));
+echo form_input($pemailid);
+echo form_error('pemailid');
+?>
+                    <label for="pemailid" class="error"></label>
+                  </div>
+                </div>
+                 <div class="form-group">
+                  <label class="col-sm-3 control-label">Adhaar Card No</label>
+                  <div class="col-sm-9">
+<?php
+$addarcard = array('type' => 'text','name' => 'addarcard','id' => 'addarcard','class' => 'form-control','placeholder' =>'Adhaar Card No','value' => set_value('addarcard'));
+echo form_input($addarcard);
+echo form_error('addarcard');
+?>
+                    <label for="addarcard" class="error"></label>
+                  </div>
+                </div>
+
+                 <div class="form-group">
+                  <label class="col-sm-3 control-label">PAN</label>
+                  <div class="col-sm-9">
+<?php
+$pancard = array('type' => 'text','name' => 'pancard','id' => 'pancard','class' => 'form-control','placeholder' =>'PAN','value' => set_value('pancard'));
+echo form_input($pancard);
+echo form_error('pancard');
+?>
+                    <label for="pancard" class="error"></label>
+                  </div>
+                </div>
+                <h4 class="page-header">Bank Details</h4>
+                 <div class="form-group">
+                  <label class="col-sm-3 control-label">Name of the Bank</label>
+                  <div class="col-sm-9">
+<?php
+$bankdetail = array('type' => 'text','name' => 'bankdetail','id' => 'bankdetail','class' => 'form-control','placeholder' =>'Name of the Bank','value' => set_value('bankdetail'));
+echo form_input($bankdetail);
+echo form_error('bankdetail');
+?>
+                    <label for="bankdetail" class="error"></label>
+                  </div>
+                </div>
+
+                <div class="form-group">
+                  <label class="col-sm-3 control-label">Name of Branch</label>
+                  <div class="col-sm-9">
+<?php
+$bankbrach = array('type' => 'text','name' => 'bankbrach','id' => 'bankbrach','class' => 'form-control','placeholder' =>'Name of Branch','value' => set_value('bankbrach'));
+echo form_input($bankbrach);
+echo form_error('bankbrach');
+?>
+                    <label for="bankbrach" class="error"></label>
+                  </div>
+                </div>
+
+                <div class="form-group">
+                  <label class="col-sm-3 control-label">Bank A/C No.</label>
+                  <div class="col-sm-9">
+<?php
+$bankac = array('type' => 'text','name' => 'bankac','id' => 'bankac','class' => 'form-control','placeholder' =>'Bank A/C No.','value' => set_value('bankac'));
+echo form_input($bankac);
+echo form_error('bankac');
+?>
+                    <label for="bankac" class="error"></label>
+                  </div>
+                </div>
+
+                 <div class="form-group">
+                  <label class="col-sm-3 control-label">IFSC Code</label>
+                  <div class="col-sm-9">
+<?php
+$ifsccode = array('type' => 'text','name' => 'ifsccode','id' => 'ifsccode','class' => 'form-control','placeholder' =>'IFSC Code','value' => set_value('ifsccode'));
+echo form_input($ifsccode);
+echo form_error('ifsccode');
+?>
+                    <label for="ifsccode" class="error"></label>
+                  </div>
+                </div>
+                <h4 class="page-header">Physical Details</h4>
+                  <div class="form-group">
+                  <label class="col-sm-3 control-label">Blood Group</label>
+                  <div class="col-sm-9">
+<?php
+$bloodgroup = array('' => '--Select--',  'O +ve' => 'O +ve', 'O –ve' => 'O –ve', 'A +ve' => 'A +ve', 'A –ve' => 'A –ve', 'AB +ve' => 'AB +ve', 'AB –ve' => 'AB –ve','B+ve' => 'B+ve', 'B-ve' => 'B-ve' );
+/*newarea Textfield*/
+ echo form_dropdown('bloodgroup', $bloodgroup, set_value('bloodgroup',1),'id="bloodgroup" data-placeholder="Choose One" class="select2"'); 
+ echo form_error('bloodgroup');
+?>
+                    <label for="bloodgroup" class="error"></label>
+                  </div>
+                </div>
+
+                 <div class="form-group">
+                  <label class="col-sm-3 control-label">Identification Mark</label>
+                  <div class="col-sm-9">
+<?php
+$Identificationmark = array('type' => 'text','name' => 'Identificationmark','id' => 'Identificationmark','class' => 'form-control','placeholder' =>'Identification Mark','value' => set_value('Identificationmark'));
+echo form_input($Identificationmark);
+echo form_error('Identificationmark');
+?>
+                    <label for="Identificationmark" class="error"></label>
+                  </div>
+                </div>
+
+                <div class="form-group">
+                  <label class="col-sm-3 control-label">Weight</label>
+                  <div class="col-sm-9">
+                  <div class="col-xs-4"><?php
+$Kg = array('type' => 'text','name' => 'Kg','id' => 'Kg','class' => 'form-control','placeholder' =>'Kg','value' => set_value('Kg'));
+echo form_input($Kg);
+echo form_error('Kg');
+?></div><div class="col-xs-4">
+<?php
+$Gm = array('type' => 'text','name' => 'Gm','id' => 'Gm','class' => 'form-control','placeholder' =>'Gm','value' => set_value('Gm'));
+echo form_input($Gm);
+echo form_error('Gm');
+?></div>
+                    <label for="Gm" class="error"></label>
+                  </div>
+                </div>
+
+                <div class="form-group">
+                  <label class="col-sm-3 control-label">Height</label>
+                          <div class="col-xs-4"><?php
+$Feet = array('type' => 'text','name' => 'Feet','id' => 'Feet','class' => 'form-control','placeholder' =>'Feet','value' => set_value('Feet'));
+echo form_input($Feet);
+echo form_error('Feet');
+?></div><div class="col-xs-4">
+<?php
+$inch = array('type' => 'text','name' => 'inch','id' => 'inch','class' => 'form-control','placeholder' =>'inch','value' => set_value('inch'));
+echo form_input($inch);
+echo form_error('inch');
+?></div>
+                </div>
+
+                
+
+          </div>
+          <div id="three" class="tab-pane">
+              <div class="form-group">
+                  <label class="col-sm-3 control-label">Class</label>
+                  <div class="col-sm-9">
+                 <?php  
+$stts = array('' => '--Select--',  'Illiterate' => 'Illiterate', 'Under Matric' => 'Under Matric', '10th' => '10th', 'H. Sec' => 'H. Sec', 'Prep' => 'Prep', '10+1' => '10+1','10+2' =>'10+2','Under Graduate' => 'Under Graduate', 'Graduate' => 'Graduate', 'Post Graduate' => 'Post Graduate','Doctorate' => 'Doctorate','Other' => 'Other');
+/*newarea Textfield*/
+ echo form_dropdown('stts', $stts, set_value('stts',1),'id="stts" data-placeholder="Choose One" class="select2"'); 
+ echo form_error('stts');
+/*----End newarea Textfield----*/
+ ?>
+                    <label for="stts" class="error"></label>
+                  </div>
+                </div> 
+
+                       <div class="form-group" id="ugb" style="display:none;">
+                  <label class="col-sm-3 control-label">Under Graduate</label>
+                  <div class="col-sm-9">
+                 <?php  
+$UnderGraduate = array('' => '--Select--', 'BA-I' => 'BA-I', 'BA-II' => 'BA-II', 'BSc-I' => 'BSc-I', 'BSc-II' => 'BSc-II', 'Bcom-I' => 'Bcom-I','Bcom-II' => 'Bcom-II','BCA-I' =>'BCA-I','BCA-II' =>'BCA-II','BBA-I' => 'BBA-I','BBA-II' => 'BBA-II','LLB-I' => 'LLB-I','LLB-II' => 'LLB-II','B.Tech-I' => 'B.Tech-I', 'B.Tech-II' => 'B.Tech-II', 'B.Tech-III' => 'B.Tech-III');
+/*newarea Textfield*/
+ echo form_dropdown('UnderGraduate', $UnderGraduate, set_value('UnderGraduate',1),'id="ug" data-placeholder="Choose One" class="select2"'); 
+ echo form_error('UnderGraduate');
+/*----End newarea Textfield----*/
+ ?>
+                    <label for="UnderGraduate" class="error"></label>
+                  </div>
+                </div> 
+
+
+                       <div class="form-group"  id="gb" style="display:none;">
+                  <label class="col-sm-3 control-label">Graduate</label>
+                  <div class="col-sm-9">
+                 <?php  
+$Graduate = array('' => '--Select--', 'BA' => 'BA', 'B.Sc' => 'B.Sc','B.Com' => 'B.Com','BCA' =>'BCA','BBA' => 'BBA','LLB' => 'LLB','B.Tech' => 'B.Tech');
+/*newarea Textfield*/
+ echo form_dropdown('Graduate', $Graduate, set_value('Graduate',1),'id="Graduate" data-placeholder="Choose One" class="select2"'); 
+ echo form_error('Graduate');
+/*----End newarea Textfield----*/
+ ?>
+                    <label for="Graduate" class="error"></label>
+                  </div>
+                </div> 
+
+                   <div class="form-group"  id="pgb" style="display:none;">
+                  <label class="col-sm-3 control-label">Post Graduate</label>
+                  <div class="col-sm-9">
+                 <?php  
+$PostGraduate = array('' => '--Select--', 'MA' => 'MA','M.Com' => 'M.Com','M.Phil' =>'M.Phil','M Pharm' => 'M Pharm','MCA' => 'MCA','MBA' => 'MBA','MTA' => 'MTA','M.Tech' => 'M.Tech','M.Sc' => 'M.Sc');
+/*newarea Textfield*/
+ echo form_dropdown('PostGraduate', $PostGraduate, set_value('PostGraduate',1),'id="PostGraduate" data-placeholder="Choose One" class="select2"'); 
+ echo form_error('PostGraduate');
+/*----End newarea Textfield----*/
+ ?>
+                    <label for="PostGraduate" class="error"></label>
+                  </div>
+                </div> 
+
+                       <div class="form-group"  id="docb" style="display:none;">
+                  <label class="col-sm-3 control-label">Doctorate</label>
+                  <div class="col-sm-9">
+                 <?php  
+$Doctorate = array('' => '--Select--', 'Ph.d' => 'Ph.d');
+/*newarea Textfield*/
+ echo form_dropdown('Doctorate', $Doctorate, set_value('Doctorate',1),'id="doc" data-placeholder="Choose One" class="select2"'); 
+ echo form_error('Doctorate');
+/*----End newarea Textfield----*/
+ ?>
+                    <label for="Doctorate" class="error"></label>
+                  </div>
+                </div> 
+
+
+                 <div class="form-group"  id="docOther1" style="display:none;">
+                  <label class="col-sm-3 control-label">Other</label>
+                  <div class="col-sm-9">
+<?php
+$docOther = array('type' => 'text','name' => 'docOther','id' => 'docOther','class' => 'form-control','placeholder' =>'Other','value' => set_value('docOther'));
+echo form_input($docOther);
+echo form_error('docOther');
+?>
+                    <label for="docOther" class="error"></label>
+                  </div>
+                </div>
+
+               
+      
+            </div>
+          <div id="four" class="tab-pane">
+            
+                  <div class="form-group">
+                  <label class="col-sm-3 control-label">Mode of Recruitment</label>
+                  <div class="col-sm-9">
+                 <?php  
+$Modemdr = array('' => '--Select--', 'Special Cases' => 'Special Cases','Direct' => 'Direct', 'Direct (Ex-Serviceman)' => 'Direct (Ex-Serviceman)','Direct(SPORTS)' => 'Direct(SPORTS)', 'PLI' => 'PLI', 'Court cases' => 'Court cases','Direct (Freedom Fighter)' => 'Direct (Freedom Fighter)','Other' => 'Other','Temporary' => 'Temporary');
+/*newarea Textfield*/
+ echo form_dropdown('Modemdr', $Modemdr, set_value('Modemdr',1),'id="Modemdr" data-placeholder="Choose One" title="Please select at least 1 area" class="select2"'); 
+ echo form_error('Modemdr');
+/*----End newarea Textfield----*/
+ ?>
+                    <label for="Modemdr" class="error"></label>
+                  </div>
+                </div> 
+
+
+                  <div class="form-group"  id="ModemdrOther1" style="display:none;">
+                  <label class="col-sm-3 control-label">Other</label>
+                  <div class="col-sm-9">
+<?php
+$mocOther = array('type' => 'text','name' => 'mocOther','id' => 'mocOther','class' => 'form-control','placeholder' =>'Other','value' => set_value('mocOther'));
+echo form_input($mocOther);
+echo form_error('mocOther');
+?>
+                    <label for="docOther" class="error"></label>
+                  </div>
+                </div>
+
+                <div class="form-group">
+                  <label class="col-sm-3 control-label">Date of Enlistment</label>
+                  <div class="col-sm-9">
+                  <div class="input-group">
+                 <?php
+$dateofesnlistment1 = array('type' => 'text','name' => 'dateofesnlistment1','id' => 'dateofesnlistment1','class' => 'form-control','placeholder' =>'Date of Enlistment','value' => set_value('dateofesnlistment1'));
+echo form_input($dateofesnlistment1);
+echo form_error('dateofesnlistment1');
+?>
+                <span class="input-group-addon"><i class="glyphicon glyphicon-calendar"></i></span>
+</div>
+                  </div>
+                </div>
+            
+              
+                 <div class="form-group">
+                  <label class="col-sm-3 control-label">Enlistment of Rank</label>
+                  <div class="col-sm-9">
+            <?php  
+$eor = array('' => '--Select--', 'Executive Staff' => 'Executive Staff', 'Ministerial Staff' => 'Ministerial Staff', 'Medical Staff' => 'Medical Staff', 'Class-IV (P)' => 'Class-IV (P)', 'Class-IV (C)' => 'Class-IV (C)');
+ echo form_dropdown('eor', $eor, set_value('eor',''),'id="eor" data-placeholder="Choose One" class="select2"'); 
+ echo form_error('eor');
+ ?>
+                    <label for="eor" class="error"></label>
+                  </div>
+                </div>
+
+                <div class="form-group" id="eors1" style="display: none;">
+                  <label class="col-sm-3 control-label">Rank</label>
+                  <div class="col-sm-9">
+            <?php  
+$eor1 = array('' => '--Select--', 'CT' => 'CT', 'Sr.Const' => 'Sr. Const', 'C-II' => 'C-II', 'HC/PR' => 'HC/PR', 'HC' => 'HC', 'ASI/LR' => 'ASI/LR','ASI/CR' => 'ASI/CR',  'ASI' => 'ASI', 'SI/CR' => 'SI/CR','SI/LR' => 'SI/LR', 'SI' => 'SI', 'INSP/CR' => 'INSP/CR','INSP/LR' => 'INSP/LR', 'INSP' => 'INSP', 'DSP/CR' =>'DSP/CR','DSP' =>'DSP', 'SP/CR' => 'SP/CR', 'SP' => 'SP','Asst. Commandant' =>'Asst. Commandant','Commandant' => 'Commandant');
+ echo form_dropdown('eor1', $eor1, set_value('eor1',''),'id="eor1" data-placeholder="Choose One" class="select2"'); 
+ echo form_error('eor1');
+ ?>
+                    <label for="RankRankre" class="error"></label>
+                  </div>
+                </div>
+
+                 <div class="form-group" id="eors2"  style="display: none;">
+                  <label class="col-sm-3 control-label">Rank</label>
+                  <div class="col-sm-9">
+            <?php  
+$eor2 = array('' => '--Select--', 'Senior Asstt.' => 'Senior Asstt.', 'Junior Asstt.' => 'Junior Asstt.', 'Clerk' => 'Clerk', 'Peon' => 'Peon', 'Daftari' => 'Daftari','Supdt Grade-I' => 'Supdt Grade-I','SubSupdt Grade-II' => 'Supdt Grade-II');
+ echo form_dropdown('eor2', $eor2, set_value('eor2',''),'id="eor2" data-placeholder="Choose One" class="select2"'); 
+ echo form_error('eor2');
+ ?>
+                    <label for="eor2" class="error"></label>
+                  </div>
+                </div>
+
+                 <div class="form-group" id="eors3"  style="display: none;">
+                  <label class="col-sm-3 control-label">Nature of duty</label>
+                  <div class="col-sm-9">
+            <?php  
+$eor3 = array('' => '--Select--', 'Doctor' => 'Doctor', 'Pharmacist' => 'Pharmacist', 'Physiotherapist' => 'Physiotherapist', 'Lab Technician' => 'Lab Technician', 'Nursing Asstt.' => 'Nursing Asstt.');
+ echo form_dropdown('eor3', $eor3, set_value('eor3',''),'id="eor3" data-placeholder="Choose One" class="select2"'); 
+ echo form_error('eor3');
+ ?>
+                    <label for="Medical" class="error"></label>
+                  </div>
+                </div>
+
+                <div class="form-group" id="eors4"  style="display: none;">
+                  <label class="col-sm-3 control-label">Trade</label>
+                  <div class="col-sm-9">
+            <?php  
+$eor4 = array('' => '--Select--', 'Cook' => 'Cook', 'Water Carrier' => 'Water Carrier', 'Sweeper' => 'Sweeper', 'Dhobi' => 'Dhobi', 'Mochi' => 'Mochi', 'Barber' => 'Barber', 'Tailor' => 'Tailor', 'Carpenter' => 'Carpenter','Mason' => 'Mason','Mali' => 'Mali','Syce' => 'Syce');
+ echo form_dropdown('eor4', $eor4, set_value('eor4',''),'id="eor4" data-placeholder="Choose One" class="select2"'); 
+ echo form_error('eor4');
+ ?>
+                    <label for="eor4" class="error"></label>
+                  </div>
+                </div>
+
+                  <div class="form-group" id="eors5"  style="display: none;">
+                  <label class="col-sm-3 control-label">Trade</label>
+                  <div class="col-sm-9">
+            <?php  
+$eor5 = array('' => '--Select--', 'Cook' => 'Cook', 'Water Carrier' => 'Water Carrier', 'Sweeper' => 'Sweeper', 'Dhobi' => 'Dhobi', 'Mochi' => 'Mochi', 'Barber' => 'Barber', 'Tailor' => 'Tailor', 'Carpenter' => 'Carpenter','Mason' => 'Mason','Mali' => 'Mali');
+ echo form_dropdown('eor5', $eor5, set_value('eor5',''),'id="eor5" data-placeholder="Choose One" class="select2"'); 
+ echo form_error('eor5');
+ ?>
+                    <label for="eor5" class="error"></label>
+                  </div>
+                </div>
+
+                  <div class="form-group">
+                  <label class="col-sm-3 control-label">Enlistment Category</label>
+                  <div class="col-sm-9">
+                 <?php  
+$Enlistmentec = array('' => '--Select--', 'GEN' => 'GEN', 'SCO' => 'SCO','SCBM' => 'SCBM', 'BC' => 'BC', 'OBC' => 'OBC', 'ST' => 'ST', 'NA' => 'NA');
+ echo form_dropdown('Enlistmentec', $Enlistmentec, set_value('Enlistmentec',1),'id="Enlistmentec" data-placeholder="Choose One" title="Please select at least 1 area" class="select2"'); 
+ echo form_error('Enlistmentec');
+ ?>
+                    <label for="Enlistmentec" class="error"></label>
+                  </div>
+                </div> 
+                <div class="form-group">
+                  <label class="col-sm-3 control-label">Enlistment Unit</label>
+                  <div class="col-sm-9">
+<?php
+ $EnlistmentUnit = array();
+                 $EnlistmentUnit[''] = '--Select--';
+                 foreach ($uname as $value) {
+                   $EnlistmentUnit[$value->users_id] = $value->nick;
+                 } 
+/*newarea Textfield*/
+ echo form_dropdown('EnlistmentUnit', $EnlistmentUnit, set_value('EnlistmentUnit',1),'id="EnlistmentUnit" data-placeholder="Choose One" title="Please select at least 1 value" class="select2"'); 
+ echo form_error('EnlistmentUnit');
+/*----End newarea Textfield----*/
+?>
+                    <label for="EnlistmentUnit" class="error"></label>
+                  </div>
+                </div>
+
+                  <div class="form-group" id="enOther1" style="display:none;">
+                  <label class="col-sm-3 control-label">Other</label>
+                  <div class="col-sm-9">
+                 <?php
+$enOther = array('type' => 'text','name' => 'enOther','id' => 'itoOther','class' => 'form-control','placeholder' =>'Other','value' => set_value('enOther'));
+echo form_input($enOther);
+echo form_error('enOther');
+?>     <label for="enOther" class="error"></label>
+                  </div>
+                </div> 
+
+                <div class="form-group">
+                  <label class="col-sm-3 control-label">Date of Retirement</label>
+                  <div class="col-sm-9">
+                  <div class="input-group">
+<?php
+$DateofRetirementdor = array('type' => 'text','name' => 'DateofRetirementdor','id' => 'DateofRetirementdor','class' => 'form-control','placeholder' =>'Date of Retirement','value' => set_value('DateofRetirementdor'));
+echo form_input($DateofRetirementdor);
+echo form_error('DateofRetirementdor');
+?><span class="input-group-addon"><i class="glyphicon glyphicon-calendar"></i></span>
+</div>
+                    <label for="DateofRetirementdor" class="error"></label>
+                  </div>
+                </div>
+
+                <div class="form-group">
+                  <label class="col-sm-3 control-label">GPF Pol. No</label>
+                  <div class="col-sm-9">
+<?php
+$gpfPRAN = array('type' => 'text','name' => 'gpfPRAN','id' => 'gpfPRAN','class' => 'form-control','placeholder' =>'GPF Pol. No.','value' => set_value('gpfPRAN'), 'maxlength' => '5');
+echo form_input($gpfPRAN);
+echo form_error('gpfPRAN');
+?>
+                    <label for="gpfPRAN" class="error"></label>
+                  </div>
+                </div>
+                  <div class="form-group">
+                  <label class="col-sm-3 control-label">PRAN No.</label>
+                  <div class="col-sm-9">
+<?php
+$PRAN = array('type' => 'text','name' => 'PRAN','id' => 'PRAN','class' => 'form-control','placeholder' =>'PRAN No.','value' => set_value('PRAN'), 'maxlength' => '12');
+echo form_input($PRAN);
+echo form_error('PRAN');
+?>
+                    <label for="PRAN" class="error"></label>
+                  </div>
+                </div>
+
+          </div>
+          <div id="five" class="tab-pane">
+              <div class="form-group">
+                  <label class="col-sm-3 control-label">Battalion/Unit</label>
+                  <div class="col-sm-9">
+<?php
+ $BattalionUnitito = array();
+                 $BattalionUnitito[''] = '--Select--';
+                 foreach ($uname as $value) {
+                   $BattalionUnitito[$value->users_id] = $value->nick;
+                 }  
+/*newarea Textfield*/
+ echo form_dropdown('BattalionUnitito', $BattalionUnitito, set_value('BattalionUnitito',1),'id="BattalionUnitito" data-placeholder="Choose One" title="Please select at least 1 area" class="select2"'); 
+ echo form_error('BattalionUnitito');
+/*----End newarea Textfield----*/
+?>
+                    <label for="BattalionUnitito" class="error"></label>
+                  </div>
+                </div>
+
+                 <div class="form-group" id="buOther1" style="display:none;">
+                  <label class="col-sm-3 control-label">Other</label>
+                  <div class="col-sm-9">
+                 <?php
+$buOther = array('type' => 'text','name' => 'buOther','id' => 'buOther','class' => 'form-control','placeholder' =>'Other','value' => set_value('buOther'));
+echo form_input($buOther);
+echo form_error('buOther');
+?>     <label for="buOther" class="error"></label>
+                  </div>
+                </div>
+
+                                <div class="form-group">
+                  <label class="col-sm-3 control-label">Category of post</label>
+                  <div class="col-sm-9">
+            <?php  
+$RankRankre = array('' => '--Select--', 'Executive Staff' => 'Executive Staff', 'Ministerial Staff' => 'Ministerial Staff', 'Medical Staff' => 'Medical Staff', 'Class-IV (P)' => 'Class-IV (P)', 'Class-IV (C)' => 'Class-IV (C)');
+ echo form_dropdown('RankRankre', $RankRankre, set_value('RankRankre',''),'id="RankRankre" data-placeholder="Choose One" class="select2"'); 
+ echo form_error('RankRankre');
+ ?>
+                    <label for="RankRankre" class="error"></label>
+                  </div>
+                </div>
+
+                <div class="form-group" id="exs1" style="display: none;">
+                  <label class="col-sm-3 control-label">Rank</label>
+                  <div class="col-sm-9">
+            <?php  
+$RankRankre = array('' => '--Select--', 'CT' => 'CT', 'Sr.Const' => 'Sr. Const', 'C-II' => 'C-II', 'HC/PR' => 'HC/PR', 'HC' => 'HC', 'ASI/LR' => 'ASI/LR','ASI/CR' => 'ASI/CR',  'ASI' => 'ASI', 'SI/CR' => 'SI/CR','SI/LR' => 'SI/LR', 'SI' => 'SI', 'INSP/CR' => 'INSP/CR','INSP/LR' => 'INSP/LR', 'INSP' => 'INSP', 'DSP/CR' =>'DSP/CR','DSP' =>'DSP', 'SP/CR' => 'SP/CR', 'SP' => 'SP','Asst. Commandant' =>'Asst. Commandant','Commandant' => 'Commandant');
+ echo form_dropdown('catop1', $RankRankre, set_value('catop1',''),'id="RankRankrei" data-placeholder="Choose One" class="select2"'); 
+ echo form_error('RankRankre');
+ ?>
+                    <label for="RankRankre" class="error"></label>
+                  </div>
+                </div>
+
+                 <div class="form-group" id="MinisterialStaff1"  style="display: none;">
+                  <label class="col-sm-3 control-label">Rank</label>
+                  <div class="col-sm-9">
+            <?php  
+$Ministerial = array('' => '--Select--', 'Senior Asstt.' => 'Senior Asstt.', 'Junior Asstt.' => 'Junior Asstt.', 'Clerk' => 'Clerk', 'Peon' => 'Peon', 'Daftari' => 'Daftari','Subdent-I' => 'Subdent-I','Subdent-II' => 'Subdent-II');
+ echo form_dropdown('catop2', $Ministerial, set_value('catop2',''),'id="Ministerial" data-placeholder="Choose One" class="select2"'); 
+ echo form_error('catop2');
+ ?>
+                    <label for="Ministerial" class="error"></label>
+                  </div>
+                </div>
+
+                 <div class="form-group" id="MedicalStaff2"  style="display: none;">
+                  <label class="col-sm-3 control-label">Nature of duty</label>
+                  <div class="col-sm-9">
+            <?php  
+$Medical = array('' => '--Select--', 'Doctor' => 'Doctor', 'Pharmacist' => 'Pharmacist', 'Physiotherapist' => 'Physiotherapist', 'Lab Technician' => 'Lab Technician', 'Nursing Asstt.' => 'Nursing Asstt.');
+ echo form_dropdown('catop3', $Medical, set_value('catop3',''),'id="Medical" data-placeholder="Choose One" class="select2"'); 
+ echo form_error('catop3');
+ ?>
+                    <label for="Medical" class="error"></label>
+                  </div>
+                </div>
+
+                <div class="form-group" id="cl4"  style="display: none;">
+                  <label class="col-sm-3 control-label">Trade</label>
+                  <div class="col-sm-9">
+            <?php  
+$cf1 = array('' => '--Select--', 'Cook' => 'Cook', 'Water Carrier' => 'Water Carrier', 'Sweeper' => 'Sweeper', 'Dhobi' => 'Dhobi', 'Mochi' => 'Mochi', 'Barber' => 'Barber', 'Tailor' => 'Tailor', 'Carpenter' => 'Carpenter','Mason' => 'Mason','Mali' => 'Mali');
+ echo form_dropdown('catop4', $cf1, set_value('catop4',''),'id="cf1" data-placeholder="Choose One" class="select2"'); 
+ echo form_error('catop4');
+ ?>
+                    <label for="cf1" class="error"></label>
+                  </div>
+                </div>
+
+                  <div class="form-group" id="cl5"  style="display: none;">
+                  <label class="col-sm-3 control-label">Trade</label>
+                  <div class="col-sm-9">
+            <?php  
+$cf2 = array('' => '--Select--', 'Cook' => 'Cook', 'Water Carrier' => 'Water Carrier', 'Sweeper' => 'Sweeper', 'Dhobi' => 'Dhobi', 'Mochi' => 'Mochi', 'Barber' => 'Barber', 'Tailor' => 'Tailor', 'Carpenter' => 'Carpenter','Mason' => 'Mason','Mali' => 'Mali');
+ echo form_dropdown('catop5', $cf2, set_value('catop5',''),'id="cf2" data-placeholder="Choose One" class="select2"'); 
+ echo form_error('catop5');
+ ?>
+                    <label for="cf2" class="error"></label>
+                  </div>
+                </div>
+
+                <div class="form-group">
+                  <label class="col-sm-3 control-label">Dept. No.</label>
+                  <div class="col-sm-9">
+<?php
+$Deptdn = array('type' => 'text','name' => 'Deptdn','id' => 'Deptdn','class' => 'form-control','placeholder' =>'Dept. No.','value' => set_value('Deptdn'));
+echo form_input($Deptdn);
+echo form_error('Deptdn');
+?>
+                    <label for="Deptdn" class="error"></label>
+                  </div>
+                </div>
+
+                <div class="form-group">
+                  <label class="col-sm-3 control-label">Identity Card No.</label>
+                  <div class="col-sm-9">
+<?php
+$iIdentityCardNocn = array('type' => 'text','name' => 'iIdentityCardNocn','id' => 'iIdentityCardNocn','class' => 'form-control','placeholder' =>'Identity Card No.','value' => set_value('iIdentityCardNocn'));
+echo form_input($iIdentityCardNocn);
+echo form_error('iIdentityCardNocn');
+?>
+                    <label for="iIdentityCardNocn" class="error"></label>
+                  </div>
+                </div>
+                          
+                 <div class="form-group" id="cattoinduction">
+                  <label class="col-sm-3 control-label">Category of Induction</label>
+                  <div class="col-sm-9">
+            <?php  
+$catofind = array('' => '--Select--', 'Executive Staff' => 'Executive Staff', 'Ministerial Staff' => 'Ministerial Staff', 'Medical Staff' => 'Medical Staff', 'Class-IV (P)' => 'Class-IV (P)', 'Class-IV (C)' => 'Class-IV (C)');
+ echo form_dropdown('catofind', $catofind, set_value('catofind',''),'id="catofind" data-placeholder="Choose One" class="select2"'); 
+ echo form_error('catofind');
+ ?>
+                    <label for="catofind" class="error"></label>
+                  </div>
+                </div>
+
+                <div class="form-group" id="catofind1" style="display: none;">
+                  <label class="col-sm-3 control-label">Rank</label>
+                  <div class="col-sm-9">
+            <?php  
+$RankRankre = array('' => '--Select--', 'CT' => 'CT', 'Sr.Const' => 'Sr. Const', 'C-II' => 'C-II', 'HC/PR' => 'HC/PR', 'HC' => 'HC', 'ASI/LR' => 'ASI/LR','ASI/CR' => 'ASI/CR',  'ASI' => 'ASI', 'SI/CR' => 'SI/CR','SI/LR' => 'SI/LR', 'SI' => 'SI', 'INSP/CR' => 'INSP/CR','INSP/LR' => 'INSP/LR', 'INSP' => 'INSP', 'DSP/CR' =>'DSP/CR','DSP' =>'DSP', 'SP/CR' => 'SP/CR', 'SP' => 'SP','Asst. Commandant' =>'Asst. Commandant','Commandant' => 'Commandant');
+ echo form_dropdown('catofind1', $RankRankre, set_value('catofind1',''),'id="RankRankrei" data-placeholder="Choose One" class="select2"'); 
+ echo form_error('catofind1');
+ ?>
+                    <label for="RankRankre" class="error"></label>
+                  </div>
+                </div>
+
+                 <div class="form-group" id="catofind2"  style="display: none;">
+                  <label class="col-sm-3 control-label">Rank</label>
+                  <div class="col-sm-9">
+            <?php  
+$Ministerial = array('' => '--Select--', 'Senior Asstt.' => 'Senior Asstt.', 'Junior Asstt.' => 'Junior Asstt.', 'Clerk' => 'Clerk', 'Peon' => 'Peon', 'Daftari' => 'Daftari','Subdent-I' => 'Subdent-I','Subdent-II' => 'Subdent-II');
+ echo form_dropdown('catofind2', $Ministerial, set_value('catofind2',''),'id="Ministerial" data-placeholder="Choose One" class="select2"'); 
+ echo form_error('catofind3');
+ ?>
+                    <label for="Ministerial" class="error"></label>
+                  </div>
+                </div>
+
+                 <div class="form-group" id="catofind3"  style="display: none;">
+                  <label class="col-sm-3 control-label">Nature of duty</label>
+                  <div class="col-sm-9">
+            <?php  
+$Medical = array('' => '--Select--', 'Doctor' => 'Doctor', 'Pharmacist' => 'Pharmacist', 'Physiotherapist' => 'Physiotherapist', 'Lab Technician' => 'Lab Technician', 'Nursing Asstt.' => 'Nursing Asstt.');
+ echo form_dropdown('catofind3', $Medical, set_value('catofind3',''),'id="Medical" data-placeholder="Choose One" class="select2"'); 
+ echo form_error('catofind3');
+ ?>
+                    <label for="Medical" class="error"></label>
+                  </div>
+                </div>
+
+                <div class="form-group" id="catofind4"  style="display: none;">
+                  <label class="col-sm-3 control-label">Trade</label>
+                  <div class="col-sm-9">
+            <?php  
+$cf1 = array('' => '--Select--', 'Cook' => 'Cook', 'Water Carrier' => 'Water Carrier', 'Sweeper' => 'Sweeper', 'Dhobi' => 'Dhobi', 'Mochi' => 'Mochi', 'Barber' => 'Barber', 'Tailor' => 'Tailor', 'Carpenter' => 'Carpenter','Mason' => 'Mason','Mali' => 'Mali');
+ echo form_dropdown('catofind4', $cf1, set_value('catofind4',''),'id="cf1" data-placeholder="Choose One" class="select2"'); 
+ echo form_error('catofind4');
+ ?>
+                    <label for="cf1" class="error"></label>
+                  </div>
+                </div>
+
+                  <div class="form-group" id="catofind5"  style="display: none;">
+                  <label class="col-sm-3 control-label">Trade</label>
+                  <div class="col-sm-9">
+            <?php  
+$cf2 = array('' => '--Select--', 'Cook' => 'Cook', 'Water Carrier' => 'Water Carrier', 'Sweeper' => 'Sweeper', 'Dhobi' => 'Dhobi', 'Mochi' => 'Mochi', 'Barber' => 'Barber', 'Tailor' => 'Tailor', 'Carpenter' => 'Carpenter','Mason' => 'Mason','Mali' => 'Mali');
+ echo form_dropdown('catofind5', $cf2, set_value('catofind5',''),'id="cf2" data-placeholder="Choose One" class="select2"'); 
+ echo form_error('catofind5');
+ ?>
+                    <label for="cf2" class="error"></label>
+                  </div>
+                </div>
+                  <div class="form-group">
+                  <label class="col-sm-3 control-label">Induction Mode</label>
+                  <div class="col-sm-9">
+                 <?php  
+$InductionModeim = array('' => '--Select--', 'Transfer' => 'Transfer', 'Transfer(Promotion)' => 'Transfer(Promotion)', 'Transfer(Excess)' => 'Transfer(Excess)', 'Attachment' => 'Attachment','Transfer Pay Purpose' => 'Transfer Pay Purpose','Since Enlistment' => 'Since Enlistment','Transfer (On regular)' => 'Transfer (On regular)','On deputation' => 'On deputation');
+ echo form_dropdown('InductionModeim', $InductionModeim, set_value('InductionModeim',1),'id="InductionModeim" data-placeholder="Choose One" class="select2"'); 
+ echo form_error('InductionModeim');
+ ?>
+                    <label for="InductionModeim" class="error"></label>
+                  </div>
+                </div> 
+                <div class="form-group">
+                  <label class="col-sm-3 control-label">Induction Date</label>
+                  <div class="col-sm-9">
+                  <div class="input-group">
+<?php
+$indictiondate = array('type' => 'text','name' => 'indictiondate','id' => 'indictiondate','class' => 'form-control','placeholder' =>'Induction Date','value' => set_value('indictiondate'));
+echo form_input($indictiondate);
+echo form_error('indictiondate');
+?><span class="input-group-addon"><i class="glyphicon glyphicon-calendar"></i></span>
+</div>
+                    <label for="indictiondate" class="error"></label>
+                  </div>
+                </div>
+
+                <div class="form-group" id="prebatunit">
+                  <label class="col-sm-3 control-label">Previous Battalion/Unit</label>
+                  <div class="col-sm-9">
+<?php
+$PreviousBatalionito = array('' => '--Select--', '7-PAP' => '7-PAP','9-PAP' => '9-PAP', '13-PAP' => '13-PAP','27-PAP' => '27-PAP','36-PAP' => '36-PAP','75-PAP' => '75-PAP','80-PAP' => '80-PAP','82-PAP' => '82-PAP', 'CCR' => 'CCR', 'CR-PAP' => 'CR-PAP','RTC-PAP' => 'RTC-PAP','ISTC-KPT' => 'ISTC-KPT','CTC-PTL' => 'CTC-PTL','CSO' => 'CSO','1-CDO' => '1-CDO','2-CDO' => '2-CDO', '3-CDO' => '3-CDO', '4-CDO' => '4-CDO','5-CDO' => '5-CDO','1-IRB' => '1-IRB','2-IRB' => '2-IRB', '3-IRB' => '3-IRB', '4-IRB' => '4-IRB','5-IRB' => '5-IRB','6-IRB' => '6-IRB', '7-IRB'); 
+/*newarea Textfield*/
+ echo form_dropdown('PreviousBatalionito', $PreviousBatalionito, set_value('PreviousBatalionito',1),'id="PreviousBatalionito" data-placeholder="Choose One" title="Please select at least 1 area" class="select2"'); 
+ echo form_error('PreviousBatalionito');
+/*----End newarea Textfield----*/
+?>
+                    <label for="PreviousBatalionito" class="error"></label>
+                  </div>
+                </div>
+
+                    <div class="form-group" id="pbuOther1" style="display:none;">
+                  <label class="col-sm-3 control-label">Other</label>
+                  <div class="col-sm-9">
+                 <?php
+$pbuOther = array('type' => 'text','name' => 'pbuOther','id' => 'pbuOther','class' => 'form-control','placeholder' =>'Other','value' => set_value('pbuOther'));
+echo form_input($pbuOther);
+echo form_error('pbuOther');
+?>     <label for="pbuOther" class="error"></label>
+                  </div>
+                </div>
+
+                <div class="form-group" id="preno1">
+                  <label class="col-sm-3 control-label">Previous No.</label>
+                  <div class="col-sm-9">
+<?php
+$PreviousNoprn = array('type' => 'text','name' => 'PreviousNoprn','id' => 'PreviousNoprn','class' => 'form-control','placeholder' =>'Previous No.','value' => set_value('PreviousNoprn'));
+echo form_input($PreviousNoprn);
+echo form_error('PreviousNoprn');
+?>
+                    <label for="PreviousNoprn" class="error"></label>
+                  </div>
+                </div>
+        
+
+                <div class="form-group" id="hblock1">
+                  <label class="col-sm-3 control-label">Lower School Course Date</label>
+                  <div class="col-sm-9">
+                  <div class="input-group">
+<?php
+$DateOFPromotionDetails21 = array('type' => 'text','name' => 'DateOFPromotionDetails21','id' => 'DateOFPromotionDetails21','class' => 'form-control','placeholder' =>'Date OF Promotion Details','value' => set_value('DateOFPromotionDetails21'));
+echo form_input($DateOFPromotionDetails21);
+echo form_error('DateOFPromotionDetails21');
+?><span class="input-group-addon"><i class="glyphicon glyphicon-calendar"></i></span>
+</div>
+                    <label for="DateOFPromotionDetails21" class="error"></label>
+                  </div>
+                </div>
+
+                <div class="form-group" id="hblock2">
+                  <label class="col-sm-3 control-label">Date of C-I</label>
+                  <div class="col-sm-9">
+                  <div class="input-group">
+<?php
+$DateOFPromotionDetails23 = array('type' => 'text','name' => 'DateOFPromotionDetails23','id' => 'DateOFPromotionDetails23','class' => 'form-control','placeholder' =>'Date OF Promotion Details','value' => set_value('DateOFPromotionDetails23'));
+echo form_input($DateOFPromotionDetails23);
+echo form_error('DateOFPromotionDetails23');
+?><span class="input-group-addon"><i class="glyphicon glyphicon-calendar"></i></span>
+</div>
+                    <label for="DateOFPromotionDetails23" class="error"></label>
+                  </div>
+                </div>
+
+
+                <div class="form-group" id="hblock3">
+                  <label class="col-sm-3 control-label">Date of C-II</label>
+                  <div class="col-sm-9">
+                  <div class="input-group">
+<?php
+$DateOFPromotionDetails24 = array('type' => 'text','name' => 'DateOFPromotionDetails24','id' => 'DateOFPromotionDetails24','class' => 'form-control','placeholder' =>'Date OF Promotion Details','value' => set_value('DateOFPromotionDetails24'));
+echo form_input($DateOFPromotionDetails24);
+echo form_error('DateOFPromotionDetails24');
+?><span class="input-group-addon"><i class="glyphicon glyphicon-calendar"></i></span>
+</div>
+                    <label for="DateOFPromotionDetails24" class="error"></label>
+                  </div>
+                </div>
+
+
+                <div class="form-group"  id="hblock4">
+                  <label class="col-sm-3 control-label">Date of offg. HC</label>
+                  <div class="col-sm-9">
+                  <div class="input-group">
+<?php
+$DateOFPromotionDetails25 = array('type' => 'text','name' => 'DateOFPromotionDetails25','id' => 'DateOFPromotionDetails25','class' => 'form-control','placeholder' =>'Date OF Promotion Details','value' => set_value('DateOFPromotionDetails25'));
+echo form_input($DateOFPromotionDetails25);
+echo form_error('DateOFPromotionDetails25');
+?><span class="input-group-addon"><i class="glyphicon glyphicon-calendar"></i></span>
+</div>
+                    <label for="DateOFPromotionDetails25" class="error"></label>
+                  </div>
+                </div>
+
+
+                <div class="form-group"  id="hblock5">
+                  <label class="col-sm-3 control-label">Inter Mediate School Course Passing  Date</label>
+                  <div class="col-sm-9">
+                  <div class="input-group">
+<?php
+$DateOFPromotionDetails26 = array('type' => 'text','name' => 'DateOFPromotionDetails26','id' => 'DateOFPromotionDetails26','class' => 'form-control','placeholder' =>'Date OF Promotion Details','value' => set_value('DateOFPromotionDetails26'));
+echo form_input($DateOFPromotionDetails26);
+echo form_error('DateOFPromotionDetails26');
+?><span class="input-group-addon"><i class="glyphicon glyphicon-calendar"></i></span>
+</div>
+                    <label for="DateOFPromotionDetails26" class="error"></label>
+                  </div>
+                </div>
+
+
+                <div class="form-group"  id="hblock6">
+                  <label class="col-sm-3 control-label">Date of List-D</label>
+                  <div class="col-sm-9">
+                  <div class="input-group">
+<?php
+$DateOFPromotionDetails27 = array('type' => 'text','name' => 'DateOFPromotionDetails27','id' => 'DateOFPromotionDetails27','class' => 'form-control','placeholder' =>'Date OF Promotion Details','value' => set_value('DateOFPromotionDetails27'));
+echo form_input($DateOFPromotionDetails27);
+echo form_error('DateOFPromotionDetails27');
+?><span class="input-group-addon"><i class="glyphicon glyphicon-calendar"></i></span>
+</div>
+                    <label for="DateOFPromotionDetails27" class="error"></label>
+                  </div>
+                </div>
+
+
+                <div class="form-group"  id="hblock7">
+                  <label class="col-sm-3 control-label">Date of List D-II</label>
+                  <div class="col-sm-9">
+                  <div class="input-group">
+<?php
+$DateOFPromotionDetails28 = array('type' => 'text','name' => 'DateOFPromotionDetails28','id' => 'DateOFPromotionDetails28','class' => 'form-control','placeholder' =>'Date OF Promotion Details','value' => set_value('DateOFPromotionDetails28'));
+echo form_input($DateOFPromotionDetails28);
+echo form_error('DateOFPromotionDetails28');
+?><span class="input-group-addon"><i class="glyphicon glyphicon-calendar"></i></span>
+</div>
+                    <label for="DateOFPromotionDetails28" class="error"></label>
+                  </div>
+                </div>
+
+
+                <div class="form-group"  id="hblock8">
+                  <label class="col-sm-3 control-label">Date of offg. ASI</label>
+                  <div class="col-sm-9">
+                  <div class="input-group">
+<?php
+$DateOFPromotionDetails29 = array('type' => 'text','name' => 'DateOFPromotionDetails29','id' => 'DateOFPromotionDetails29','class' => 'form-control','placeholder' =>'Date OF Promotion Details','value' => set_value('DateOFPromotionDetails29'));
+echo form_input($DateOFPromotionDetails29);
+echo form_error('DateOFPromotionDetails29');
+?><span class="input-group-addon"><i class="glyphicon glyphicon-calendar"></i></span>
+</div>
+                    <label for="DateOFPromotionDetails29" class="error"></label>
+                  </div>
+                </div>
+
+
+                <div class="form-group"  id="hblock9">
+                  <label class="col-sm-3 control-label">Upper School Course Passing  Date</label>
+                  <div class="col-sm-9">
+                  <div class="input-group">
+<?php
+$DateOFPromotionDetails30 = array('type' => 'text','name' => 'DateOFPromotionDetails30','id' => 'DateOFPromotionDetails30','class' => 'form-control','placeholder' =>'Date OF Promotion Details','value' => set_value('DateOFPromotionDetails30'));
+echo form_input($DateOFPromotionDetails30);
+echo form_error('DateOFPromotionDetails30');
+?><span class="input-group-addon"><i class="glyphicon glyphicon-calendar"></i></span>
+</div>
+                    <label for="DateOFPromotionDetails30" class="error"></label>
+                  </div>
+                </div>
+
+
+                <div class="form-group"  id="hblock10">
+                  <label class="col-sm-3 control-label">Date of List-E</label>
+                  <div class="col-sm-9">
+                  <div class="input-group">
+<?php
+$DateOFPromotionDetails31 = array('type' => 'text','name' => 'DateOFPromotionDetails31','id' => 'DateOFPromotionDetails31','class' => 'form-control','placeholder' =>'Date OF Promotion Details','value' => set_value('DateOFPromotionDetails31'));
+echo form_input($DateOFPromotionDetails31);
+echo form_error('DateOFPromotionDetails31');
+?><span class="input-group-addon"><i class="glyphicon glyphicon-calendar"></i></span>
+</div>
+                    <label for="DateOFPromotionDetails31" class="error"></label>
+                  </div>
+                </div>
+
+                <div class="form-group"  id="hblock11">
+                  <label class="col-sm-3 control-label">Date of List E-II</label>
+                  <div class="col-sm-9">
+                  <div class="input-group">
+<?php
+$DateOFPromotionDetails32 = array('type' => 'text','name' => 'DateOFPromotionDetails32','id' => 'DateOFPromotionDetails32','class' => 'form-control','placeholder' =>'Date OF Promotion Details','value' => set_value('DateOFPromotionDetails32'));
+echo form_input($DateOFPromotionDetails32);
+echo form_error('DateOFPromotionDetails32');
+?><span class="input-group-addon"><i class="glyphicon glyphicon-calendar"></i></span>
+</div>
+                    <label for="DateOFPromotionDetails32" class="error"></label>
+                  </div>
+                </div>
+
+
+                <div class="form-group"  id="hblock12">
+                  <label class="col-sm-3 control-label">Date of Offg. SI</label>
+                  <div class="col-sm-9">
+                  <div class="input-group">
+<?php
+$DateOFPromotionDetails33 = array('type' => 'text','name' => 'DateOFPromotionDetails33','id' => 'DateOFPromotionDetails33','class' => 'form-control','placeholder' =>'Date OF Promotion Details','value' => set_value('DateOFPromotionDetails33'));
+echo form_input($DateOFPromotionDetails33);
+echo form_error('DateOFPromotionDetails33');
+?><span class="input-group-addon"><i class="glyphicon glyphicon-calendar"></i></span>
+</div>
+                    <label for="DateOFPromotionDetails33" class="error"></label>
+                  </div>
+                </div>
+
+
+                <div class="form-group"  id="hblock13">
+                  <label class="col-sm-3 control-label">Date of List F</label>
+                  <div class="col-sm-9">
+                  <div class="input-group">
+<?php
+$DateOFPromotionDetails34 = array('type' => 'text','name' => 'DateOFPromotionDetails34','id' => 'DateOFPromotionDetails34','class' => 'form-control','placeholder' =>'Date OF Promotion Details','value' => set_value('DateOFPromotionDetails34'));
+echo form_input($DateOFPromotionDetails34);
+echo form_error('DateOFPromotionDetails34');
+?><span class="input-group-addon"><i class="glyphicon glyphicon-calendar"></i></span>
+</div>
+                    <label for="DateOFPromotionDetails34" class="error"></label>
+                  </div>
+                </div>
+
+ <div class="form-group"  id="hblock14">
+                  <label class="col-sm-3 control-label">Date of List F-II</label>
+                  <div class="col-sm-9">
+                  <?php
+$LowerSchoolCourseDate35 = array('type' => 'text','name' => 'LowerSchoolCourseDate35','id' => 'LowerSchoolCourseDate35','class' => 'form-control','placeholder' =>'Date of offg. INSP','value' => set_value('LowerSchoolCourseDate35'));
+echo form_input($LowerSchoolCourseDate35);
+echo form_error('LowerSchoolCourseDate35');
+?>
+                
+                    <label for="PromotionDetailsinm" class="error"></label>
+                  </div>
+                </div> 
+
+
+                <div class="form-group"  id="hblock15">
+                  <label class="col-sm-3 control-label">Date of offg. INSP</label>
+                  <div class="col-sm-9">
+                  <div class="input-group">
+<?php
+$DateOFPromotionDetails35 = array('type' => 'text','name' => 'DateOFPromotionDetails35','id' => 'DateOFPromotionDetails35','class' => 'form-control','placeholder' =>'Date OF Promotion Details','value' => set_value('DateOFPromotionDetails35'));
+echo form_input($DateOFPromotionDetails35);
+echo form_error('DateOFPromotionDetails35');
+?><span class="input-group-addon"><i class="glyphicon glyphicon-calendar"></i></span>
+</div>
+                    <label for="DateOFPromotionDetails35" class="error"></label>
+                  </div>
+                </div>
+
+          </div>
+          <div id="six" class="tab-pane">
+                  <div class="form-group">
+                  <label class="col-sm-3 control-label">Training Institute</label>
+                  <div class="col-sm-9">
+                 <?php  
+$TrainingInstituteti = array('' => '--Select--', 'Deferred Basic Training Sports Person' => 'Deferred Basic Training Sports Person', 'Deferred basic training Medical Rest' => 'Deferred basic training Medical Rest', 'RTCI' => 'RTC','ISTC' => 'ISTC','CTC BHG' =>'CTC BHG', 'PPA Phillaur' =>'PPA Phillaur', 'PRTC Jahankhelan' => 'PRTC Jahankhelan', 'Ladda Kothi Sangrur' => 'Ladda Kothi Sangrur','CTC BHG' => 'CTC BHG' ,'CTC BHG PTL' => 'CTC BHG PTL','ISTC KPT' => 'ISTC KPT', 'ISTC KPT.' => 'ISTC KPT.', 'ISTC/KPT' => 'ISTC/KPT','PPA PHR' => 'PPA PHR','PPA PHR.' => 'PPA PHR.', 'PPA/PHR' => 'PPA/PHR','RTC' => 'RTC','RTC BHG PTL' => 'RTC BHG PTL', 'RTC BHG PTL.' => 'RTC BHG PTL.','RTC L/SGR.' => 'RTC L/SGR.', 'RTC PAP JRC' => 'RTC PAP JRC','RTC PAP JRC' => 'RTC PAP JRC','RTC/PAP' => 'RTC/PAP');
+ echo form_dropdown('TrainingInstituteti', $TrainingInstituteti, set_value('TrainingInstituteti',1),'id="TrainingInstituteti" data-placeholder="Choose One" title="Please select at least 1 area" class="select2"'); 
+ echo form_error('TrainingInstituteti');
+ ?>
+                    <label for="TrainingInstituteti" class="error"></label>
+                  </div>
+                </div>
+
+                <div class="form-group" id="Othertraining1" style="display:none;">
+                  <label class="col-sm-3 control-label">Other Details</label>
+                  <div class="col-sm-9">
+<?php
+$Othertraining1 = array('type' => 'text','name' => 'Othertraining','id' => 'Othertraining','class' => 'form-control','placeholder' =>'Other Details','value' => set_value('Othertraining'));
+echo form_input($Othertraining1);
+echo form_error('Othertraining1');
+?>
+                    <label for="Othertraining" class="error"></label>
+                  </div>
+                </div>
+
+               
+
+                 
+
+                <div class="form-group" id="Batchbn1">
+                  <label class="col-sm-3 control-label">Batch Group</label>
+                  <div class="col-sm-9">
+<?php
+$Batchbn = array('type' => 'text','name' => 'Batchbn','id' => 'Batchbn','class' => 'form-control','placeholder' =>'Batch Group','value' => set_value('Batchbn'));
+echo form_input($Batchbn);
+echo form_error('Batchbn');
+?>
+                    <label for="Batchbn" class="error"></label>
+                  </div>
+                </div>
+
+                 <div class="form-group"  id="batchpassdate1">
+                  <label class="col-sm-3 control-label">Batch Passing Years</label>
+                  <div class="col-sm-9">
+                     <select name="batchpassdate" class="form-control">
+                    <?php for ($i=1970; $i <2016 ; $i++) { 
+                      if($i == 1){
+                        echo '<option value="'.$i.'">'.$i.' </option>';
+                      }else{
+                        echo '<option value="'.$i.'">'.$i.'</option>';
+                      }
+                      
+                    } ?>
+
+                  </select>
+        
+                    <label for="batchpassdate" class="error"></label>
+                  </div>
+                </div>
+          </div>
+           <div id="seven" class="tab-pane"> 
+              <div class="form-group">
+                  <label class="col-sm-3 control-label">Training Institute</label>
+                  <div class="col-sm-9">
+                 <?php  
+$TrainingInstitutessti = array('' => '--Select--',  'RTCI' => 'RTC','ISTC' => 'ISTC','CTC BHG' =>'CTC BHG', 'PPA Phillaur' =>'PPA Phillaur', 'PRTC Jahankhelan' => 'PRTC Jahankhelan', 'Ladda Kothi Sangrur' => 'Ladda Kothi Sangrur','Other' => 'Other');
+ echo form_dropdown('TrainingInstitutessti', $TrainingInstitutessti, set_value('TrainingInstitutessti',1),'id="TrainingInstitutessti" data-placeholder="Choose One" title="Please select at least 1 area" class="select2"'); 
+ echo form_error('TrainingInstitutessti');
+ ?>
+                    <label for="TrainingInstitutessti" class="error"></label>
+                  </div>
+                </div>
+
+                 <div class="form-group" id="TrainingInstitutesstiOther1" style="display:none">
+                  <label class="col-sm-3 control-label">Other</label>
+                  <div class="col-sm-9">
+<?php
+$TrainingInstitutesstiOther = array('type' => 'text','name' => 'TrainingInstitutesstiOther','id' => 'TrainingInstitutesstiOther','class' => 'form-control','placeholder' =>'Other','value' => set_value('TrainingInstitutesstiOther'));
+echo form_input($TrainingInstitutesstiOther);
+echo form_error('TrainingInstitutesstiOther');
+?>
+                    <label for="TrainingInstitutesstiOther" class="error"></label>
+                  </div>
+                </div>
+
+
+ <div class="form-group" id="NamesofsCourses1">
+                  <label class="col-sm-3 control-label">Name of Course</label>
+                  <div class="col-sm-9">
+<?php
+$NamesofsCourses = array('type' => 'text','name' => 'NamesofsCourses','id' => 'NamesofsCourses','class' => 'form-control','placeholder' =>'Name of Course','value' => set_value('NamesofsCourses'));
+echo form_input($NamesofsCourses);
+echo form_error('NamesofsCourses');
+?>
+                    <label for="NamesofsCourses" class="error"></label>
+                  </div>
+                </div>
+
+           <div class="form-group" id="DurationsofsCourses1">
+                  <label class="col-sm-3 control-label">Duration of Course</label>
+                  <div class="col-sm-9">
+                  <div class="col-xs-3">
+                  <div class="input-group">
+<?php
+$DurationsofsCourses = array('type' => 'text','name' => 'DurationsofsCourses','id' => 'DurationsofsCourses','class' => 'form-control','placeholder' =>'From','value' => set_value('DurationsofsCourses'));
+echo form_input($DurationsofsCourses);
+echo form_error('DurationsofsCourses');
+?><span class="input-group-addon"><i class="glyphicon glyphicon-calendar"></i></span>
+</div>
+                    <label for="DurationsofsCourses" class="error"></label>
+                    </div>
+                    <div class="col-xs-3"><div class="input-group"> 
+<?php
+$DurationsofsCoursest = array('type' => 'text','name' => 'DurationsofsCoursest','id' => 'DurationsofsCoursest','class' => 'form-control','placeholder' =>'To','value' => set_value('DurationsofsCoursest'));
+echo form_input($DurationsofsCoursest);
+echo form_error('DurationsofsCoursest');
+?><span class="input-group-addon"><i class="glyphicon glyphicon-calendar"></i></span>
+</div>
+                    <label for="DurationsofsCoursest" class="error"></label>
+                    </div>
+                  </div>
+                </div>
+
+           </div>
+
+           <div id="eight" class="tab-pane"> 
+             <div class="form-group">
+                  <label class="col-sm-3 control-label">Name of Range</label>
+                  <div class="col-sm-9">
+<?php
+$NameofsRanges = array('type' => 'text','name' => 'NameofsRanges','id' => 'NameofsRanges','class' => 'form-control','placeholder' =>'Name of Range','value' => set_value('NameofsRanges'));
+echo form_input($NameofsRanges);
+echo form_error('NameofsRanges');
+?>
+                    <label for="NameofsRanges" class="error"></label>
+                  </div>
+                </div>
+
+                 <div class="form-group">
+                  <label class="col-sm-3 control-label">Date of Practice</label>
+                  <div class="col-sm-9">
+                  <div class="input-group">
+<?php
+$dateofprcatice = array('type' => 'text','name' => 'dateofprcatice','id' => 'dateofprcatice','class' => 'form-control','placeholder' =>'Date of Practice','value' => set_value('dateofprcatice'));
+echo form_input($dateofprcatice);
+echo form_error('dateofprcatice');
+?><span class="input-group-addon"><i class="glyphicon glyphicon-calendar"></i></span>
+</div>
+                    <label for="dateofprcatice" class="error"></label>
+                  </div>
+                </div>
+
+                 <div class="form-group">
+                  <label class="col-sm-3 control-label">Firing Weapon</label>
+                  <div class="col-sm-9">
+         <?php 
+                 $tow = array();
+                  $tow[''] = '--Select--'; 
+                 foreach ($weapon as $value) {
+                  if($value->weapon_name == 'Sniper7.62 MM'){
+                   
+                  }else{
+                    $tow[$value->weapon_name] = $value->weapon_name;
+                  }
+                 }
+/*newarea Textfield*/
+ echo form_dropdown('tow', $tow, set_value('tow',''),'id="tow" data-placeholder="Choose One" title="Please select at least 1 value" class="select2"'); 
+ echo form_error('tow');
+/*----End newarea Textfield----*/
+ ?>
+                    <label for="belt" class="error"></label>
+                  </div>
+                </div>
+
+           </div>
+
+           <div id="nine" class="tab-pane"> 
+
+                 <div class="form-group">
+                  <label class="col-sm-3 control-label">Latest Annual Medical Date</label>
+                  <div class="col-sm-9">
+                  <div class="input-group">
+<?php
+$LatestAnnualMedicalDate = array('type' => 'text','name' => 'LatestAnnualMedicalDate','id' => 'LatestAnnualMedicalDate','class' => 'form-control','placeholder' =>'Latest Annual Medical Date','value' => set_value('LatestAnnualMedicalDate'));
+echo form_input($LatestAnnualMedicalDate);
+echo form_error('LatestAnnualMedicalDate');
+?><span class="input-group-addon"><i class="glyphicon glyphicon-calendar"></i></span>
+</div>
+                    <label for="LatestAnnualMedicalDate" class="error"></label>
+                  </div>
+                </div>
+
+                   <div class="form-group">
+                  <label class="col-sm-3 control-label">Present Health Status</label>
+                  <div class="col-sm-9">
+                 <?php  
+$PresentHealthStatus = array('' => '--Select--', 'Fit' => 'Fit', 'Light Duty' => 'Light Duty', 'Chronic Disease' => 'Chronic Disease','Handicapped' => 'Handicapped','Hospitalized' =>'Hospitalized','Medical Rest' => 'Medical Rest','Misc' =>'Misc');
+ echo form_dropdown('PresentHealthStatus', $PresentHealthStatus, set_value('PresentHealthStatus',1),'id="PresentHealthStatus" data-placeholder="Choose One" title="Please select at least 1 area" class="select2"'); 
+ echo form_error('PresentHealthStatus');
+ ?>
+                    <label for="PresentHealthStatus" class="error"></label>
+                  </div>
+                </div>
+
+                   <div class="form-group" id="ChronicDiseaseDetails1" style="display:none;">
+                  <label class="col-sm-3 control-label">Chronic Disease Details</label>
+                  <div class="col-sm-9">
+<?php
+$ChronicDiseaseDetails = array('type' => 'text','name' => 'ChronicDiseaseDetails','id' => 'ChronicDiseaseDetails','class' => 'form-control','placeholder' =>'Details','value' => set_value('ChronicDiseaseDetails'));
+echo form_input($ChronicDiseaseDetails);
+echo form_error('ChronicDiseaseDetails');
+?>
+                    <label for="ChronicDiseaseDetails" class="error"></label>
+                  </div>
+                </div>
+
+                <div class="form-group" id="MiscDetails1" style="display:none;">
+                  <label class="col-sm-3 control-label">Misc</label>
+                  <div class="col-sm-9">
+<?php
+$MiscDetails = array('type' => 'text','name' => 'MiscDetails','id' => 'MiscDetails','class' => 'form-control','placeholder' =>'Details','value' => set_value('MiscDetails'));
+echo form_input($MiscDetails);
+echo form_error('MiscDetails');
+?>
+                    <label for="MiscDetails" class="error"></label>
+                  </div>
+                </div>
+
+           </div>
+
+           <div id="ten" class="tab-pane">
+             <div class="form-group">
+                  <label class="col-sm-3 control-label">Posting Detail </label>
+                  <div class="col-sm-9">
+                 <?php  
+$Postingtiset = array('' => '--Select--', 'Fix Duties' => 'Fix Duties', 'Law & Order Duty' => 'Law & Order Duty', 'Special Squads' => 'Special Squads','Permanent Attachment' => 'Permanent Attachment','Training' => 'Training','Sports' => 'Sports','Available with BNs' => 'Available with BNs','Battalion Misc Duties' => 'Battalion Misc Duties','Institutions' => 'Institutions');
+ echo form_dropdown('Postingtiset', $Postingtiset, set_value('Postingtiset',1),'id="Postingtiset" data-placeholder="Choose One" title="Please select at least 1 value" class="select2"'); 
+ echo form_error('Postingtiset');
+ ?>
+                    <label for="Postingtiset" class="error"></label>
+                  </div>
+                </div>
+
+
+
+           <div class="form-group" id="fone1" style="display: none;">
+                  <label class="col-sm-3 control-label">VP Guards </label>
+                  <div class="col-sm-9">
+                 <?php  
+$vpgurds = array('' => '--Select--', 'VP Guards' => 'VP Guards');
+ echo form_dropdown('fx1', $vpgurds, set_value('fx1',1),'id="Postingtiset" data-placeholder="Choose One" title="Please select at least 1 value" class="select2"'); 
+ echo form_error('fx1');
+ ?>
+                    <label for="fx1" class="error"></label>
+                  </div>
+                </div>
+
+                     <div class="form-group">
+                  <label class="col-sm-3 control-label">Location</label>
+                  <div class="col-sm-9">
+                 <?php  
+$vploc = array('type' => 'text','name' => 'vploc','id' => 'vploc','class' => 'form-control','value' => set_value('vploc'), 'placeholder' => 'Location');
+echo form_input($vploc);
+ echo form_error('vploc');
+ ?>
+                    <label for="vploc" class="error"></label>
+                  </div>
+                </div>
+
+
+                    <div class="form-group">
+                  <label class="col-sm-3 control-label">District</label>
+                  <div class="col-sm-9">
+                 <?php  
+$vpdist = array('type' => 'text','name' => 'vpdist','id' => 'vpdist','class' => 'form-control','value' => set_value('vpdist'), 'placeholder' => 'District');
+echo form_input($vpdist);
+ echo form_error('vpdist');
+ ?>
+                    <label for="vpdist" class="error"></label>
+                  </div>
+                </div>
+
+                <div class="form-group" id="fone2" style="display: none;">
+                  <label class="col-sm-3 control-label">Jails Security </label>
+                  <div class="col-sm-9">
+                 <?php  
+$vpgurds = array('' => '--Select--', 'Jails Security' => 'Jails Security');
+ echo form_dropdown('fx2', $vpgurds, set_value('fx2',1),'id="Postingtiset" data-placeholder="Choose One" title="Please select at least 1 value" class="select2"'); 
+ echo form_error('fx2');
+ ?>
+                    <label for="Postingtiset" class="error"></label>
+                  </div>
+                </div>
+
+                            <div class="form-group">
+                  <label class="col-sm-3 control-label">Name Of Jail</label>
+                  <div class="col-sm-9">
+                 <?php  
+$jailname = array('type' => 'text','name' => 'jailname','id' => 'jailname','class' => 'form-control','value' => set_value('jailname'), 'placeholder' => 'Name Of Jail');
+echo form_input($jailname);
+ echo form_error('jailname');
+ ?>
+                    <label for="jailname" class="error"></label>
+                  </div>
+                </div>
+
+
+                    <div class="form-group">
+                  <label class="col-sm-3 control-label">District</label>
+                  <div class="col-sm-9">
+                 <?php  
+$jaildist = array('type' => 'text','name' => 'jaildist','id' => 'jaildist','class' => 'form-control','value' => set_value('jaildist'), 'placeholder' => 'District');
+echo form_input($jaildist);
+ echo form_error('jaildist');
+ ?>
+                    <label for="jaildist" class="error"></label>
+                  </div>
+                </div>
+
+
+                <div class="form-group" id="fone3" style="display: none;">
+                  <label class="col-sm-3 control-label">Punjab Police HQRS,SEC.9,CHG </label>
+                  <div class="col-sm-9">
+                 <?php  
+$vpgurds = array('' => '--Select--', 'Punjab Police HQRS,SEC.9,CHG' => 'Punjab Police HQRS,SEC.9,CHG');
+ echo form_dropdown('fx3', $vpgurds, set_value('fx3',1),'id="Postingtiset" data-placeholder="Choose One" title="Please select at least 1 value" class="select2"'); 
+ echo form_error('Postingtiset');
+ ?>
+                    <label for="Postingtiset" class="error"></label>
+                  </div>
+                </div>
+
+                 <div class="form-group" id="fone4" style="display: none;">
+                  <label class="col-sm-3 control-label">DERA BEAS SECURITY DUTY </label>
+                  <div class="col-sm-9">
+                 <?php  
+$vpgurds = array('' => '--Select--', 'DERA BEAS SECURITY DUTY ' => 'DERA BEAS SECURITY DUTY ');
+ echo form_dropdown('fx4', $vpgurds, set_value('fx4',1),'id="Postingtiset" data-placeholder="Choose One" title="Please select at least 1 value" class="select2"'); 
+ echo form_error('fx4');
+ ?>
+                    <label for="Postingtiset" class="error"></label>
+                  </div>
+                </div>
+
+                   <div class="form-group" id="fone5" style="display: none;">
+                  <label class="col-sm-3 control-label">OTHER STATIC GUARDS </label>
+                  <div class="col-sm-9">
+                 <?php  
+$vpgurds = array('' => '--Select--', 'OTHER STSTIC GUARDS ' => 'OTHER STSTIC GUARDS');
+ echo form_dropdown('fx5', $vpgurds, set_value('fx5',1),'id="Postingtiset" data-placeholder="Choose One" title="Please select at least 1 value" class="select2"'); 
+ echo form_error('Postingtiset');
+ ?>
+                    <label for="fx5" class="error"></label>
+                  </div>
+                </div>
+
+
+
+                <div class="form-group">
+                  <label class="col-sm-3 control-label">Location</label>
+                  <div class="col-sm-9">
+                 <?php  
+$osgloc = array('type' => 'text','name' => 'osgloc','id' => 'osgloc','class' => 'form-control','value' => set_value('osgloc'), 'placeholder' => 'Name Of Jail');
+echo form_input($osgloc);
+ echo form_error('osgloc');
+ ?>
+                    <label for="osgloc" class="error"></label>
+                  </div>
+                </div>
+
+
+                    <div class="form-group">
+                  <label class="col-sm-3 control-label">District</label>
+                  <div class="col-sm-9">
+                 <?php  
+$osgdist = array('type' => 'text','name' => 'osgdist','id' => 'osgdist','class' => 'form-control','value' => set_value('osgdist'), 'placeholder' => 'District');
+echo form_input($osgdist);
+ echo form_error('osgdist');
+ ?>
+                    <label for="osgdist" class="error"></label>
+                  </div>
+                </div>
+
+                <div class="form-group" id="fone6" style="display: none;">
+                  <label class="col-sm-3 control-label">PSOS/GUNMAN DIRECT FROM BNS. </label>
+                  <div class="col-sm-9">
+                 <?php  
+$vpgurds = array('' => '--Select--', 'Police Officer ' => 'Police Officer', 'Political Persons', 'Political Persons','Civil Officers' => 'Civil Officers','Judicial Officers' => 'Judicial Officers','Threatening persons','Retired civil officer duty' => 'Retired civil officer duty', 'Retired Judicial officer duty' => 'Retired Judicial officer duty');
+ echo form_dropdown('fx6', $vpgurds, set_value('fx6',1),'id="Postingtiset" data-placeholder="Choose One" title="Please select at least 1 value" class="select2"'); 
+ echo form_error('fx6');
+ ?>
+                    <label for="Postingtiset" class="error"></label>
+                  </div>
+                </div>
+
+                 <div class="form-group" id="fone7" style="display: none;">
+                  <label class="col-sm-3 control-label">VIP SEC.WING CHG.U/82nd BN. </label>
+                  <div class="col-sm-9">
+                 <?php  
+$vpgurds = array('' => '--Select--', 'VIP SEC.WING CHG.U/82nd BN.' => 'VIP SEC.WING CHG.U/82nd BN.');
+ echo form_dropdown('fx7', $vpgurds, set_value('fx7',1),'id="Postingtiset" data-placeholder="Choose One" title="Please select at least 1 value" class="select2"'); 
+ echo form_error('fx7');
+ ?>
+                    <label for="Postingtiset" class="error"></label>
+                  </div>
+                </div>
+
+                 <div class="form-group" id="fone8" style="display: none;">
+                  <label class="col-sm-3 control-label">POLICE SEC.WING CHG U/13th BN. </label>
+                  <div class="col-sm-9">
+                 <?php  
+$vpgurds = array('' => '--Select--', 'POLICE SEC.WING CHG U/13th BN.' => 'POLICE SEC.WING CHG U/13th BN.');
+ echo form_dropdown('fx8', $vpgurds, set_value('fx8',1),'id="Postingtiset" data-placeholder="Choose One" title="Please select at least 1 value" class="select2"'); 
+ echo form_error('Postingtiset');
+ ?>
+                    <label for="Postingtiset" class="error"></label>
+                  </div>
+                </div>
+
+
+                  <div class="form-group" id="fone9" style="display: none;">
+                  <label class="col-sm-3 control-label">BANK SECURITY DUTY </label>
+                  <div class="col-sm-9">
+                 <?php  
+$vpgurds = array('' => '--Select--', 'BANK SECURITY DUTY' => 'BANK SECURITY DUTY');
+ echo form_dropdown('fx9', $vpgurds, set_value('fx9',1),'id="Postingtiset" data-placeholder="Choose One" title="Please select at least 1 value" class="select2"'); 
+ echo form_error('Postingtiset');
+ ?>
+                    <label for="Postingtiset" class="error"></label>
+                  </div>
+                </div>
+
+                  <div class="form-group" id="fone10" style="display: none;">
+                  <label class="col-sm-3 control-label">SPECIAL PROTECTION UNIT (C.M. SEC.)</label>
+                  <div class="col-sm-9">
+                 <?php  
+$vpgurds = array('' => '--Select--', 'SPECIAL PROTECTION UNIT (C.M. SEC.)' => 'SPECIAL PROTECTION UNIT (C.M. SEC.)');
+ echo form_dropdown('fx10', $vpgurds, set_value('fx10',1),'id="Postingtiset" data-placeholder="Choose One" title="Please select at least 1 value" class="select2"'); 
+ echo form_error('fx10');
+ ?>
+                    <label for="Postingtiset" class="error"></label>
+                  </div>
+                </div>
+
+                 <div class="form-group" id="fone11" style="display: none;">
+                  <label class="col-sm-3 control-label">PB. BHAWAN NEW DELHI (SEC. DUTY)</label>
+                  <div class="col-sm-9">
+                 <?php  
+$vpgurds = array('' => '--Select--', 'PB. BHAWAN NEW DELHI (SEC. DUTY)' => 'PB. BHAWAN NEW DELHI (SEC. DUTY)');
+ echo form_dropdown('fx11', $vpgurds, set_value('fx11',1),'id="Postingtiset" data-placeholder="Choose One" title="Please select at least 1 value" class="select2"'); 
+ echo form_error('Postingtiset');
+ ?>
+                    <label for="Postingtiset" class="error"></label>
+                  </div>
+                </div>
+
+                 <div class="form-group"  id="fone12" style="display: none;">
+                  <label class="col-sm-3 control-label">PB. BHAWAN NEW DELHI (RESERVE)</label>
+                  <div class="col-sm-9">
+                 <?php  
+$vpgurds = array('' => '--Select--', 'PB. BHAWAN NEW DELHI (RESERVE)' => 'PB. BHAWAN NEW DELHI (RESERVE)');
+ echo form_dropdown('fx12', $vpgurds, set_value('fx12',1),'id="Postingtiset" data-placeholder="Choose One" title="Please select at least 1 value" class="select2"'); 
+ echo form_error('Postingtiset');
+ ?>
+                    <label for="Postingtiset" class="error"></label>
+                  </div>
+                </div>
+<!-- LAW OF DUTIES START -->
+                  <div class="form-group"   id="lone1" style="display: none;">
+                  <label class="col-sm-3 control-label">PERMANENT DUTY</label>
+                  <div class="col-sm-9">
+                 <?php  
+$vpgurds = array('' => '--Select--', 'PERMANENT DUTY' => 'PERMANENT DUTY');
+ echo form_dropdown('fx13', $vpgurds, set_value('fx13',1),'id="Postingtiset" data-placeholder="Choose One" title="Please select at least 1 value" class="select2"'); 
+ echo form_error('fx13');
+ ?>
+                    <label for="Postingtiset" class="error"></label>
+                  </div>
+                </div>
+
+                 <div class="form-group"  id="lone2" style="display: none;">
+                  <label class="col-sm-3 control-label">DGP, RESERVES</label>
+                  <div class="col-sm-9">
+                 <?php  
+$vpgurds = array('' => '--Select--', 'DGP, RESERVES' => 'DGP, RESERVES');
+ echo form_dropdown('fx14', $vpgurds, set_value('fx14',1),'id="Postingtiset" data-placeholder="Choose One" title="Please select at least 1 value" class="select2"'); 
+ echo form_error('Postingtiset');
+ ?>
+                    <label for="Postingtiset" class="error"></label>
+                  </div>
+                </div>
+
+                 <div class="form-group" id="lone3" style="display: none;">
+                  <label class="col-sm-3 control-label">TRAINING /EMERGENCY RESERVE FOR TEMP. DUTY</label>
+                  <div class="col-sm-9">
+                 <?php  
+$vpgurds = array('' => '--Select--', 'TRAINING /EMERGENCY RESERVE FOR TEMP. DUTY' => 'TRAINING /EMERGENCY RESERVE FOR TEMP. DUTY');
+ echo form_dropdown('fx15', $vpgurds, set_value('fx15',1),'id="Postingtiset" data-placeholder="Choose One" title="Please select at least 1 value" class="select2"'); 
+ echo form_error('Postingtiset');
+ ?>
+                    <label for="Postingtiset" class="error"></label>
+                  </div>
+                </div>
+
+                <!-- SPECIAL SQUADS START -->
+
+                  <div class="form-group" id="sqone1" style="display: none;">
+                  <label class="col-sm-3 control-label">ANTI RIOT POLICE, JALANDHAR</label>
+                  <div class="col-sm-9">
+                 <?php  
+$vpgurds = array('' => '--Select--', 'ANTI RIOT POLICE, JALANDHAR' => 'ANTI RIOT POLICE, JALANDHAR');
+ echo form_dropdown('ss1', $vpgurds, set_value('ss1',1),'id="Postingtiset" data-placeholder="Choose One" title="Please select at least 1 value" class="select2"'); 
+ echo form_error('ss1');
+ ?>
+                    <label for="Postingtiset" class="error"></label>
+                  </div>
+                </div>
+
+                   <div class="form-group" id="sqone2" style="display: none;">
+                  <label class="col-sm-3 control-label">ANTI RIOT POLICE, MANSA</label>
+                  <div class="col-sm-9">
+                 <?php  
+$vpgurds = array('' => '--Select--', 'ANTI RIOT POLICE, MANSA' => 'ANTI RIOT POLICE, MANSA');
+ echo form_dropdown('ss2', $vpgurds, set_value('ss2',1),'id="Postingtiset" data-placeholder="Choose One" title="Please select at least 1 value" class="select2"'); 
+ echo form_error('ss2');
+ ?>
+                    <label for="Postingtiset" class="error"></label>
+                  </div>
+                </div>
+
+                 <div class="form-group" id="sqone3" style="display: none;">
+                  <label class="col-sm-3 control-label">ANTI RIOT POLICE, MUKATSAR</label>
+                  <div class="col-sm-9">
+                 <?php  
+$vpgurds = array('' => '--Select--', 'ANTI RIOT POLICE, MUKATSAR' => 'ANTI RIOT POLICE, MUKATSAR');
+ echo form_dropdown('ss3', $vpgurds, set_value('ss3',1),'id="Postingtiset" data-placeholder="Choose One" title="Please select at least 1 value" class="select2"'); 
+ echo form_error('ss3');
+ ?>
+                    <label for="Postingtiset" class="error"></label>
+                  </div>
+                </div>
+
+                <div class="form-group" id="sqone4" style="display: none;">
+                  <label class="col-sm-3 control-label">S.D.R.F. TEAM, JALANDHAR</label>
+                  <div class="col-sm-9">
+                 <?php  
+$vpgurds = array('' => '--Select--', 'S.D.R.F. TEAM, JALANDHAR' => 'S.D.R.F. TEAM, JALANDHAR');
+ echo form_dropdown('ss4', $vpgurds, set_value('ss4',1),'id="Postingtiset" data-placeholder="Choose One" title="Please select at least 1 value" class="select2"'); 
+ echo form_error('ss4');
+ ?>
+                    <label for="Postingtiset" class="error"></label>
+                  </div>
+                </div>
+
+                  <div class="form-group" id="sqone5" style="display: none;">
+                  <label class="col-sm-3 control-label">SPL. STRIKING GROUPS</label>
+                  <div class="col-sm-9">
+                 <?php  
+$vpgurds = array('' => '--Select--', 'SPL. STRIKING GROUPS' => 'SPL. STRIKING GROUPS');
+ echo form_dropdown('ss5', $vpgurds, set_value('ss5',1),'id="Postingtiset" data-placeholder="Choose One" title="Please select at least 1 value" class="select2"'); 
+ echo form_error('ss5');
+ ?>
+                    <label for="Postingtiset" class="error"></label>
+                  </div>
+                </div>
+
+                 <div class="form-group" id="sqone6" style="display: none;">
+                  <label class="col-sm-3 control-label">SWAT TEAM (4TH CDO)</label>
+                  <div class="col-sm-9">
+                 <?php  
+$vpgurds = array('' => '--Select--', 'SWAT TEAM (4TH CDO)' => 'SWAT TEAM (4TH CDO)');
+ echo form_dropdown('ss6', $vpgurds, set_value('ss6',1),'id="Postingtiset" data-placeholder="Choose One" title="Please select at least 1 value" class="select2"'); 
+ echo form_error('ss6');
+ ?>
+                    <label for="Postingtiset" class="error"></label>
+                  </div>
+                </div>
+
+<!-- PERMANENT ATTACHMENT START -->
+
+                 <div class="form-group" id="paone1" style="display: none;">
+                  <label class="col-sm-3 control-label">ATTACHED WITH DISTT., MOHALI</label>
+                  <div class="col-sm-9">
+                 <?php  
+$vpgurds = array('' => '--Select--', 'ATTACHED WITH DISTT., MOHALI' => 'ATTACHED WITH DISTT., MOHALI');
+ echo form_dropdown('pa1', $vpgurds, set_value('pa1',1),'id="Postingtiset" data-placeholder="Choose One" title="Please select at least 1 value" class="select2"'); 
+ echo form_error('pa1');
+ ?>
+                    <label for="Postingtiset" class="error"></label>
+                  </div>
+                </div>
+
+                <div class="form-group" id="paone2" style="display: none;">
+                  <label class="col-sm-3 control-label">ATTACHED WITH DISTT. POLICE (MARTYR’S KIN MALE)</label>
+                  <div class="col-sm-9">
+                 <?php  
+$vpgurds = array('' => '--Select--', 'ATTACHED WITH DISTT. POLICE (MARTYR’S KIN MALE)' => 'ATTACHED WITH DISTT. POLICE (MARTYR’S KIN MALE)');
+ echo form_dropdown('pa2', $vpgurds, set_value('pa2',1),'id="Postingtiset" data-placeholder="Choose One" title="Please select at least 1 value" class="select2"'); 
+ echo form_error('pa2');
+ ?>
+                    <label for="Postingtiset" class="error"></label>
+                  </div>
+                </div>
+
+                  <div class="form-group"  id="paone3" style="display: none;">
+                  <label class="col-sm-3 control-label">ATTACHED WITH DISTT. POLICE ((MARTYR’S KIN FEMALE)</label>
+                  <div class="col-sm-9">
+                 <?php  
+$vpgurds = array('' => '--Select--', 'ATTACHED WITH DISTT. POLICE ((MARTYR’S KIN FEMALE)' => 'ATTACHED WITH DISTT. POLICE ((MARTYR’S KIN FEMALE)');
+ echo form_dropdown('pa3', $vpgurds, set_value('pa3',1),'id="Postingtiset" data-placeholder="Choose One" title="Please select at least 1 value" class="select2"'); 
+ echo form_error('pa3');
+ ?>
+                    <label for="Postingtiset" class="error"></label>
+                  </div>
+                </div>
+
+                 <div class="form-group"   id="paone4" style="display: none;">
+                  <label class="col-sm-3 control-label">ATTACHED WITH DISTT. POLICE (MARTYR’S KIN FEMALE)</label>
+                  <div class="col-sm-9">
+                 <?php  
+$vpgurds = array('' => '--Select--', 'ATTACHED WITH DISTT. POLICE (OTHERS MALE)' => 'ATTACHED WITH DISTT. POLICE (OTHERS MALE)');
+ echo form_dropdown('pa4', $vpgurds, set_value('pa4',1),'id="Postingtiset" data-placeholder="Choose One" title="Please select at least 1 value" class="select2"'); 
+ echo form_error('pa4');
+ ?>
+                    <label for="Postingtiset" class="error"></label>
+                  </div>
+                </div>
+
+                  <div class="form-group" id="paone5" style="display: none;">
+                  <label class="col-sm-3 control-label">ATTACHED WITH DISTT. POLICE ((MARTYR’S KIN FEMALE)</label>
+                  <div class="col-sm-9">
+                 <?php  
+$vpgurds = array('' => '--Select--', 'ATTACHED WITH DISTT. POLICE (OTHERS FEMALE)' => 'ATTACHED WITH DISTT. POLICE (OTHERS FEMALE)');
+ echo form_dropdown('pa5', $vpgurds, set_value('pa5',1),'id="Postingtiset" data-placeholder="Choose One" title="Please select at least 1 value" class="select2"'); 
+ echo form_error('pa5');
+ ?>
+                    <label for="Postingtiset" class="error"></label>
+                  </div>
+                </div>
+
+                    <div class="form-group" id="paone6" style="display: none;">
+                  <label class="col-sm-3 control-label">C.P.O. ATTACHMENT UNDER 13TH BN</label>
+                  <div class="col-sm-9">
+                 <?php  
+$vpgurds = array('' => '--Select--', 'C.P.O. ATTACHMENT UNDER 13TH BN' => 'C.P.O. ATTACHMENT UNDER 13TH BN');
+ echo form_dropdown('pa6', $vpgurds, set_value('pa6',1),'id="Postingtiset" data-placeholder="Choose One" title="Please select at least 1 value" class="select2"'); 
+ echo form_error('pa6');
+ ?>
+                    <label for="Postingtiset" class="error"></label>
+                  </div>
+                </div>
+
+                 <div class="form-group" id="paone7" style="display: none;">
+                  <label class="col-sm-3 control-label">PB. POLICE OFFICER INSTITUTE SEC 32 CHG</label>
+                  <div class="col-sm-9">
+                 <?php  
+$vpgurds = array('' => '--Select--', 'PB. POLICE OFFICER INSTITUTE SEC 32 CHG' => 'PB. POLICE OFFICER INSTITUTE SEC 32 CHG');
+ echo form_dropdown('pa7', $vpgurds, set_value('pa7',1),'id="Postingtiset" data-placeholder="Choose One" title="Please select at least 1 value" class="select2"'); 
+ echo form_error('pa7');
+ ?>
+                    <label for="Postingtiset" class="error"></label>
+                  </div>
+                </div>
+
+                 <div class="form-group"  id="paone8" style="display: none;">
+                  <label class="col-sm-3 control-label">NRI CELL MOHALI</label>
+                  <div class="col-sm-9">
+                 <?php  
+$vpgurds = array('' => '--Select--', 'NRI CELL MOHALI' => 'NRI CELL MOHALI');
+ echo form_dropdown('pa8', $vpgurds, set_value('pa8',1),'id="Postingtiset" data-placeholder="Choose One" title="Please select at least 1 value" class="select2"'); 
+ echo form_error('pa8');
+ ?>
+                    <label for="Postingtiset" class="error"></label>
+                  </div>
+                </div>
+
+                  <div class="form-group"  id="paone9" style="display: none;">
+                  <label class="col-sm-3 control-label">INTELLIGENCE WING</label>
+                  <div class="col-sm-9">
+                 <?php  
+$vpgurds = array('' => '--Select--', 'INTELLIGENCE WING' => 'INTELLIGENCE WING');
+ echo form_dropdown('pa9', $vpgurds, set_value('pa9',1),'id="Postingtiset" data-placeholder="Choose One" title="Please select at least 1 value" class="select2"'); 
+ echo form_error('pa9');
+ ?>
+                    <label for="Postingtiset" class="error"></label>
+                  </div>
+                </div>
+
+                 <div class="form-group" id="paone10" style="display: none;">
+                  <label class="col-sm-3 control-label">CENTRAL POLICE LINE MOHALI</label>
+                  <div class="col-sm-9">
+                 <?php  
+$vpgurds = array('' => '--Select--', 'CENTRAL POLICE LINE MOHALI' => 'CENTRAL POLICE LINE MOHALI');
+ echo form_dropdown('pa10', $vpgurds, set_value('pa10',1),'id="Postingtiset" data-placeholder="Choose One" title="Please select at least 1 value" class="select2"'); 
+ echo form_error('pa10');
+ ?>
+                    <label for="Postingtiset" class="error"></label>
+                  </div>
+                </div>
+
+
+                 <div class="form-group" id="paone11" style="display: none;">
+                  <label class="col-sm-3 control-label">VIGILANCE BUREAU</label>
+                  <div class="col-sm-9">
+                 <?php  
+$vpgurds = array('' => '--Select--', 'VIGILANCE BUREAU' => 'VIGILANCE BUREAU');
+ echo form_dropdown('pa11', $vpgurds, set_value('pa11',1),'id="Postingtiset" data-placeholder="Choose One" title="Please select at least 1 value" class="select2"'); 
+ echo form_error('pa11');
+ ?>
+                    <label for="Postingtiset" class="error"></label>
+                  </div>
+                </div>
+
+                <div class="form-group" id="paone12" style="display: none;">
+                  <label class="col-sm-3 control-label">STATE NARCOTIC CRIME BUREAU</label>
+                  <div class="col-sm-9">
+                 <?php  
+$vpgurds = array('' => '--Select--', 'STATE NARCOTIC CRIME BUREAU' => 'STATE NARCOTIC CRIME BUREAU');
+ echo form_dropdown('pa12', $vpgurds, set_value('pa12',1),'id="Postingtiset" data-placeholder="Choose One" title="Please select at least 1 value" class="select2"'); 
+ echo form_error('Postingtiset');
+ ?>
+                    <label for="Postingtiset" class="error"></label>
+                  </div>
+                </div>
+
+                 <div class="form-group"  id="paone13" style="display: none;">
+                  <label class="col-sm-3 control-label">MOHALI AIRPORT IMMIGRATION DUTY</label>
+                  <div class="col-sm-9">
+                 <?php  
+$vpgurds = array('' => '--Select--', 'MOHALI AIRPORT IMMIGRATION DUTY' => 'MOHALI AIRPORT IMMIGRATION DUTY');
+ echo form_dropdown('pa13', $vpgurds, set_value('pa13',1),'id="Postingtiset" data-placeholder="Choose One" title="Please select at least 1 value" class="select2"'); 
+ echo form_error('Postingtiset');
+ ?>
+                    <label for="Postingtiset" class="error"></label>
+                  </div>
+                </div>
+
+
+                <div class="form-group"  id="paone14" style="display: none;">
+                  <label class="col-sm-3 control-label">STATE HUMAN RIGHTS COMMISSION </label>
+                  <div class="col-sm-9">
+                 <?php  
+$vpgurds = array('' => '--Select--', 'STATE HUMAN RIGHTS COMMISSION ' => 'STATE HUMAN RIGHTS COMMISSION ');
+ echo form_dropdown('pa14', $vpgurds, set_value('pa14',1),'id="Postingtiset" data-placeholder="Choose One" title="Please select at least 1 value" class="select2"'); 
+ echo form_error('Postingtiset');
+ ?>
+                    <label for="Postingtiset" class="error"></label>
+                  </div>
+                </div>
+
+                 <div class="form-group"  id="paone15" style="display: none;">
+                  <label class="col-sm-3 control-label">BUREAU OF INVESTIGATION</label>
+                  <div class="col-sm-9">
+                 <?php  
+$vpgurds = array('' => '--Select--', 'BUREAU OF INVESTIGATION' => 'BUREAU OF INVESTIGATION');
+ echo form_dropdown('pa15', $vpgurds, set_value('pa15',1),'id="Postingtiset" data-placeholder="Choose One" title="Please select at least 1 value" class="select2"'); 
+ echo form_error('Postingtiset');
+ ?>
+                    <label for="Postingtiset" class="error"></label>
+                  </div>
+                </div>
+
+                 <div class="form-group"  id="paone16" style="display: none;">
+                  <label class="col-sm-3 control-label">RTC/PAP, JALANDHAR</label>
+                  <div class="col-sm-9">
+                 <?php  
+$vpgurds = array('' => '--Select--', 'RTC/PAP, JALANDHAR' => 'RTC/PAP, JALANDHAR');
+ echo form_dropdown('pa16', $vpgurds, set_value('pa16',1),'id="Postingtiset" data-placeholder="Choose One" title="Please select at least 1 value" class="select2"'); 
+ echo form_error('Postingtiset');
+ ?>
+                    <label for="Postingtiset" class="error"></label>
+                  </div>
+                </div>
+
+                <div class="form-group"  id="paone17" style="display: none;">
+                  <label class="col-sm-3 control-label">ISTC/PAP, KAPURTHALA</label>
+                  <div class="col-sm-9">
+                 <?php  
+$vpgurds = array('' => '--Select--', 'ISTC/PAP, KAPURTHALA' => 'ISTC/PAP, KAPURTHALA');
+ echo form_dropdown('pa17', $vpgurds, set_value('pa17',1),'id="Postingtiset" data-placeholder="Choose One" title="Please select at least 1 value" class="select2"'); 
+ echo form_error('Postingtiset');
+ ?>
+                    <label for="Postingtiset" class="error"></label>
+                  </div>
+                </div>
+                 <div class="form-group"  id="paone18" style="display: none;">
+                  <label class="col-sm-3 control-label">POLICE COMMANDO TRG. CENTRE, BHG, PATIALA</label>
+                  <div class="col-sm-9">
+                 <?php  
+$vpgurds = array('' => '--Select--', 'POLICE COMMANDO TRG. CENTRE, BHG, PATIALA' => 'POLICE COMMANDO TRG. CENTRE, BHG, PATIALA');
+ echo form_dropdown('pa18', $vpgurds, set_value('pa18',1),'id="Postingtiset" data-placeholder="Choose One" title="Please select at least 1 value" class="select2"'); 
+ echo form_error('Postingtiset');
+ ?>
+                    <label for="Postingtiset" class="error"></label>
+                  </div>
+                </div>
+
+                <div class="form-group"  id="paone19" style="display: none;">
+                  <label class="col-sm-3 control-label">RTC LADDA KOTHI SANGRUR</label>
+                  <div class="col-sm-9">
+                 <?php  
+$vpgurds = array('' => '--Select--', 'RTC LADDA KOTHI SANGRUR' => 'RTC LADDA KOTHI SANGRUR');
+ echo form_dropdown('pa19', $vpgurds, set_value('pa19',1),'id="Postingtiset" data-placeholder="Choose One" title="Please select at least 1 value" class="select2"'); 
+ echo form_error('Postingtiset');
+ ?>
+                    <label for="Postingtiset" class="error"></label>
+                  </div>
+                </div>
+
+                    <div class="form-group" id="paone20" style="display: none;">
+                  <label class="col-sm-3 control-label">PUNJAB POLICE ACADEMY PHILLAUR</label>
+                  <div class="col-sm-9">
+                 <?php  
+$vpgurds = array('' => '--Select--', 'PUNJAB POLICE ACADEMY PHILLAUR' => 'PUNJAB POLICE ACADEMY PHILLAUR');
+ echo form_dropdown('pa20', $vpgurds, set_value('pa20',1),'id="Postingtiset" data-placeholder="Choose One" title="Please select at least 1 value" class="select2"'); 
+ echo form_error('Postingtiset');
+ ?>
+                    <label for="Postingtiset" class="error"></label>
+                  </div>
+                </div>
+
+                  <div class="form-group" id="paone21" style="display: none;">
+                  <label class="col-sm-3 control-label">POLICE RECRUITS TRAINING CENTRE, JAHAN KHELAN</label>
+                  <div class="col-sm-9">
+                 <?php  
+$vpgurds = array('' => '--Select--', 'POLICE RECRUITS TRAINING CENTRE, JAHAN KHELAN' => 'POLICE RECRUITS TRAINING CENTRE, JAHAN KHELAN');
+ echo form_dropdown('pa21', $vpgurds, set_value('pa21',1),'id="Postingtiset" data-placeholder="Choose One" title="Please select at least 1 value" class="select2"'); 
+ echo form_error('Postingtiset');
+ ?>
+                    <label for="Postingtiset" class="error"></label>
+                  </div>
+                </div>
+
+                 <div class="form-group" id="paone22" style="display: none;">
+                  <label class="col-sm-3 control-label">POLICE RECRUITS TRAINING CENTRE, JAHAN KHELAN</label>
+                  <div class="col-sm-9">
+                 <?php  
+$vpgurds = array('' => '--Select--', 'POLICE RECRUITS TRAINING CENTRE, JAHAN KHELAN' => 'POLICE RECRUITS TRAINING CENTRE, JAHAN KHELAN');
+ echo form_dropdown('pa22', $vpgurds, set_value('pa22',1),'id="Postingtiset" data-placeholder="Choose One" title="Please select at least 1 value" class="select2"'); 
+ echo form_error('Postingtiset');
+ ?>
+                    <label for="Postingtiset" class="error"></label>
+                  </div>
+                </div>
+
+<!-- SPORTS START -->
+                  <div class="form-group" id="ssone23" style="display: none;">
+                  <label class="col-sm-3 control-label">DSO</label>
+                  <div class="col-sm-9">
+                 <?php  
+$vpgurds = array('' => '--Select--', 'DSO' => 'DSO');
+ echo form_dropdown('pa23', $vpgurds, set_value('pa23',1),'id="Postingtiset" data-placeholder="Choose One" title="Please select at least 1 value" class="select2"'); 
+ echo form_error('Postingtiset');
+ ?>
+                    <label for="Postingtiset" class="error"></label>
+                  </div>
+                </div>
+
+                   <div class="form-group" id="ssone24" style="display: none;">
+                  <label class="col-sm-3 control-label">CSO, JALANDHAR</label>
+                  <div class="col-sm-9">
+                 <?php  
+$vpgurds = array('' => '--Select--', 'CSO, JALANDHAR' => 'CSO, JALANDHAR');
+ echo form_dropdown('pa24', $vpgurds, set_value('pa24',1),'id="Postingtiset" data-placeholder="Choose One" title="Please select at least 1 value" class="select2"'); 
+ echo form_error('Postingtiset');
+ ?>
+                    <label for="Postingtiset" class="error"></label>
+                  </div>
+                </div>
+
+                 <div class="form-group" id="ssone25" style="display: none;">
+                  <label class="col-sm-3 control-label">NIS PATIALA</label>
+                  <div class="col-sm-9">
+                 <?php  
+$vpgurds = array('' => '--Select--', 'NIS PATIALA' => 'NIS PATIALA');
+ echo form_dropdown('pa25', $vpgurds, set_value('pa25',1),'id="Postingtiset" data-placeholder="Choose One" title="Please select at least 1 value" class="select2"'); 
+ echo form_error('Postingtiset');
+ ?>
+                    <label for="Postingtiset" class="error"></label>
+                  </div>
+                </div>
+
+                 <div class="form-group"  id="ssone26" style="display: none;">
+                  <label class="col-sm-3 control-label">OTHERS</label>
+                  <div class="col-sm-9">
+                 <?php  
+$vpgurds = array('' => '--Select--', 'OTHERS' => 'OTHERS');
+ echo form_dropdown('pa26', $vpgurds, set_value('pa26',1),'id="Postingtiset" data-placeholder="Choose One" title="Please select at least 1 value" class="select2"'); 
+ echo form_error('Postingtiset');
+ ?>
+                    <label for="Postingtiset" class="error"></label>
+                  </div>
+                </div>
+
+                <!-- AVAILABLE WITH BNs. -->
+
+                  <div class="form-group"  id="awbone1" style="display: none;">
+                  <label class="col-sm-3 control-label">PAP CAMPUS  SECURITY</label>
+                  <div class="col-sm-9">
+                 <?php  
+$vpgurds = array('' => '--Select--', 'PAP CAMPUS  SECURITY' => 'PAP CAMPUS  SECURITY');
+ echo form_dropdown('aw1', $vpgurds, set_value('aw1',1),'id="Postingtiset" data-placeholder="Choose One" title="Please select at least 1 value" class="select2"'); 
+ echo form_error('Postingtiset');
+ ?>
+                    <label for="Postingtiset" class="error"></label>
+                  </div>
+                </div>
+
+                <div class="form-group" id="awbone2" style="display: none;">
+                  <label class="col-sm-3 control-label">PERSONAL SECURITY STAFF ARMED WING OFFICER</label>
+                  <div class="col-sm-9">
+                 <?php  
+$vpgurds = array('' => '--Select--', 'PERSONAL SECURITY STAFF ARMED WING OFFICER' => 'PERSONAL SECURITY STAFF ARMED WING OFFICER');
+ echo form_dropdown('aw2', $vpgurds, set_value('aw2',1),'id="Postingtiset" data-placeholder="Choose One" title="Please select at least 1 value" class="select2"'); 
+ echo form_error('pa28');
+ ?>
+                    <label for="Postingtiset" class="error"></label>
+                  </div>
+                </div>
+
+                  <div class="form-group" id="awbone3" style="display: none;">
+                  <label class="col-sm-3 control-label">OFFICE STAFF IN HIGHER OFFICES</label>
+                  <div class="col-sm-9">
+                 <?php  
+$vpgurds = array('' => '--Select--', 'OFFICE STAFF IN HIGHER OFFICES' => 'OFFICE STAFF IN HIGHER OFFICES');
+ echo form_dropdown('aw3', $vpgurds, set_value('aw3',1),'id="Postingtiset" data-placeholder="Choose One" title="Please select at least 1 value" class="select2"'); 
+ echo form_error('Postingtiset');
+ ?>
+                    <label for="Postingtiset" class="error"></label>
+                  </div>
+                </div>
+
+                  <div class="form-group"  id="awbone4" style="display: none;">
+                  <label class="col-sm-3 control-label">OFFICE STAFF IN BN. OFFICE</label>
+                  <div class="col-sm-9">
+                 <?php  
+$vpgurds = array('' => '--Select--', 'OFFICE STAFF IN BN. OFFICE' => 'OFFICE STAFF IN BN. OFFICE');
+ echo form_dropdown('aw4', $vpgurds, set_value('aw4',1),'id="Postingtiset" data-placeholder="Choose One" title="Please select at least 1 value" class="select2"'); 
+ echo form_error('Postingtiset');
+ ?>
+                    <label for="Postingtiset" class="error"></label>
+                  </div>
+                </div>
+
+                  <div class="form-group"  id="awbone5" style="display: none;">
+                  <label class="col-sm-3 control-label">OFFICE STAFF IN BN. OFFICE</label>
+                  <div class="col-sm-9">
+                 <?php  
+$vpgurds = array('' => '--Select--', 'Commandant office' => 'Commandant office', 'Asstt. Commandant office' => 'Asstt. Commandant office', 'Dy.S.P. office' => 'Dy.S.P. office', 'English Branch' => 'English Branch','Account Branch' => 'Account Branch' , 'OSI Branch' => 'OSI Branch', 'Litigation Branch' => 'Litigation Branch', 'Steno Branch' => 'Steno Branch','GPF Branch' => 'GPF Branch','Computer Cell' => 'Computer Cell');
+ echo form_dropdown('aw5', $vpgurds, set_value('aw5',1),'id="Postingtiset" data-placeholder="Choose One" title="Please select at least 1 value" class="select2"'); 
+ echo form_error('Postingtiset');
+ ?>
+                    <label for="Postingtiset" class="error"></label>
+                  </div>
+                </div>
+
+                 <div class="form-group" id="awbone6" style="display: none;">
+                  <label class="col-sm-3 control-label">BN KOT GUARD</label>
+                  <div class="col-sm-9">
+                 <?php  
+$vpgurds = array('' => '--Select--', 'BN KOT GUARD' => 'BN KOT GUARD');
+ echo form_dropdown('aw6', $vpgurds, set_value('aw6',1),'id="Postingtiset" data-placeholder="Choose One" title="Please select at least 1 value" class="select2"'); 
+ echo form_error('Postingtiset');
+ ?>
+                    <label for="Postingtiset" class="error"></label>
+                  </div>
+                </div>
+
+                 <div class="form-group"  id="awbone7" style="display: none;">
+                  <label class="col-sm-3 control-label">BN. HQRS.  OTHER GUARD</label>
+                  <div class="col-sm-9">
+                 <?php  
+$vpgurds = array('' => '--Select--', 'BN. HQRS.  OTHER GUARD' => 'BN. HQRS.  OTHER GUARD');
+ echo form_dropdown('aw7', $vpgurds, set_value('aw7',1),'id="Postingtiset" data-placeholder="Choose One" title="Please select at least 1 value" class="select2"'); 
+ echo form_error('aw7');
+ ?>
+                    <label for="Postingtiset" class="error"></label>
+                  </div>
+                </div>
+
+                  <div class="form-group"  id="awbone8" style="display: none;">
+                  <label class="col-sm-3 control-label">TRADESMEN</label>
+                  <div class="col-sm-9">
+                 <?php  
+$vpgurds = array('' => '--Select--', 'TRADESMEN' => 'TRADESMEN');
+ echo form_dropdown('aw8', $vpgurds, set_value('aw8',1),'id="Postingtiset" data-placeholder="Choose One" title="Please select at least 1 value" class="select2"'); 
+ echo form_error('aw8');
+ ?>
+                    <label for="Postingtiset" class="error"></label>
+                  </div>
+                </div>
+
+                 <div class="form-group"  id="awbone9" style="display: none;">
+                  <label class="col-sm-3 control-label">M.T. SECTION</label>
+                  <div class="col-sm-9">
+                 <?php  
+$vpgurds = array('' => '--Select--', 'M.T. SECTION' => 'M.T. SECTION');
+ echo form_dropdown('aw9', $vpgurds, set_value('aw9',1),'id="Postingtiset" data-placeholder="Choose One" title="Please select at least 1 value" class="select2"'); 
+ echo form_error('aw9');
+ ?>
+                    <label for="Postingtiset" class="error"></label>
+                  </div>
+                </div>
+
+                 <div class="form-group" id="awbone10" style="display: none;">
+                  <label class="col-sm-3 control-label">QUARTERMASTER BRANCH (LINE STAFF)
+</label>
+                  <div class="col-sm-9">
+                 <?php  
+$vpgurds = array('' => '--Select--', 'QUARTERMASTER BRANCH (LINE STAFF)
+' => 'QUARTERMASTER BRANCH (LINE STAFF)
+');
+ echo form_dropdown('aw10', $vpgurds, set_value('aw10',1),'id="Postingtiset" data-placeholder="Choose One" title="Please select at least 1 value" class="select2"'); 
+ echo form_error('aw10');
+ ?>
+                    <label for="Postingtiset" class="error"></label>
+                  </div>
+                </div>
+
+                <div class="form-group" id="awbone11" style="display: none;">
+                  <label class="col-sm-3 control-label">GENERAL DUTY BN.HQRS
+</label>
+                  <div class="col-sm-9">
+                 <?php  
+$vpgurds = array('' => '--Select--', 'GENERAL DUTY BN.HQRS
+' => 'GENERAL DUTY BN.HQRS
+');
+ echo form_dropdown('aw11', $vpgurds, set_value('aw11',1),'id="Postingtiset" data-placeholder="Choose One" title="Please select at least 1 value" class="select2"'); 
+ echo form_error('aw11');
+ ?>
+                    <label for="Postingtiset" class="error"></label>
+                  </div>
+                </div>
+
+                 <div class="form-group" id="awbone12" style="display: none;">
+                  <label class="col-sm-3 control-label">TRG. RESERVE AT BN.HQRS.
+</label>
+                  <div class="col-sm-9">
+                 <?php  
+$vpgurds = array('' => '--Select--', 'TRG. RESERVE AT BN.HQRS.
+' => 'TRG. RESERVE AT BN.HQRS.
+');
+ echo form_dropdown('aw12', $vpgurds, set_value('aw12',1),'id="Postingtiset" data-placeholder="Choose One" title="Please select at least 1 value" class="select2"'); 
+ echo form_error('aw12');
+ ?>
+                    <label for="Postingtiset" class="error"></label>
+                  </div>
+                </div>
+
+                 <div class="form-group" id="awbone13" style="display: none;">
+                  <label class="col-sm-3 control-label">TRG. RESERVE AT BN.HQRS.
+</label>
+                  <div class="col-sm-9">
+                 <?php  
+$vpgurds = array('' => '--Select--', 'TRG. RESERVE AT BN.HQRS.
+' => 'TRG. RESERVE AT BN.HQRS.
+');
+ echo form_dropdown('aw13', $vpgurds, set_value('aw13',1),'id="Postingtiset" data-placeholder="Choose One" title="Please select at least 1 value" class="select2"'); 
+ echo form_error('aw13');
+ ?>
+                    <label for="Postingtiset" class="error"></label>
+                  </div>
+                </div>
+
+                <div class="form-group"  id="awbone14" style="display: none;">
+                  <label class="col-sm-3 control-label">RECRUITMENT DUTY
+</label>
+                  <div class="col-sm-9">
+                 <?php  
+$vpgurds = array('' => '--Select--', 'RECRUITMENT DUTY
+' => 'RECRUITMENT DUTY
+');
+ echo form_dropdown('aw14', $vpgurds, set_value('aw14',1),'id="Postingtiset" data-placeholder="Choose One" title="Please select at least 1 value" class="select2"'); 
+ echo form_error('aw14');
+ ?>
+                    <label for="Postingtiset" class="error"></label>
+                  </div>
+                </div>
+
+                <!-- BATTALION MISC. DUTIES START -->
+
+                  <div class="form-group"  id="bmdone1" style="display: none;">
+                  <label class="col-sm-3 control-label">RECRUIT
+</label>
+                  <div class="col-sm-9">
+                 <?php  
+$vpgurds = array('' => '--Select--', 'RECRUIT
+' => 'RECRUIT
+');
+ echo form_dropdown('aw15', $vpgurds, set_value('aw15',1),'id="Postingtiset" data-placeholder="Choose One" title="Please select at least 1 value" class="select2"'); 
+ echo form_error('aw15');
+ ?>
+                    <label for="Postingtiset" class="error"></label>
+                  </div>
+                </div>
+
+                 <div class="form-group"  id="bmdone2" style="display: none;">
+                  <label class="col-sm-3 control-label">LEAVE 
+</label>
+                  <div class="col-sm-9">
+                 <?php  
+$vpgurds = array('' => '--Select--', 'LEAVE 
+' => 'LEAVE
+');
+ echo form_dropdown('aw16', $vpgurds, set_value('aw16',1),'id="Postingtiset" data-placeholder="Choose One" title="Please select at least 1 value" class="select2"'); 
+ echo form_error('aw16');
+ ?>
+                    <label for="Postingtiset" class="error"></label>
+                  </div>
+                </div>
+
+                 <div class="form-group"  id="bmdone3" style="display: none;">
+                  <label class="col-sm-3 control-label">ABSENT 
+</label>
+                  <div class="col-sm-9">
+                 <?php  
+$vpgurds = array('' => '--Select--', 'ABSENT 
+' => 'ABSENT
+');
+ echo form_dropdown('aw17', $vpgurds, set_value('aw17',1),'id="Postingtiset" data-placeholder="Choose One" title="Please select at least 1 value" class="select2"'); 
+ echo form_error('aw17');
+ ?>
+                    <label for="Postingtiset" class="error"></label>
+                  </div>
+                </div>
+
+                 <div class="form-group"  id="bmdone4" style="display: none;">
+                  <label class="col-sm-3 control-label">UNDER SUSPENSION 
+</label>
+                  <div class="col-sm-9">
+                 <?php  
+$vpgurds = array('' => '--Select--', 'UNDER SUSPENSION 
+' => 'UNDER SUSPENSION
+');
+ echo form_dropdown('aw18', $vpgurds, set_value('aw18',1),'id="Postingtiset" data-placeholder="Choose One" title="Please select at least 1 value" class="select2"'); 
+ echo form_error('aw18');
+ ?>
+                    <label for="Postingtiset" class="error"></label>
+                  </div>
+                </div>
+
+                 <div class="form-group"  id="bmdone5" style="display: none;">
+                  <label class="col-sm-3 control-label">Handicapped on Medical Rest
+</label>
+                  <div class="col-sm-9">
+                 <?php  
+$vpgurds = array('' => '--Select--', 'Handicapped on Medical Rest 
+' => 'Handicapped on Medical Rest
+');
+ echo form_dropdown('aw19', $vpgurds, set_value('aw19',1),'id="Postingtiset" data-placeholder="Choose One" title="Please select at least 1 value" class="select2"'); 
+ echo form_error('aw19');
+ ?>
+                    <label for="Postingtiset" class="error"></label>
+                  </div>
+                </div>
+
+                 <div class="form-group"  id="bmdone6" style="display: none;">
+                  <label class="col-sm-3 control-label">Handicapped on light duty
+</label>
+                  <div class="col-sm-9">
+                 <?php  
+$vpgurds = array('' => '--Select--', 'Handicapped on light duty 
+' => 'Handicapped on light duty
+');
+ echo form_dropdown('aw20', $vpgurds, set_value('aw20',1),'id="Postingtiset" data-placeholder="Choose One" title="Please select at least 1 value" class="select2"'); 
+ echo form_error('Postingtiset');
+ ?>
+                    <label for="Postingtiset" class="error"></label>
+                  </div>
+                </div>
+
+                  <div class="form-group"  id="bmdone7" style="display: none;">
+                  <label class="col-sm-3 control-label">Chronic Disease on Medical Rest
+</label>
+                  <div class="col-sm-9">
+                 <?php  
+$vpgurds = array('' => '--Select--', 'Chronic Disease on Medical Rest 
+' => 'Chronic Disease on Medical Rest
+');
+ echo form_dropdown('aw21', $vpgurds, set_value('aw21',1),'id="Postingtiset" data-placeholder="Choose One" title="Please select at least 1 value" class="select2"'); 
+ echo form_error('aw21');
+ ?>
+                    <label for="Postingtiset" class="error"></label>
+                  </div>
+                </div>
+
+                <div class="form-group"  id="bmdone8" style="display: none;">
+                  <label class="col-sm-3 control-label">Chronic Disease on Medical Rest
+</label>
+                  <div class="col-sm-9">
+                 <?php  
+$vpgurds = array('' => '--Select--', 'Chronic Disease  on light duty 
+' => 'Chronic Disease  on light duty
+');
+ echo form_dropdown('aw22', $vpgurds, set_value('aw22',1),'id="Postingtiset" data-placeholder="Choose One" title="Please select at least 1 value" class="select2"'); 
+ echo form_error('aw22');
+ ?>
+                    <label for="Postingtiset" class="error"></label>
+                  </div>
+                </div>
+
+                <div class="form-group"  id="bmdone9" style="display: none;">
+                  <label class="col-sm-3 control-label">OSD ETC
+</label>
+                  <div class="col-sm-9">
+                 <?php  
+$vpgurds = array('' => '--Select--', 'OSD ETC 
+' => 'OSD ETC
+');
+ echo form_dropdown('aw23', $vpgurds, set_value('aw23',1),'id="Postingtiset" data-placeholder="Choose One" title="Please select at least 1 value" class="select2"'); 
+ echo form_error('aw23');
+ ?>
+                    <label for="Postingtiset" class="error"></label>
+                  </div>
+                </div>
+
+                <!-- INSTITUTIONS START -->
+
+                <div class="form-group"  id="instone1" style="display: none;">
+                  <label class="col-sm-3 control-label">IRB Institutions
+</label>
+                  <div class="col-sm-9">
+                 <?php  
+$vpgurds = array('' => '--Select--', 'IRB Institutions 
+' => 'IRB Institutions
+');
+ echo form_dropdown('irb1', $vpgurds, set_value('irb1',1),'id="Postingtiset" data-placeholder="Choose One" title="Please select at least 1 value" class="select2"'); 
+ echo form_error('irb1');
+ ?>
+                    <label for="Postingtiset" class="error"></label>
+                  </div>
+                </div>
+
+                <div class="form-group"  id="instone2" style="display: none;">
+                  <label class="col-sm-3 control-label">CDO Institutions
+</label>
+                  <div class="col-sm-9">
+                 <?php  
+$vpgurds = array('' => '--Select--', 'CDO Institutions 
+' => 'CDO Institutions
+');
+ echo form_dropdown('irb2', $vpgurds, set_value('irb2',1),'id="Postingtiset" data-placeholder="Choose One" title="Please select at least 1 value" class="select2"'); 
+ echo form_error('irb2');
+ ?>
+                    <label for="Postingtiset" class="error"></label>
+                  </div>
+                </div>
+
+                <div class="form-group"   id="instone3" style="display: none;">
+                  <label class="col-sm-3 control-label">PAP Outer Bn Institutions
+</label>
+                  <div class="col-sm-9">
+                 <?php  
+$vpgurds = array('' => '--Select--', 'PAP Outer Bn Institutions
+' => 'PAP Outer Bn Institutions
+');
+ echo form_dropdown('irb3', $vpgurds, set_value('irb3',1),'id="Postingtiset" data-placeholder="Choose One" title="Please select at least 1 value" class="select2"'); 
+ echo form_error('irb3');
+ ?>
+                    <label for="Postingtiset" class="error"></label>
+                  </div>
+                </div>
+
+                 <div class="form-group"   id="instone4" style="display: none;">
+                  <label class="col-sm-3 control-label">PAP Outer Bn Institutions
+</label>
+                  <div class="col-sm-9">
+                 <?php  
+$vpgurds = array('' => '--Select--', 'PAP Outer Bn Institutions
+' => 'PAP Outer Bn Institutions
+');
+ echo form_dropdown('irb4', $vpgurds, set_value('irb4',1),'id="Postingtiset" data-placeholder="Choose One" title="Please select at least 1 value" class="select2"'); 
+ echo form_error('irb4');
+ ?>
+                    <label for="irb4" class="error"></label>
+                  </div>
+                </div>
+
+
+                   <div class="form-group"  id="instone5" style="display: none;">
+                  <label class="col-sm-3 control-label">Institutions Duty</label>
+                  <div class="col-sm-9">
+ <?php  
+$Institutionsti = array('' => '--Select--', 'PRINTING PRESS' => 'PRINTING PRESS', 'PHOTOGRAPHY CELL' => 'PHOTOGRAPHY CELL','ART GALLERY' => 'ART GALLERY','WIRELESS SECTION' => 'WIRELESS SECTION','DUPLEX' =>'DUPLEX','PAP HOSPITAL' => 'PAP HOSPITAL','GRIEVANCES REDRESSAL CELL' => 'GRIEVANCES REDRESSAL CELL','GOLF CLUB' => 'GOLF CLUB','GOLF RANGE' => 'GOLF RANGE','GAZETTED OFFICERS MESS' => 'GAZETTED OFFICERS MESS','MINI GOS MESS' => 'MINI GOS MESS' , 'B.M.STAFF' => 'B.M.STAFF', 'SEWERAGE AND SANITATION' => 'SEWERAGE AND SANITATION','B.D. TEAM' => 'B.D. TEAM', 'ELECTRICITY WING' => 'ELECTRICITY WING','PIPE BAND' => 'PIPE BAND','BRASS BAND' => 'BRASS BAND','MOUNTED POLICE' => 'MOUNTED POLICE','RE-BROWNING WORKSHOP' => 'RE-BROWNING WORKSHOP','BASE WORKSHOP' => 'BASE WORKSHOP','PAP GAS AGENCY' => 'PAP GAS AGENCY','TEAR GAS SQUAD' => 'TEAR GAS SQUAD', 'EMPTY CATRIDGE CELL' => 'EMPTY CATRIDGE CELL', 'CABLE NETWORK' => 'CABLE NETWORK','GURUDWARA SAHIB PAP CAMPUS' => 'GURUDWARA SAHIB PAP CAMPUS','COUNSELLING AND CARRIER GUIDANCE CENTRE' => 'COUNSELLING AND CARRIER GUIDANCE CENTRE','PAP BOOK SHOP' => 'PAP BOOK SHOP','COMPUTER HARDWARE CELL' => 'COMPUTER HARDWARE CELL','PAP WEBSITE' => 'PAP WEBSITE','COMPUTER TRG. CENTRE' => 'COMPUTER TRG. CENTRE', 'LADIES WELFARE CENTRE &  MULTIPURPOSE HALL' => 'LADIES WELFARE CENTRE &  MULTIPURPOSE HALL','PAPCOS' => 'PAPCOS','SUPERVISION OF PERSONNEL ATTACH WITH POLICE DAV PUBLIC SCHOOL' => 'SUPERVISION OF PERSONNEL ATTACH WITH POLICE DAV PUBLIC SCHOOL','B.P. UNIT' => 'B.P. UNIT','BEAUTIFICATION STAFF' => 'BEAUTIFICATION STAFF','R.P.STAFF' => 'R.P.STAFF','SPECIAL GUARD' => 'SPECIAL GUARD','CO-OPERATIVE STORE' => 'CO-OPERATIVE STORE','CULTURAL TROUP' => 'CULTURAL TROUP','APNA DHABA' => 'APNA DHABA','SHIV SHAKTI MANDIR' => 'SHIV SHAKTI MANDIR','SONA BATH' => 'SONA BATH','SWIMMING POOL 25 MTR' => 'SWIMMING POOL 25 MTR','BAKERY' => 'BAKERY','TECHNICAL TEAM' => 'TECHNICAL TEAM', 'PAP GYM. NEW' => 'PAP GYM. NEW','PAP GYM. OLD' => 'PAP GYM. OLD','ACUPRESSURE' => 'ACUPRESSURE','SPORTS CAFE,MILK BAR & JUICE BAR PAP' => 'SPORTS CAFE,MILK BAR & JUICE BAR PAP','INDOOR STADIUM' => 'INDOOR STADIUM','PAP  SHOOTING RANGE' => 'PAP  SHOOTING RANGE', 'Others' => 'Others' );
+ echo form_dropdown('irb5', $Institutionsti, set_value('irb5',1),'id="Institutionsti" data-placeholder="Choose One" title="Please select at least 1 area" class="select2"'); 
+ echo form_error('irb5');
+ ?>
+                    <label for="Institutionsti" class="error"></label>
+                  </div>
+                </div>
+
+
+  <div class="form-group"   id="instone6" style="display: none;">
+                  <label class="col-sm-3 control-label">Total of Institutions
+</label>
+                  <div class="col-sm-9">
+                 <?php
+$lsd = array('type' => 'text','name' => 'irb6','id' => 'ons','class' => 'form-control','placeholder' =>'Total of Institutions','value' => set_value('irb6'));
+echo form_input($lsd);
+echo form_error('lsd');
+?>
+
+                    <label for="Postingtiset" class="error"></label>
+                  </div>
+                </div>
+
+
+
+
+       
+           <div class="form-group" style="display: none;">
+                  <label class="col-sm-3 control-label">Posting </label>
+                  <div class="col-sm-9">
+                 <?php  
+$Postingtiset = array('' => '--Select--', 'Admin Duty' => 'Admin Duty', 'Bn. Hqr. Admin Duty' => 'Bn. Hqr. Admin Duty', 'Other duties' => 'Other duties');
+ echo form_dropdown('Postingtiset', $Postingtiset, set_value('Postingtiset',1),'id="Postingtiset" data-placeholder="Choose One" title="Please select at least 1 value" class="select2"'); 
+ echo form_error('Postingtiset');
+ ?>
+                    <label for="Postingtiset" class="error"></label>
+                  </div>
+                </div>
+          
+                 <div class="form-group" id="AdminDutyti1" style="display:none">
+                  <label class="col-sm-3 control-label">Admin Duty</label>
+                  <div class="col-sm-9"> 
+ <?php  
+$AdminDutyti = array('' => '--Select--',  'Armed HQ Admin duty' => 'Armed HQ Admin duty', 'CPO officers admin duty' => 'CPO officers admin duty','CPO offices admin duty' => 'CPO offices admin duty','Other bn office admin duty' => 'Other bn office admin duty','Other' => 'Other');
+ echo form_dropdown('AdminDutyti', $AdminDutyti, set_value('AdminDutyti',1),'id="AdminDutyti" data-placeholder="Choose One" title="Please select at least 1 area" class="select2"'); 
+ echo form_error('AdminDutyti');
+ ?>
+                    <label for="AdminDutyti" class="error"></label>
+                  </div>
+                </div>
+
+                 <div class="form-group" id="AdminDutytiOther" style="display:none;">
+                  <label class="col-sm-3 control-label">Other</label>
+                  <div class="col-sm-9">
+<?php
+$AdminDutytiOther = array('type' => 'text','name' => 'AdminDutytiOther','id' => 'AdminDutytiOther','class' => 'form-control','placeholder' =>'Details','value' => set_value('AdminDutytiOther'));
+echo form_input($AdminDutytiOther);
+echo form_error('AdminDutytiOther');
+?>
+                    <label for="AdminDutytiOther" class="error"></label>
+                  </div>
+                </div>
+
+                    <div class="form-group" id="BnHqrAdminDuty1"  style="display:none"> 
+                  <label class="col-sm-3 control-label">Bn. Hqr. Admin Duty</label>
+                  <div class="col-sm-9"> 
+ <?php  
+$BnHqrAdminDuty = array('' => '--Select--',  'Commandant office' => 'Commandant office', 'Asst. Commandant office' => 'Asst. Commandant office','DSP Office' => 'DSP Office','English Branch' => 'English Branch','Account Branch' => 'Account Branch','OSI Branch' => 'OSI Branch','Litigation Branch' => 'Litigation Branch','Steno Branch' => 'Steno Branch','GPF Branch' => 'GPF Branch','Computer Cell' => 'Computer Cell');
+ echo form_dropdown('BnHqrAdminDuty', $BnHqrAdminDuty, set_value('BnHqrAdminDuty',1),'id="BnHqrAdminDuty" data-placeholder="Choose One" title="Please select at least 1 area" class="select2"'); 
+ echo form_error('BnHqrAdminDuty');
+ ?>
+                    <label for="BnHqrAdminDuty" class="error"></label>
+                  </div>
+                </div>
+
+                 <div class="form-group"  id="Commandantoffice1"  style="display:none">
+                  <label class="col-sm-3 control-label">Commandant office</label>
+                  <div class="col-sm-9">
+ <?php  
+$Commandantoffice = array('' => '--Select--', 'Reader' => 'Reader', 'Orderly' => 'Orderly','Telephone operator' => 'Telephone operator','Dak Runner' => 'Dak Runner');
+ echo form_dropdown('Commandantoffice', $Commandantoffice, set_value('Commandantoffice',1),'id="Commandantoffice" data-placeholder="Choose One" title="Please select at least 1 area" class="select2"'); 
+ echo form_error('Commandantoffice');
+ ?>
+                    <label for="Commandantoffice" class="error"></label>
+                  </div>
+                </div>
+
+                <div class="form-group" id="AsstCommandantOffice1"  style="display:none">
+                  <label class="col-sm-3 control-label">Asst. Commandant Office</label>
+                  <div class="col-sm-9">
+ <?php  
+$AsstCommandantOffice = array('' => '--Select--', 'Reader' => 'Reader', 'Office orderly' => 'Office orderly');
+ echo form_dropdown('AsstCommandantOffice', $AsstCommandantOffice, set_value('AsstCommandantOffice',1),'id="AsstCommandantOffice" data-placeholder="Choose One" title="Please select at least 1 value" class="select2"'); 
+ echo form_error('AsstCommandantOffice');
+ ?>
+                    <label for="AsstCommandantOffice" class="error"></label>
+                  </div>
+                </div>
+
+
+                <div class="form-group" id="DSPOffice1"  style="display:none">
+                  <label class="col-sm-3 control-label">DSP Office</label>
+                  <div class="col-sm-9">
+ <?php  
+$DSPOffice = array('' => '--Select--', 'Reader' => 'Reader', 'Office orderly' => 'Office orderly');
+ echo form_dropdown('DSPOffice', $DSPOffice, set_value('DSPOffice',1),'id="DSPOffice" data-placeholder="Choose One" title="Please select at least 1 area" class="select2"'); 
+ echo form_error('DSPOffice');
+ ?>
+                    <label for="DSPOffice" class="error"></label>
+                  </div>
+                </div>
+
+
+                <div class="form-group"  id="EnglishBranch1"  style="display:none">
+                  <label class="col-sm-3 control-label">English Branch</label>
+                  <div class="col-sm-9">
+ <?php  
+$EnglishBranch = array('' => '--Select--', 'Head Clerk' => 'Head Clerk', 'CRC' => 'CRC', 'Asst. CRC' => 'Asst. CRC','AC-I' => 'AC-I', 'Asst.AC-I' => 'Asst.AC-I','AC-II' => 'AC-II','Asst.AC-II' => 'Asst.AC-II','Diarist' => 'Diarist','Dispatcher' => 'Dispatcher','Dak Runner' => 'Dak Runner','Record Keeper' => 'Record Keeper','Asst. Record Keeper' =>'Asst. Record Keeper','Nodal Officer' => 'Nodal Officer','Photostat M/C Operator' => 'Photostat M/C Operator','Computer Operator' =>'Computer Operator');
+ echo form_dropdown('EnglishBranch', $EnglishBranch, set_value('EnglishBranch',1),'id="EnglishBranch" data-placeholder="Choose One" title="Please select at least 1 area" class="select2"'); 
+ echo form_error('EnglishBranch');
+ ?>
+                    <label for="EnglishBranch" class="error"></label>
+                  </div>
+                </div>
+
+                   <div class="form-group" id="AccountBranch1"  style="display:none">
+                  <label class="col-sm-3 control-label">Account Branch</label>
+                  <div class="col-sm-9">
+ <?php  
+$AccountBranch = array('' => '--Select--', 'Accountant' => 'Accountant', 'I/C Upper Seat' => 'I/C Upper Seat', 'I/C Lower Seat' => 'I/C Lower Seat','Asst. Lower Seat' => 'Asst. Lower Seat', 'I/C Contingency' => 'I/C Contingency','GIS' => 'GIS','Medical, TA,CWF etc.' => 'Medical, TA,CWF etc.','Treasury Duty' => 'Treasury Duty');
+ echo form_dropdown('AccountBranch', $AccountBranch, set_value('AccountBranch',1),'id="AccountBranch" data-placeholder="Choose One" title="Please select at least 1 area" class="select2"'); 
+ echo form_error('AccountBranch');
+ ?>
+                    <label for="AccountBranch" class="error"></label>
+                  </div>
+                </div>
+
+                 <div class="form-group"  id="OSIBranch1"  style="display:none">
+                  <label class="col-sm-3 control-label">OSI Branch</label>
+                  <div class="col-sm-9">
+ <?php  
+$OSIBranch = array('' => '--Select--', 'OSI' => 'OSI', 'I/C PLI Cases' => 'I/C PLI Cases', 'I/C Correspondence' => 'I/C Correspondence','Fauji Missal Clerk' => 'Fauji Missal Clerk', 'I/C Deployment' => 'I/C Deployment');
+ echo form_dropdown('OSIBranch', $OSIBranch, set_value('OSIBranch',1),'id="OSIBranch" data-placeholder="Choose One" title="Please select at least 1 area" class="select2"'); 
+ echo form_error('OSIBranch');
+ ?>
+                    <label for="OSIBranch" class="error"></label>
+                  </div>
+                </div>
+
+
+                 <div class="form-group" id="LitigationBranch1"  style="display:none">
+                  <label class="col-sm-3 control-label">Litigation Branch</label>
+                  <div class="col-sm-9">
+ <?php  
+$LitigationBranch = array('' => '--Select--', 'I/C Litigation' => 'I/C Litigation', 'Asst. Litigation' => 'Asst. Litigation');
+ echo form_dropdown('LitigationBranch', $LitigationBranch, set_value('LitigationBranch',1),'id="LitigationBranch" data-placeholder="Choose One" title="Please select at least 1 area" class="select2"'); 
+ echo form_error('LitigationBranch');
+ ?>
+                    <label for="LitigationBranch" class="error"></label>
+                  </div>
+                </div>
+
+                 <div class="form-group"  id="StenoBranch1"  style="display:none">
+                  <label class="col-sm-3 control-label">Steno Branch</label>
+                  <div class="col-sm-9">
+ <?php  
+$StenoBranch = array('' => '--Select--', 'Steno' => 'Steno', 'Astt. Steno' => 'Astt. Steno');
+ echo form_dropdown('StenoBranch', $StenoBranch, set_value('StenoBranch',1),'id="StenoBranch" data-placeholder="Choose One" title="Please select at least 1 area" class="select2"'); 
+ echo form_error('StenoBranch');
+ ?>
+                    <label for="StenoBranch" class="error"></label>
+                  </div>
+                </div>
+
+                 <div class="form-group"   id="GPFBranch1"  style="display:none">
+                  <label class="col-sm-3 control-label">GPF Branch</label>
+                  <div class="col-sm-9">
+ <?php  
+$GPFBranch = array('' => '--Select--', 'I/C GPF Branch' => 'I/C GPF Branch', 'Asstt. GPF Branch' => 'Asstt. GPF Branch');
+ echo form_dropdown('GPFBranch', $GPFBranch, set_value('GPFBranch',1),'id="GPFBranch" data-placeholder="Choose One" title="Please select at least 1 value" class="select2"'); 
+ echo form_error('GPFBranch');
+ ?>
+                    <label for="GPFBranch" class="error"></label>
+                  </div>
+                </div>
+
+                <div class="form-group" id="ComputerCell1"  style="display:none">
+                  <label class="col-sm-3 control-label">Computer Cell</label>
+                  <div class="col-sm-9">
+ <?php  
+$ComputerCell = array('' => '--Select--', 'I/C Computer Cell' => 'I/C Computer Cell', 'Asstt. Computer Cell' => 'Asstt. Computer Cell');
+ echo form_dropdown('ComputerCell', $ComputerCell, set_value('ComputerCell',1),'id="ComputerCell" data-placeholder="Choose One" title="Please select at least 1 value" class="select2"'); 
+ echo form_error('ComputerCell');
+ ?>
+                    <label for="ComputerCell" class="error"></label>
+                  </div>
+                </div>
+
+                 <div class="form-group" id="MudDuties1"  style="display:none">
+                  <label class="col-sm-3 control-label">Mud Duties</label>
+                  <div class="col-sm-9">
+ <?php  
+$MudDuties = array('' => '--Select--', 'Reserve Inspector' => 'Reserve Inspector', 'Line Officer' => 'Line Officer', 'BHM' => 'BHM','A-BHM'=> 'A-BHM','A/BHM'=> 'A/BHM', 'MHC' => 'MHC', 'A/MHC' => 'A/MHC',  'Orderly to RI' => 'Orderly to RI','CDI' => 'CDI','CDO' => 'CDO','A/CDO' => 'A/CDO', 'Quarter Master INSP' => 'Quarter Master INSP','KHC' => 'KHC','A/KHC' => 'A/KHC','MSK' => 'MSK','A/MSK' => 'A/MSK',  'Armourer ' => 'Armourer','A/Armourer' => 'A/Armourer', 'I/C Class-IV' => 'I/C Class-IV','Quarter Munshi  Asstt.' => 'Quarter Munshi Asstt.','Quarter Munshi' => 'Quarter Munshi','I/C Mess' => 'I/C Mess','I/C Mess Asstt.' => 'I/C Mess Asstt.','I/C Canteen' => 'I/C Canteen','Grossary Shop' => 'Grossary Shop', 'Incharge' => 'Incharge', 'Incharge Asstt'=> 'Incharge Asstt');
+ echo form_dropdown('MudDuties', $MudDuties, set_value('MudDuties',1),'id="MudDuties" data-placeholder="Choose One" title="Please select at least 1 area" class="select2"'); 
+ echo form_error('MudDuties');
+ ?>
+                    <label for="MudDuties" class="error"></label>
+                  </div>
+                </div>
+
+                   <div class="form-group"  id="GeneralStaff1"  style="display:none">
+                  <label class="col-sm-3 control-label">General Staff</label>
+                  <div class="col-sm-9">
+ <?php  
+$GeneralStaff = array('' => '--Select--', 'On-Duty' => 'On-Duty', 'Misc' => 'Misc');
+ echo form_dropdown('GeneralStaff', $GeneralStaff, set_value('GeneralStaff',1),'id="GeneralStaff" data-placeholder="Choose One" title="Please select at least 1 area" class="select2"'); 
+ echo form_error('GeneralStaff');
+ ?>
+                    <label for="GeneralStaff" class="error"></label>
+                  </div>
+                </div>
+
+
+                 <div class="form-group"  id="genralOther1" style="display:none;">
+                  <label class="col-sm-3 control-label">Other</label>
+                  <div class="col-sm-9">
+<?php
+$genralOther = array('type' => 'text','name' => 'genralOther','id' => 'genralOther','class' => 'form-control','placeholder' =>'Other','value' => set_value('genralOther'));
+echo form_input($genralOther);
+echo form_error('genralOther');
+?>
+                    <label for="genralOther" class="error"></label>
+                  </div>
+                </div>
+
+
+                   <div class="form-group"   id="MTSectionf1"  style="display:none">
+                  <label class="col-sm-3 control-label">MT Section</label>
+                  <div class="col-sm-9">
+ <?php  
+$MTSectionf = array('' => '--Select--', 'MTO' => 'MTO', 'Asstt. MTO-cum- Garage HC' => 'Asstt. MTO-cum- Garage HC','MHC-cum- I/C MT Store' => 'MHC-cum- I/C MT Store','AMHC-cum- Asstt. MT Store' => 'AMHC-cum- Asstt. MT Store','I/C Patrol Pump &amp; Asstt.' =>'I/C Patrol Pump &amp; Asstt.','Mechanics' => 'Mechanics','Drivers' => 'Drivers','Any Other' => 'Any Other');
+ echo form_dropdown('MTSectionf', $MTSectionf, set_value('MTSectionf',1),'id="MTSectionf" data-placeholder="Choose One" title="Please select at least 1 area" class="select2"'); 
+ echo form_error('MTSectionf');
+ ?>
+                    <label for="MTSectionf" class="error"></label>
+                  </div>
+                </div>
+
+                  <div class="form-group" id="MTSectionfothers1" style="display:none">
+                  <label class="col-sm-3 control-label">MT Section others</label>
+                  <div class="col-sm-9">
+<?php
+$MTSectionfothers = array('type' => 'text','name' => 'MTSectionfothers','id' => 'MTSectionfothers','class' => 'form-control','placeholder' =>'MT Sectionf others','value' => set_value('MTSectionfothers'));
+echo form_input($MTSectionfothers);
+echo form_error('MTSectionfothers');
+?>
+                    <label for="MTSectionfothers" class="error"></label>
+                  </div>
+                </div>
+
+
+                   <div class="form-group" id="Institutionsti1"  style="display:none">
+                  <label class="col-sm-3 control-label">Institutions Duty</label>
+                  <div class="col-sm-9">
+ <?php  
+$Institutionsti = array('' => '--Select--', 'PRINTING PRESS' => 'PRINTING PRESS', 'PHOTOGRAPHY CELL' => 'PHOTOGRAPHY CELL','ART GALLERY' => 'ART GALLERY','WIRELESS SECTION' => 'WIRELESS SECTION','DUPLEX' =>'DUPLEX','PAP HOSPITAL' => 'PAP HOSPITAL','GRIEVANCES REDRESSAL CELL' => 'GRIEVANCES REDRESSAL CELL','GOLF CLUB' => 'GOLF CLUB','GOLF RANGE' => 'GOLF RANGE','GAZETTED OFFICERS MESS' => 'GAZETTED OFFICERS MESS','MINI GOS MESS' => 'MINI GOS MESS' , 'B.M.STAFF' => 'B.M.STAFF', 'SEWERAGE AND SANITATION' => 'SEWERAGE AND SANITATION','B.D. TEAM' => 'B.D. TEAM', 'ELECTRICITY WING' => 'ELECTRICITY WING','PIPE BAND' => 'PIPE BAND','BRASS BAND' => 'BRASS BAND','MOUNTED POLICE' => 'MOUNTED POLICE','RE-BROWNING WORKSHOP' => 'RE-BROWNING WORKSHOP','BASE WORKSHOP' => 'BASE WORKSHOP','PAP GAS AGENCY' => 'PAP GAS AGENCY','TEAR GAS SQUAD' => 'TEAR GAS SQUAD', 'EMPTY CATRIDGE CELL' => 'EMPTY CATRIDGE CELL', 'CABLE NETWORK' => 'CABLE NETWORK','GURUDWARA SAHIB PAP CAMPUS' => 'GURUDWARA SAHIB PAP CAMPUS','COUNSELLING AND CARRIER GUIDANCE CENTRE' => 'COUNSELLING AND CARRIER GUIDANCE CENTRE','PAP BOOK SHOP' => 'PAP BOOK SHOP','COMPUTER HARDWARE CELL' => 'COMPUTER HARDWARE CELL','PAP WEBSITE' => 'PAP WEBSITE','COMPUTER TRG. CENTRE' => 'COMPUTER TRG. CENTRE', 'LADIES WELFARE CENTRE &  MULTIPURPOSE HALL' => 'LADIES WELFARE CENTRE &  MULTIPURPOSE HALL','PAPCOS' => 'PAPCOS','SUPERVISION OF PERSONNEL ATTACH WITH POLICE DAV PUBLIC SCHOOL' => 'SUPERVISION OF PERSONNEL ATTACH WITH POLICE DAV PUBLIC SCHOOL','B.P. UNIT' => 'B.P. UNIT','BEAUTIFICATION STAFF' => 'BEAUTIFICATION STAFF','R.P.STAFF' => 'R.P.STAFF','SPECIAL GUARD' => 'SPECIAL GUARD','CO-OPERATIVE STORE' => 'CO-OPERATIVE STORE','CULTURAL TROUP' => 'CULTURAL TROUP','APNA DHABA' => 'APNA DHABA','SHIV SHAKTI MANDIR' => 'SHIV SHAKTI MANDIR','SONA BATH' => 'SONA BATH','SWIMMING POOL 25 MTR' => 'SWIMMING POOL 25 MTR','BAKERY' => 'BAKERY','TECHNICAL TEAM' => 'TECHNICAL TEAM', 'PAP GYM. NEW' => 'PAP GYM. NEW','PAP GYM. OLD' => 'PAP GYM. OLD','ACUPRESSURE' => 'ACUPRESSURE','SPORTS CAFE,MILK BAR & JUICE BAR PAP' => 'SPORTS CAFE,MILK BAR & JUICE BAR PAP','INDOOR STADIUM' => 'INDOOR STADIUM','PAP  SHOOTING RANGE' => 'PAP  SHOOTING RANGE', 'Others' => 'Others' );
+ echo form_dropdown('Institutionsti', $Institutionsti, set_value('Institutionsti',1),'id="Institutionsti" data-placeholder="Choose One" title="Please select at least 1 area" class="select2"'); 
+ echo form_error('Institutionsti');
+ ?>
+                    <label for="Institutionsti" class="error"></label>
+                  </div>
+                </div>
+
+                <div class="form-group" id="Institutionstiother1"  style="display:none">
+                 <label class="col-sm-3 control-label">Institutions duty others</label>
+                  <div class="col-sm-9">
+<?php
+$Institutionstiother = array('type' => 'text','name' => 'Institutionstiother','id' => 'Institutionstiother','class' => 'form-control','placeholder' =>'Institutions duty others','value' => set_value('Institutionstiother'));
+echo form_input($Institutionstiother);
+echo form_error('Institutionstiother');
+?>
+                    <label for="MTSectionfothers" class="error"></label>
+                  </div>
+                </div>
+
+                 <div class="form-group" id="GuardDutiesti1"  style="display:none">
+                  <label class="col-sm-3 control-label">Guard Duties</label>
+                  <div class="col-sm-9">
+ <?php  
+$GuardDutiesti = array('' => '--Select--', 'VP Guard Duties' => 'VP Guard Duties', 'Political Persons Guard Duty' => 'Political Persons Guard Duty','Threatening Persons/Places Guard Duty' => 'Threatening Persons/Places Guard Duty','Police Officers Guard Duty' => 'Police Officers Guard Duty','Civil Officer&#39;s Guard Duties' =>'Civil Officer&#39;s Guard Duties','Judicial Officer&#39;s Guard Duties.' => 'Judicial Officer&#39;s Guard Duties.');
+ echo form_dropdown('GuardDutiesti', $GuardDutiesti, set_value('GuardDutiesti',1),'id="GuardDutiesti" data-placeholder="Choose One" title="Please select at least 1 area" class="select2"'); 
+ echo form_error('GuardDutiesti');
+ ?>
+                    <label for="GuardDutiesti" class="error"></label>
+                  </div>
+                </div>
+
+                <div class="form-group" id="GunmenDutiesti1"  style="display:none">
+                  <label class="col-sm-3 control-label">Gunman Duties</label>
+                  <div class="col-sm-9"> 
+ <?php  
+$GunmenDutiesti = array('' => '--Select--', 'Bn officers Gunman duty' => 'Bn officers Gunman duty', 'Armed Bn Officers Gunman duty' => 'Armed Bn Officers Gunman duty','Other Officer Gunman duty' => 'Other Officer Gunman duty','Police Officers Gunman Duty' => 'Police Officers Gunman Duty','Civil Officer&#39;s Gunman Duty' =>'Civil Officer&#39;s Gunman Duty','Judicial officers Gunman Duty' => 'Judicial officers Gunman Duty','Threatened persons Gunman Duty' => 'Threatened persons Gunman Duty','Retired officer Gunman Duty' => 'Retired officer Gunman Duty');
+ echo form_dropdown('GunmenDutiesti', $GunmenDutiesti, set_value('GunmenDutiesti',1),'id="GunmenDutiesti" data-placeholder="Choose One" title="Please select at least 1 area" class="select2"'); 
+ echo form_error('GunmenDutiesti');
+ ?>
+                    <label for="GunmenDutiesti" class="error"></label>
+                  </div>
+                </div>
+
+                   <div class="form-group" id="Companydutiesti1"  style="display:none">
+                  <label class="col-sm-3 control-label">Company Duties</label>
+                  <div class="col-sm-9">
+ <?php  
+$Companydutiesti = array('' => '--Select--', 'A' => 'A', 'B' => 'B','C' => 'C','D' => 'D','E' =>'E','F' => 'F');
+ echo form_dropdown('Companydutiesti', $Companydutiesti, set_value('Companydutiesti',1),'id="Companydutiesti" data-placeholder="Choose One" title="Please select at least 1 value" class="select2"'); 
+ echo form_error('Companydutiesti');
+ ?>
+                    <label for="Companydutiesti" class="error"></label>
+                  </div>
+                </div>
+
+                 <div class="form-group"  id="LawOrderDuty1"  style="display:none">
+                  <label class="col-sm-3 control-label">Law &amp; Order Duty</label>
+                  <div class="col-sm-9">
+ <?php  
+$LawOrderDuty = array('' => '--Select--', 'APermanent Duty' => 'Permanent Duty', 'Temporary Duty' => 'Temporary Duty');
+ echo form_dropdown('LawOrderDuty', $LawOrderDuty, set_value('LawOrderDuty',1),'id="LawOrderDuty" data-placeholder="Choose One" title="Please select at least 1 area" class="select2"'); 
+ echo form_error('LawOrderDuty');
+ ?>
+                    <label for="LawOrderDuty" class="error"></label>
+                  </div>
+                </div>
+
+                  <div class="form-group" id="SpecialTeamDuty1"  style="display:none">
+                  <label class="col-sm-3 control-label">Special Team Duty</label>
+                  <div class="col-sm-9">
+ <?php  
+$SpecialTeamDuty = array('' => '--Select--', 'Anti Riot Police (ARP)' => 'Anti Riot Police (ARP)', 'Special Striking Group (SSG)' => 'Special Striking Group (SSG)','State Disaster Response Force (SDRF)' => 'State Disaster Response Force (SDRF)');
+ echo form_dropdown('SpecialTeamDuty', $SpecialTeamDuty, set_value('SpecialTeamDuty',1),'id="SpecialTeamDuty" data-placeholder="Choose One" title="Please select at least 1 area" class="select2"'); 
+ echo form_error('SpecialTeamDuty');
+ ?>
+                    <label for="SpecialTeamDuty" class="error"></label>
+                  </div>
+                </div>
+
+                 <div class="form-group"  id="SportsAttachments1"  style="display:none">
+                  <label class="col-sm-3 control-label">Sports Attachments</label>
+                  <div class="col-sm-9">
+ <?php  
+$SportsAttachments = array('' => '--Select--', 'DSO' => 'DSO', 'CSO' => 'CSO', 'NIS Patiala' => 'NIS Patiala','Others' => 'Others');
+ echo form_dropdown('SportsAttachments', $SportsAttachments, set_value('SportsAttachments',1),'id="SportsAttachments" data-placeholder="Choose One" title="Please select at least 1 area" class="select2"'); 
+ echo form_error('SportsAttachments');
+ ?>
+                    <label for="SportsAttachments" class="error"></label>
+                  </div>
+                </div>
+
+                 <div class="form-group" id="SportsAttachmentsOthers1" style="display:none">
+                  <label class="col-sm-3 control-label">Sports Attachments others</label>
+                  <div class="col-sm-9">
+<?php
+$SportsAttachmentsOthers = array('type' => 'text','name' => 'SportsAttachmentsOthers','id' => 'SportsAttachmentsOthers','class' => 'form-control','placeholder' =>'Sports Attachments others','value' => set_value('SportsAttachmentsOthers'));
+echo form_input($SportsAttachmentsOthers);
+echo form_error('SportsAttachmentsOthers');
+?>
+                    <label for="SportsAttachmentsOthers" class="error"></label>
+                  </div>
+                </div>
+
+                 <div class="form-group" id="OtherAttachmentDuties1"  style="display:none">
+                  <label class="col-sm-3 control-label">Other Attachment Duties</label>
+                  <div class="col-sm-9">
+ <?php  
+$OtherAttachmentDuties = array('' => '--Select--', 'District' => 'District', 'Police security wing under 13th Bn' => 'Police security wing under 13th Bn','CPO Punjab chg under 13th Bn' => 'CPO Punjab chg under 13th Bn','CPL reserve under 13th Bn' => 'CPL reserve under 13th Bn','VIP security under 82th Bn' => 'VIP security under 82th Bn','Special Protection Unit ( CM Security)' => 'Special Protection Unit ( CM Security)','Intelligence wing' =>'Intelligence wing','Vigilance wing' => 'Vigilance wing','NRI Wing' => 'NRI Wing','Bureau of Investigation' =>'Bureau of Investigation','State Narcotic Bureau' => 'State Narcotic Bureau','Airport Immigration' => 'Airport Immigration','Passport Office' => 'Passport Office','State Crime Record Bureau' => 'State Crime Record Bureau','National Crime Record Bureau' => 'National Crime Record Bureau', 'Counter Intelligence' => 'Counter Intelligence','State Human Rights Commission' => 'State Human Rights Commission','RTC' => 'RTC','ISTC' => 'ISTC','CTC BHG' => 'CTC BHG','PPA Phillaur' => 'PPA Phillaur','PRTC Jahankhelan' => 'PRTC Jahankhelan', 'Ladda Kothi Sangrur' => 'Ladda Kothi Sangrur','Other Armed Battalion' => 'Other Armed Battalion','Other' => 'Other');
+ echo form_dropdown('OtherAttachmentDuties', $OtherAttachmentDuties, set_value('OtherAttachmentDuties',1),'id="OtherAttachmentDuties" data-placeholder="Choose One" title="Please select at least 1 area" class="select2"'); 
+ echo form_error('OtherAttachmentDuties');
+ ?>
+                    <label for="OtherAttachmentDuties" class="error"></label>
+                  </div>
+                </div>
+
+
+                  <div class="form-group" id="AttachmentDutiesothers11" style="display:none">
+                  <label class="col-sm-3 control-label">Attachment Duties others</label>
+                  <div class="col-sm-9">
+<?php
+$AttachmentDutiesothers = array('type' => 'text','name' => 'AttachmentDutiesothers','id' => 'AttachmentDutiesothers','class' => 'form-control','placeholder' =>'Attachment Duties others','value' => set_value('AttachmentDutiesothers'));
+echo form_input($AttachmentDutiesothers);
+echo form_error('AttachmentDutiesothers');
+?>
+                    <label for="AttachmentDutiesothers" class="error"></label>
+                  </div>
+                </div>
+
+           </div>
+        </div>
+              </div><!-- panel-body -->
+              <div class="panel-footer">
+                <div class="row">
+                  <div class="col-sm-9 col-sm-offset-3">
+                    <button type="submit" class="btn btn-primary">Submit</button>
+                    <a href=""  class="btn btn-default">Reset</a>
+                  </div>
+                </div>
+              </div><!-- panel-footer -->
+          </div><!-- panel -->
+      <?php echo form_close(); ?>
+         </div><!-- col-md-6 -->
+    </div><!-- row -->
+    </div><!-- contentpanel -->
+
+  </div><!-- mainpanel -->
+
+</section>
+<script src="<?php echo base_url();?>webroot/js/jquery-2.1.3.min.js"></script>
+<script src="<?php echo base_url();?>webroot/js/jquery-migrate-1.2.1.min.js"></script>
+<script src="<?php echo base_url();?>webroot/js/jquery-ui-1.10.3.min.js"></script>
+<script src="<?php echo base_url();?>webroot/js/bootstrap.min.js"></script>
+<script src="<?php echo base_url();?>webroot/js/modernizr.min.js"></script>
+<script src="<?php echo base_url();?>webroot/js/jquery.sparkline.min.js"></script>
+<script src="<?php echo base_url();?>webroot/js/toggles.min.js"></script>
+<script src="<?php echo base_url();?>webroot/js/retina.min.js"></script>
+<script src="<?php echo base_url();?>webroot/js/jquery.cookies.js"></script>
+<script src="<?php echo base_url();?>webroot/js/jquery.mousewheel.js"></script>
+<script src="<?php echo base_url();?>webroot/js/select2.min.js"></script>
+<script src="<?php echo base_url();?>webroot/js/jquery.validate.min.js"></script>
+<script src="<?php echo base_url();?>webroot/js/bootstrap-timepicker.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/moment.js/2.9.0/moment-with-locales.js"></script>
+<script src="//cdn.rawgit.com/Eonasdan/bootstrap-datetimepicker/e8bddc60e73c1ec2475f827be36e1957af72e2ea/src/js/bootstrap-datetimepicker.js"></script>
+
+<script src="<?php echo base_url();?>webroot/js/custom.js"></script>
+<script type="text/javascript">
+jQuery(document).ready(function(){
+  "use strict";
+  jQuery(".select2").select2({width:"100%"}),
+  jQuery("#basicForm4").validate({
+    highlight:function(e){
+    jQuery(e).closest(".form-group").removeClass("has-success").addClass("has-error")},
+    success:function(e){jQuery(e).closest(".form-group").removeClass("has-error")}
+  }),jQuery('#indictiondate').datepicker({dateFormat: "dd/mm/yy"}); jQuery('#batchpassdate').datepicker({dateFormat: "dd/mm/yy"}); jQuery('#dateofprcatice').datepicker({dateFormat: "dd/mm/yy"}); jQuery('#DateofCommencingdoc').datepicker({dateFormat: "dd/mm/yy"}); jQuery('#DurationsofsCourses').datepicker({dateFormat: "dd/mm/yy"});  jQuery('#DurationsofsCoursest').datepicker({dateFormat: "dd/mm/yy"});  jQuery('#LatestAnnualMedicalDate').datepicker({dateFormat: "dd/mm/yy"}); jQuery('#DateOFPromotionDetails').datepicker({dateFormat: "dd/mm/yy"}); 
+  jQuery('#dateofesnlistment1').datepicker({dateFormat: "dd/mm/yy"});   jQuery('#DateofRetirementdor').datepicker({dateFormat: "dd/mm/yy"}); 
+
+jQuery('#DateOFPromotionDetails21').datepicker({dateFormat: "dd/mm/yy"}); 
+jQuery('#DateOFPromotionDetails22').datepicker({dateFormat: "dd/mm/yy"}); 
+jQuery('#DateOFPromotionDetails23').datepicker({dateFormat: "dd/mm/yy"}); 
+jQuery('#DateOFPromotionDetails24').datepicker({dateFormat: "dd/mm/yy"}); 
+jQuery('#DateOFPromotionDetails25').datepicker({dateFormat: "dd/mm/yy"}); 
+jQuery('#DateOFPromotionDetails26').datepicker({dateFormat: "dd/mm/yy"}); 
+jQuery('#DateOFPromotionDetails27').datepicker({dateFormat: "dd/mm/yy"}); 
+jQuery('#DateOFPromotionDetails28').datepicker({dateFormat: "dd/mm/yy"}); 
+jQuery('#DateOFPromotionDetails29').datepicker({dateFormat: "dd/mm/yy"}); 
+jQuery('#DateOFPromotionDetails30').datepicker({dateFormat: "dd/mm/yy"}); 
+jQuery('#DateOFPromotionDetails31').datepicker({dateFormat: "dd/mm/yy"}); 
+jQuery('#DateOFPromotionDetails32').datepicker({dateFormat: "dd/mm/yy"}); 
+jQuery('#DateOFPromotionDetails33').datepicker({dateFormat: "dd/mm/yy"}); 
+jQuery('#DateOFPromotionDetails34').datepicker({dateFormat: "dd/mm/yy"}); 
+jQuery('#DateOFPromotionDetails35').datepicker({dateFormat: "dd/mm/yy"}); 
+ jQuery('#datetimepicker1').datepicker({dateFormat: "dd/mm/yy"});
+
+ $(document).on('change', '#Postingtiset', function() {
+  if(this.value == 'Fix Duties'){
+     $('#fone1,#fone2,#fone3,#fone4,#fone5,#fone6,#fone7,#fone8,#fone9,#fone10,#fone11,#fone12').show();
+     $('#lone1,#lone2,#lone3').hide();
+     $('#sqone1,#sqone2,#sqone3,#sqone4,#sqone5,#sqone6').hide();
+     $('#paone1,#paone2,#paone3,#paone4,#paone5,#paone6,#paone7,#paone8,#paone9,#paone10,#paone11,#paone12,#paone13,#paone14,#paone15,#paone16,#paone17,#paone18,#paone19,#paone20,#paone21,#paone22').hide();
+     $('#ssone23,#ssone24,#ssone25,#ssone26').hide();
+     $('#awbone1,#awbone2,#awbone3,#awbone4,#awbone5,#awbone6,#awbone7,#awbone8,#awbone9,#awbone10,#awbone11,#awbone12,#awbone13,#awbone14').hide();
+     $('#bmdone1,#bmdone2,#bmdone3,#bmdone4,#bmdone5,#bmdone6,#bmdone7,#bmdone8,#bmdone9').hide();   
+    $('#instone1,#instone2,#instone3,#instone4,#instone5,#instone6').hide();
+   }else if(this.value == 'Law & Order Duty'){
+    $('#fone1,#fone2,#fone3,#fone4,#fone5,#fone6,#fone7,#fone8,#fone9,#fone10,#fone11,#fone12').hide();
+    $('#lone1,#lone2,#lone3').show();
+    $('#sqone1,#sqone2,#sqone3,#sqone4,#sqone5,#sqone6').hide();
+     $('#paone1,#paone2,#paone3,#paone4,#paone5,#paone6,#paone7,#paone8,#paone9,#paone10,#paone11,#paone12,#paone13,#paone14,#paone15,#paone16,#paone17,#paone18,#paone19,#paone20,#paone21,#paone22').hide();
+     $('#ssone23,#ssone24,#ssone25,#ssone26').hide();
+     $('#awbone1,#awbone2,#awbone3,#awbone4,#awbone5,#awbone6,#awbone7,#awbone8,#awbone9,#awbone10,#awbone11,#awbone12,#awbone13,#awbone14').hide();
+     $('#bmdone1,#bmdone2,#bmdone3,#bmdone4,#bmdone5,#bmdone6,#bmdone7,#bmdone8,#bmdone9').hide();   
+    $('#instone1,#instone2,#instone3,#instone4,#instone5,#instone6').hide();
+   }else if(this.value == 'Special Squads'){
+    $('#fone1,#fone2,#fone3,#fone4,#fone5,#fone6,#fone7,#fone8,#fone9,#fone10,#fone11,#fone12').hide();
+    $('#lone1,#lone2,#lone3').hide();
+    $('#sqone1,#sqone2,#sqone3,#sqone4,#sqone5,#sqone6').show();
+    $('#paone1,#paone2,#paone3,#paone4,#paone5,#paone6,#paone7,#paone8,#paone9,#paone10,#paone11,#paone12,#paone13,#paone14,#paone15,#paone16,#paone17,#paone18,#paone19,#paone20,#paone21,#paone22').hide();
+     $('#ssone23,#ssone24,#ssone25,#ssone26').hide();
+     $('#awbone1,#awbone2,#awbone3,#awbone4,#awbone5,#awbone6,#awbone7,#awbone8,#awbone9,#awbone10,#awbone11,#awbone12,#awbone13,#awbone14').hide();
+     $('#bmdone1,#bmdone2,#bmdone3,#bmdone4,#bmdone5,#bmdone6,#bmdone7,#bmdone8,#bmdone9').hide();   
+    $('#instone1,#instone2,#instone3,#instone4,#instone5,#instone6').hide();
+   }else if(this.value == 'Permanent Attachment'){
+    $('#fone1,#fone2,#fone3,#fone4,#fone5,#fone6,#fone7,#fone8,#fone9,#fone10,#fone11,#fone12').hide();
+    $('#lone1,#lone2,#lone3').hide();
+    $('#sqone1,#sqone2,#sqone3,#sqone4,#sqone5,#sqone6').hide();
+    $('#paone1,#paone2,#paone3,#paone4,#paone5,#paone6,#paone7,#paone8,#paone9,#paone10,#paone11,#paone12,#paone13,#paone14,#paone15,#paone16,#paone17,#paone18,#paone19,#paone20,#paone21,#paone22').show();
+    $('#ssone23,#ssone24,#ssone25,#ssone26').hide();
+     $('#awbone1,#awbone2,#awbone3,#awbone4,#awbone5,#awbone6,#awbone7,#awbone8,#awbone9,#awbone10,#awbone11,#awbone12,#awbone13,#awbone14').hide();
+     $('#bmdone1,#bmdone2,#bmdone3,#bmdone4,#bmdone5,#bmdone6,#bmdone7,#bmdone8,#bmdone9').hide();   
+    $('#instone1,#instone2,#instone3,#instone4,#instone5,#instone6').hide();
+   }else if(this.value == 'Training'){
+    $('#ug').hide();
+   }else if(this.value == 'Sports'){
+    $('#fone1,#fone2,#fone3,#fone4,#fone5,#fone6,#fone7,#fone8,#fone9,#fone10,#fone11,#fone12').hide();
+    $('#lone1,#lone2,#lone3').hide();
+    $('#sqone1,#sqone2,#sqone3,#sqone4,#sqone5,#sqone6').hide();
+    $('#paone1,#paone2,#paone3,#paone4,#paone5,#paone6,#paone7,#paone8,#paone9,#paone10,#paone11,#paone12,#paone13,#paone14,#paone15,#paone16,#paone17,#paone18,#paone19,#paone20,#paone21,#paone22').hide();
+    $('#ssone23,#ssone24,#ssone25,#ssone26').show();
+    $('#awbone1,#awbone2,#awbone3,#awbone4,#awbone5,#awbone6,#awbone7,#awbone8,#awbone9,#awbone10,#awbone11,#awbone12,#awbone13,#awbone14').hide();
+     $('#bmdone1,#bmdone2,#bmdone3,#bmdone4,#bmdone5,#bmdone6,#bmdone7,#bmdone8,#bmdone9').hide();   
+    $('#instone1,#instone2,#instone3,#instone4,#instone5,#instone6').hide();
+   }else if(this.value == 'Available with BNs'){
+    $('#fone1,#fone2,#fone3,#fone4,#fone5,#fone6,#fone7,#fone8,#fone9,#fone10,#fone11,#fone12').hide();
+    $('#lone1,#lone2,#lone3').hide();
+    $('#sqone1,#sqone2,#sqone3,#sqone4,#sqone5,#sqone6').hide();
+    $('#paone1,#paone2,#paone3,#paone4,#paone5,#paone6,#paone7,#paone8,#paone9,#paone10,#paone11,#paone12,#paone13,#paone14,#paone15,#paone16,#paone17,#paone18,#paone19,#paone20,#paone21,#paone22').hide();
+    $('#ssone23,#ssone24,#ssone25,#ssone26').hide();
+    $('#awbone1,#awbone2,#awbone3,#awbone4,#awbone5,#awbone6,#awbone7,#awbone8,#awbone9,#awbone10,#awbone11,#awbone12,#awbone13,#awbone14').show();
+     $('#bmdone1,#bmdone2,#bmdone3,#bmdone4,#bmdone5,#bmdone6,#bmdone7,#bmdone8,#bmdone9').hide();   
+    $('#instone1,#instone2,#instone3,#instone4,#instone5,#instone6').hide();
+   }else if(this.value == 'Battalion Misc Duties'){
+    $('#fone1,#fone2,#fone3,#fone4,#fone5,#fone6,#fone7,#fone8,#fone9,#fone10,#fone11,#fone12').hide();
+    $('#lone1,#lone2,#lone3').hide();
+    $('#sqone1,#sqone2,#sqone3,#sqone4,#sqone5,#sqone6').hide();
+    $('#paone1,#paone2,#paone3,#paone4,#paone5,#paone6,#paone7,#paone8,#paone9,#paone10,#paone11,#paone12,#paone13,#paone14,#paone15,#paone16,#paone17,#paone18,#paone19,#paone20,#paone21,#paone22').hide();
+    $('#ssone23,#ssone24,#ssone25,#ssone26').hide();
+    $('#awbone1,#awbone2,#awbone3,#awbone4,#awbone5,#awbone6,#awbone7,#awbone8,#awbone9,#awbone10,#awbone11,#awbone12,#awbone13,#awbone14').hide();
+    $('#bmdone1,#bmdone2,#bmdone3,#bmdone4,#bmdone5,#bmdone6,#bmdone7,#bmdone8,#bmdone9').show();
+    $('#instone1,#instone2,#instone3,#instone4,#instone5,#instone6').hide();
+   }else if(this.value == 'Institutions'){
+    $('#fone1,#fone2,#fone3,#fone4,#fone5,#fone6,#fone7,#fone8,#fone9,#fone10,#fone11,#fone12').hide();
+    $('#lone1,#lone2,#lone3').hide();
+    $('#sqone1,#sqone2,#sqone3,#sqone4,#sqone5,#sqone6').hide();
+    $('#paone1,#paone2,#paone3,#paone4,#paone5,#paone6,#paone7,#paone8,#paone9,#paone10,#paone11,#paone12,#paone13,#paone14,#paone15,#paone16,#paone17,#paone18,#paone19,#paone20,#paone21,#paone22').hide();
+    $('#ssone23,#ssone24,#ssone25,#ssone26').hide();
+    $('#awbone1,#awbone2,#awbone3,#awbone4,#awbone5,#awbone6,#awbone7,#awbone8,#awbone9,#awbone10,#awbone11,#awbone12,#awbone13,#awbone14').hide();
+    $('#bmdone1,#bmdone2,#bmdone3,#bmdone4,#bmdone5,#bmdone6,#bmdone7,#bmdone8,#bmdone9').show();
+    $('#instone1,#instone2,#instone3,#instone4,#instone5,#instone6').hide();
+   }
+});
+
+    
+   $(document).on('change', '#stts', function() {
+  if(this.value == 'Under Graduate'){
+     $('#ugb').show();
+     $('#gb').hide();
+     $('#pgb').hide();
+     $('#docb').hide();
+   }else if(this.value == 'Graduate'){
+    $('#gb').show();
+     $('#pgb').hide();
+     $('#docb').hide();
+     $('#ugb').hide();
+   }else if(this.value == 'Post Graduate'){
+    $('#pgb').show();
+    $('#docb').hide();
+     $('#ugb').hide();
+     $('#gb').hide();
+   }else if(this.value == 'Doctorate'){
+    $('#docb').show();
+    $('#ugb').hide();
+     $('#gb').hide();
+     $('#pgb').hide();
+   }else if(this.value == 'Other'){
+    $('#docOther1').show();
+    $('#ugb').hide();
+     $('#gb').hide();
+     $('#pgb').hide();
+   }else{
+      $('#docb').hide();
+    $('#ugb').hide();
+     $('#gb').hide();
+     $('#pgb').hide();
+   }
+});
+   $(document).on('change', '#ugl', function() {
+  if(this.value == 'Others'){
+     $('#ug').show();
+   }else{
+    $('#ug').hide();
+   }
+});
+   $(document).on('change', '#gard', function() {
+  if(this.value == 'Others'){
+     $('#g').show();
+   }else{
+    $('#g').hide();
+   }
+});
+
+   $(document).on('change', '#TrainingInstitutessti', function() {
+  if(this.value == 'Other'){
+     $('#TrainingInstitutesstiOther1').show();
+   }else if(this.value == 'Deferred Basic Training Sports person'){
+    $('#NamesofsCourses1').hide();
+    $('#DurationsofsCourses1').hide(); 
+    $('#TrainingInstitutesstiOther1').hide();
+   }else if(this.value == 'Deferred basic training Medical Rest'){
+     $('#NamesofsCourses1').hide();
+    $('#DurationsofsCourses1').hide();     
+    $('#TrainingInstitutesstiOther1').hide();
+   }
+   else{
+    $('#TrainingInstitutesstiOther1').hide();
+     $('#NamesofsCourses1').show();
+    $('#DurationsofsCourses1').show(); 
+   }
+});
+
+    $(document).on('change', '#PresentHealthStatus', function() {
+  if(this.value == 'Chronic Disease'){
+     $('#ChronicDiseaseDetails1').show();
+     $('#MiscDetails1').hide();
+   }else if(this.value == 'Misc'){
+    $('#MiscDetails1').show();
+    $('#ChronicDiseaseDetails1').hide();
+   }else{
+    $('#ChronicDiseaseDetails1').hide();
+    $('#MiscDetails1').hide();
+   }
+});
+ 
+    $(document).on('change', '#Postingtiset', function() {
+  if(this.value == 'Admin Duty'){
+     $('#ChronicDiseaseDetails1').show();
+     $('#MiscDetails1').hide();
+   }else if(this.value == 'Bn. Hqr. Admin Duty'){
+    $('#MiscDetails1').show();
+    $('#ChronicDiseaseDetails1').hide();
+   }else if(this.value == 'Other duties'){
+    $('#MiscDetails1').show();
+    $('#ChronicDiseaseDetails1').hide();
+   }else{
+    $('#ChronicDiseaseDetails1').hide();
+    $('#MiscDetails1').hide();
+   }
+});
+
+
+  $(document).on('change', '#AdminDutyti', function() {
+  if(this.value == 'Other'){
+     $('#AdminDutytiOther').show();
+   }else{
+    $('#AdminDutytiOther').hide();
+   }
+});
+
+     $(document).on('change', '#Postingtiset', function() {
+  if(this.value == 'Admin Duty'){
+     $('#AdminDutyti1').show();
+     $('#BnHqrAdminDuty1').hide();
+    $('#MudDuties1').hide();
+    $('#GeneralStaff1').hide();
+    $('#MTSectionf1').hide();
+    $('#Institutionsti1').hide();
+    $('#GuardDutiesti').hide();
+    $('#GunmenDutiesti1').hide();
+    $('#Companydutiesti1').hide();
+    $('#LawOrderDuty1').hide();
+    $('#SpecialTeamDuty1').hide();
+    $('#SportsAttachments1').hide();
+    $('#OtherAttachmentDuties1').hide();
+   }else if(this.value == 'Bn. Hqr. Admin Duty'){
+    $('#BnHqrAdminDuty1').show();
+    $('#AdminDutyti1').hide();
+    $('#MudDuties1').hide();
+    $('#GeneralStaff1').hide();
+    $('#MTSectionf1').hide();
+    $('#Institutionsti1').hide();
+    $('#GuardDutiesti').hide();
+    $('#GunmenDutiesti1').hide();
+    $('#Companydutiesti1').hide();
+    $('#LawOrderDuty1').hide();
+    $('#SpecialTeamDuty1').hide();
+    $('#SportsAttachments1').hide();
+    $('#OtherAttachmentDuties1').hide();
+   }else if(this.value == 'Other duties'){
+    $('#MudDuties1').show();
+    $('#GeneralStaff1').show();
+    $('#MTSectionf1').show();
+    $('#Institutionsti1').show();
+    $('#GuardDutiesti').show();
+    $('#GunmenDutiesti1').show();
+    $('#Companydutiesti1').show();
+    $('#LawOrderDuty1').show();
+    $('#SpecialTeamDuty1').show();
+    $('#SportsAttachments1').show();
+    $('#OtherAttachmentDuties1').show();
+    $('#AdminDutyti1').hide();
+    $('#BnHqrAdminDuty1').hide();
+   }else{
+    $('#AdminDutyti1').hide();
+    $('#BnHqrAdminDuty1').hide();
+   }
+});
+
+     $(document).on('change', '#BnHqrAdminDuty', function() {
+  if(this.value == 'Commandant office'){
+     $('#Commandantoffice1').show();
+
+     $('#AsstCommandantOffice1').hide();
+     $('#DSPOffice1').hide();
+     $('#EnglishBranch1').hide();
+     $('#AccountBranch1').hide();
+     $('#OSIBranch1').hide();
+     $('#LitigationBranch1').hide();
+     $('#StenoBranch1').hide();
+     $('#GPFBranch1').hide();
+     $('#ComputerCell1').hide();
+   }else if(this.value == 'Asst. Commandant office'){
+    $('#AsstCommandantOffice1').show();
+
+    $('#Commandantoffice1').hide();
+     $('#DSPOffice1').hide();
+     $('#EnglishBranch1').hide();
+     $('#AccountBranch1').hide();
+     $('#OSIBranch1').hide();
+     $('#LitigationBranch1').hide();
+     $('#StenoBranch1').hide();
+     $('#GPFBranch1').hide();
+     $('#ComputerCell1').hide();
+
+   }else if(this.value == 'DSP Office'){
+    $('#DSPOffice1').show();
+
+    $('#Commandantoffice1').hide();
+     $('#AsstCommandantOffice1').hide();
+     $('#EnglishBranch1').hide();
+     $('#AccountBranch1').hide();
+     $('#OSIBranch1').hide();
+     $('#LitigationBranch1').hide();
+     $('#StenoBranch1').hide();
+     $('#GPFBranch1').hide();
+     $('#ComputerCell1').hide();
+  
+   }else if(this.value == 'English Branch'){
+    $('#EnglishBranch1').show();
+
+     $('#Commandantoffice1').hide();
+     $('#AsstCommandantOffice1').hide();
+     $('#DSPOffice1').hide();
+     $('#AccountBranch1').hide();
+     $('#OSIBranch1').hide();
+     $('#LitigationBranch1').hide();
+     $('#StenoBranch1').hide();
+     $('#GPFBranch1').hide();
+     $('#ComputerCell1').hide();
+  
+   }else if(this.value == 'Account Branch'){
+    $('#AccountBranch1').show();
+
+    $('#Commandantoffice1').hide();
+     $('#AsstCommandantOffice1').hide();
+     $('#DSPOffice1').hide();
+     $('#EnglishBranch1').hide();
+     $('#OSIBranch1').hide();
+     $('#LitigationBranch1').hide();
+     $('#StenoBranch1').hide();
+     $('#GPFBranch1').hide();
+     $('#ComputerCell1').hide();
+  
+   }else if(this.value == 'OSI Branch'){
+    $('#OSIBranch1').show();
+
+     $('#Commandantoffice1').hide();
+     $('#AsstCommandantOffice1').hide();
+     $('#DSPOffice1').hide();
+     $('#EnglishBranch1').hide();
+     $('#AccountBranch1').hide();
+     $('#LitigationBranch1').hide();
+     $('#StenoBranch1').hide();
+     $('#GPFBranch1').hide();
+     $('#ComputerCell1').hide();
+  
+   }else if(this.value == 'Litigation Branch'){
+    $('#LitigationBranch1').show();
+
+     $('#Commandantoffice1').hide();
+     $('#AsstCommandantOffice1').hide();
+     $('#DSPOffice1').hide();
+     $('#EnglishBranch1').hide();
+     $('#AccountBranch1').hide();
+     $('#OSIBranch1').hide();
+     $('#StenoBranch1').hide();
+     $('#GPFBranch1').hide();
+     $('#ComputerCell1').hide();
+  
+   }else if(this.value == 'Steno Branch'){
+    $('#StenoBranch1').show();
+
+     $('#Commandantoffice1').hide();
+     $('#AsstCommandantOffice1').hide();
+     $('#DSPOffice1').hide();
+     $('#EnglishBranch1').hide();
+     $('#AccountBranch1').hide();
+     $('#OSIBranch1').hide();
+     $('#LitigationBranch1').hide();
+     $('#GPFBranch1').hide();
+     $('#ComputerCell1').hide();
+  
+   }else if(this.value == 'GPF Branch'){
+    $('#GPFBranch1').show();
+
+     $('#Commandantoffice1').hide();
+     $('#AsstCommandantOffice1').hide();
+     $('#DSPOffice1').hide();
+     $('#EnglishBranch1').hide();
+     $('#AccountBranch1').hide();
+     $('#OSIBranch1').hide();
+     $('#LitigationBranch1').hide();
+     $('#StenoBranch1').hide();
+     $('#ComputerCell1').hide();
+  
+   }else if(this.value == 'Computer Cell'){
+    $('#ComputerCell1').show();
+
+     $('#Commandantoffice1').hide();
+     $('#AsstCommandantOffice1').hide();
+     $('#DSPOffice1').hide();
+     $('#EnglishBranch1').hide();
+     $('#AccountBranch1').hide();
+     $('#OSIBranch1').hide();
+     $('#LitigationBranch1').hide();
+     $('#StenoBranch1').hide();
+     $('#GPFBranch1').hide();
+  
+   }else{
+    $('#Commandantoffice1').hide();
+     $('#AsstCommandantOffice1').hide();
+     $('#DSPOffice1').hide();
+     $('#EnglishBranch1').hide();
+     $('#AccountBranch1').hide();
+     $('#OSIBranch1').hide();
+     $('#LitigationBranch1').hide();
+     $('#StenoBranch1').hide();
+     $('#GPFBranch1').hide();
+     $('#ComputerCell1').hide();
+   }
+});
+
+           
+
+ $(document).on('change', '#pgard', function() {
+  if(this.value == 'Others'){
+     $('#pg').show();
+   }else{
+    $('#pg').hide();
+   }
+});
+
+
+  $(document).on('change', '#mstatus', function() {
+  if(this.value == 'Single'){
+     $('#Single1').show();
+     $('#Unmarried1').hide();
+   }else if(this.value == 'Unmarried'){  
+    $('#Unmarried1').show();
+    $('#Single1').hide();
+   }else{
+    $('#Unmarried1').hide();
+    $('#Single1').hide();
+   }
+});
+
+  $(document).on('change', '#MTSectionf', function() {
+  if(this.value == 'Any Other'){ 
+     $('#MTSectionfothers1').show();
+   }else{
+    $('#MTSectionfothers1').hide();
+   }
+});
+
+  $(document).on('change', '#SportsAttachments', function() {
+  if(this.value == 'Others'){ 
+     $('#SportsAttachmentsOthers1').show();
+   }else{
+    $('#SportsAttachmentsOthers1').hide();
+   }
+});
+
+  $(document).on('change', '#OtherAttachmentDuties', function() {
+  if(this.value == 'Other'){
+     $('#AttachmentDutiesothers11').show();
+   }else{
+    $('#AttachmentDutiesothers11').hide();
+   }
+});
+
+
+  $(document).on('change', '#doc', function() {
+  if(this.value == 'Other'){
+     $('#docOther1').show();
+   }else{
+    $('#docOther1').hide();
+   }
+});
+  
+
+  $(document).on('change', '#TrainingInstituteti', function() { 
+  if(this.value == 'Deferred Basic Training Sports Person'){   
+     $('#DateofCommencingdoc1').hide();
+     $('#Batchbn1').hide();
+     $('#batchpassdate1').hide();
+     $('#Othertraining1').hide();
+   }else if(this.value == 'Deferred basic training Medical Rest'){  
+     $('#DateofCommencingdoc1').hide();
+     $('#Batchbn1').hide();
+     $('#batchpassdate1').hide();
+     $('#Othertraining1').hide();
+   }else if(this.value == 'Other'){
+    $('#Othertraining1').show();
+   }
+   else{
+     $('#DateofCommencingdoc1').show();
+     $('#Batchbn1').show();
+     $('#batchpassdate1').show();
+     $('#Othertraining1').hide();
+   }
+});
+ 
+
+ $(document).on('click', '#peradd', function() {
+    $('#pfpart1').hide();
+    $('#pfpart2').hide();
+    $('#pfpart3').hide();
+    $('#pfpart4').hide();
+
+    $('#pfpart5').hide();
+    $('#pfpart6').hide();
+    $('#pfpart7').hide();
+    $('#pfpart8').hide();
+    $('#pfpart9').hide();
+        
+
+});
+
+  
+
+  $(document).on('change', '#Modemdr', function() { 
+  if(this.value == 'Other'){   
+     $('#ModemdrOther1').show();
+   }
+   else{
+     $('#ModemdrOther1').hide();
+   }
+});
+
+  $(document).on('click', '#peraddi', function() {
+    $('#pfpart1').show();
+    $('#pfpart2').show();
+    $('#pfpart3').show();
+    $('#pfpart4').show();
+
+    $('#pfpart5').show();
+    $('#pfpart6').show();
+    $('#pfpart7').show();
+    $('#pfpart8').show();
+    $('#pfpart9').show();
+        
+
+});
+
+  $("#state").change(function(){
+    var state = $("#state").val();
+    var dataStrings = 'state='+ state;
+      $.ajax({
+    type: "POST",
+    url: "<?php echo base_url();?>bt-st-aj",
+    data: dataStrings,
+    cache: false,
+    success: function(html){
+    $("#listing").html(html);
+    }  
+      
+    });
+
+    });
+
+  $("#postate").change(function(){
+    var postate = $("#postate").val();
+    var dataStrings = 'postate='+ postate;
+      $.ajax({
+    type: "POST",
+    url: "<?php echo base_url();?>bt-sti-aj",
+    data: dataStrings,
+    cache: false,
+    success: function(html){
+    $("#listing2").html(html);
+    }  
+      
+    });
+
+    });
+
+ // $('#datetimepicker1').datetimepicker();
+
+
+     $(document).on('change', '#EnlistmentUnit', function() {
+      if(this.value == 'Other'){
+     $('#enOther1').show();
+   }else{
+    $('#enOther1').hide();
+   }
+  
+});
+
+          $(document).on('change', '#BattalionUnitito', function() {
+      if(this.value == 'Other'){
+     $('#buOther1').show();
+   }else{
+    $('#buOther1').hide();
+   }
+  
+});
+
+                $(document).on('change', '#PreviousBatalionito', function() {
+      if(this.value == 'Other'){
+     $('#pbuOther1').show();
+   }else{
+    $('#pbuOther1').hide();
+   }
+  
+});
+
+             $(document).on('change', '#GeneralStaff', function() {
+      if(this.value == 'Misc'){
+     $('#genralOther1').show();
+   }else{
+    $('#genralOther1').hide();
+   }
+  
+});
+
+
+            $(document).on('change', '#Institutionsti', function() {
+      if(this.value == 'Others'){
+     $('#Institutionstiother1').show();
+   }else{
+    $('#Institutionstiother1').hide();
+   }
+  
+});
+
+
+    $(document).on('change', '#eor', function() {
+      if(this.value == 'Executive Staff'){
+     $('#eors1').show();
+     $('#eors2').hide();
+     $('#eors3').hide();
+      $('#eors4').hide();
+      $('#eors5').hide();
+   } else if(this.value == 'Medical Staff'){
+     $('#eors3').show();
+     $('#eors1').hide();
+     $('#eors2').hide();
+      $('#eors4').hide();
+      $('#eors5').hide();
+   }else if(this.value == 'Ministerial Staff'){
+      $('#eors3').hide();
+     $('#eors1').hide();
+     $('#eors2').show();
+      $('#eors4').hide();
+      $('#eors5').hide();
+   }else if(this.value == 'Class-IV (P)'){
+      $('#eors3').hide();
+     $('#eors1').hide();
+     $('#eors2').hide();
+      $('#eors4').show();
+      $('#eors5').hide();
+   }else if(this.value == 'Class-IV (C)'){
+        $('#eors3').hide();
+     $('#eors1').hide();
+     $('#eors2').hide();
+      $('#eors4').hide();
+      $('#eors5').show();
+   }else{
+    $('#eors3').hide();
+     $('#eors1').hide();
+     $('#eors2').hide();
+      $('#eors4').hide();
+      $('#eors5').show();
+   }
+  
+});
+  
+
+  $(document).on('change', '#RankRankre', function() {
+      if(this.value == 'Executive Staff'){
+     $('#exs1').show();
+     $('#MedicalStaff2').hide();
+     $('#MinisterialStaff1').hide();
+      $('#cl4').hide();
+      $('#cl5').hide();
+      $('#hblock1,#hblock2,#hblock3,#hblock4,#hblock5,#hblock6,#hblock7,#hblock8,#hblock9,#hblock10,#hblock11,#hblock12,#hblock13,#hblock14,#hblock15,#cattoinduction,#prebatunit,#preno1').show();
+   } else if(this.value == 'Medical Staff'){
+     $('#MedicalStaff2').show();
+     $('#exs1').hide();
+     $('#MinisterialStaff1').hide();
+      $('#cl4').hide();
+      $('#cl5').hide();
+      $('#hblock1,#hblock2,#hblock3,#hblock4,#hblock5,#hblock6,#hblock7,#hblock8,#hblock9,#hblock10,#hblock11,#hblock12,#hblock13,#hblock14,#hblock15,#cattoinduction,#prebatunit,#preno1').hide();
+      
+   }else if(this.value == 'Ministerial Staff'){
+     $('#MinisterialStaff1').show();
+      $('#MedicalStaff2').hide();
+     $('#exs1').hide();
+      $('#cl4').hide();
+      $('#cl5').hide();
+       $('#hblock1,#hblock2,#hblock3,#hblock4,#hblock5,#hblock6,#hblock7,#hblock8,#hblock9,#hblock10,#hblock11,#hblock12,#hblock13,#hblock14,#hblock15,#preno1').hide();
+   }else if(this.value == 'Class-IV (P)'){
+     $('#cl4,#prebatunit,#preno1').show();
+        $('#MedicalStaff2').hide();
+     $('#exs1').hide();
+      $('#cl5').hide();
+   $('#hblock1,#hblock2,#hblock3,#hblock4,#hblock5,#hblock6,#hblock7,#hblock8,#hblock9,#hblock10,#hblock11,#hblock12,#hblock13,#hblock14,#hblock15,#cattoinduction').hide();
+   }else if(this.value == 'Class-IV (C)'){
+     $('#cl5,#prebatunit,#preno1').show();
+     $('#MinisterialStaff1').hide();
+      $('#MedicalStaff2').hide();
+     $('#exs1').hide();
+      $('#cl4').hide();
+       $('#exs1').hide();
+             $('#hblock1,#hblock2,#hblock3,#hblock4,#hblock5,#hblock6,#hblock7,#hblock8,#hblock9,#hblock10,#hblock11,#hblock12,#hblock13,#hblock14,#hblock15,#cattoinduction').hide();
+   }else{
+    $('#exs1').hide();
+    $('#MedicalStaff2').hide();
+    $('#MinisterialStaff1').hide();
+    $('#cl4').hide();
+    $('#cl5').hide();
+   }
+  
+}); 
+                    
+   
+     $(document).on('change', '#catofind', function() {
+      if(this.value == 'Executive Staff'){
+     $('#catofind1').show();
+     $('#catofind2').hide();
+     $('#catofind3').hide();
+      $('#catofind4').hide();
+      $('#catofind5').hide();
+   } else if(this.value == 'Medical Staff'){
+     $('#catofind3').show();
+     $('#catofind1').hide();
+     $('#catofind2').hide();
+      $('#catofind5').hide();
+      $('#catofind4').hide();
+   }else if(this.value == 'Ministerial Staff'){
+     $('#catofind2').show();
+      $('#catofind1').hide();
+     $('#catofind3').hide();
+      $('#catofind4').hide();
+      $('#catofind5').hide();
+   }else if(this.value == 'Class-IV (P)'){
+     $('#catofind4').show();
+      $('#catofind1').hide();
+     $('#catofind3').hide();
+      $('#catofind2').hide();
+      $('#catofind5').hide();
+   }else if(this.value == 'Class-IV (C)'){
+     $('#catofind5').show();
+      $('#catofind1').hide();
+     $('#catofind3').hide();
+      $('#catofind2').hide();
+      $('#catofind4').hide();
+   }else{
+    $('#catofind5').hide();
+      $('#catofind1').hide();
+     $('#catofind3').hide();
+      $('#catofind2').hide();
+      $('#catofind4').hide();
+   }
+  
+}); 
+
+});
+</script>
+</body>
+</html>

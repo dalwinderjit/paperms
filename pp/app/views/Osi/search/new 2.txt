@@ -1,0 +1,25 @@
+selected_posting_id
+selected_employee_id
+
+function updateEmployeePosting(){
+	var posting_id = selected_posting_id;
+	var employee_id = selected_employee_id;
+	var order_no = $('#order_number').val();
+	var posting_date = $('#posting_date').val();
+	var data = { 'posting_id':posting_id,
+				 'emplyee_id':employee_id,
+				 'order_no':order_no,
+				 'posting_date':posting_date
+	};
+	$.ajax({
+		url:"<?php echo base_url();?>battalion/ajax-update-employee-posting",
+		type:"POST",
+		data:data,
+		success:function(response){
+			console.log(response);
+			var obj = JSON.parse(response);
+			console.log(obj['postings']);
+			insertDataInPostingList2(obj['postings']);
+		}
+	})
+}

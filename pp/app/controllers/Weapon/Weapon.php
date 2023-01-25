@@ -1,0 +1,4062 @@
+<?php if(!defined('BASEPATH')) exit('You have not permission to access');
+class Weapon extends CI_Controller
+	{
+		
+		public function __construct(){
+			parent:: __construct();
+			$this->permission->is_logged_in(); 
+			$this->permission->clear_cache();
+			$this->load->model('Weapon/'.'Weapon_model'); 
+			$this->load->library('pagination');
+		}
+		public function _remap($method){
+			//var_dump($this->uri);
+			if($this->uri->uri_string=='khc-figures'){
+				if($this->session->user_log==100){
+					$this->khc_figures();
+				}elseif($this->session->user_log==3){
+					$this->khc_figures_for_battalion();
+				}
+                        }elseif($this->uri->uri_string=='bt-weaponlist'){
+				if($this->session->user_log==100){
+					$this->weapon_list_report();
+				}elseif($this->session->user_log==3){
+					$this->weapon_list_report_for_battalion();
+				}
+                        }elseif($this->uri->segments[1]=='bt-bkhcarms-edit'){
+				$this->$method($this->uri->segments[2]);
+			}elseif($this->uri->segments[1]=='bt-issuedepositid'){
+				$this->$method($this->uri->segments[2]);
+			}else{
+				$array = array();
+				foreach($this->uri->segments as $k=>$v){
+					if($k==1){ }else{
+						$array[] = $v;
+					}
+				}
+				if(count($array)>0){
+					call_user_func_array(array($this,$method),$array);
+				}else{
+					$this->$method();
+				}
+			}
+		}
+		
+		public function khc_figures_for_battalion(){
+			$data = array();
+			$battalion_objects = $this->Weapon_model->getBattalionById($this->session->userdata('userid'));
+			$default_battalions = array();
+			foreach($battalion_objects as $k=>$v){
+				$default_battalions[$v->users_id] = $v->user_name;
+			}
+			$default_battalions = $this->sortBattalions($default_battalions);
+			$data['battalions'] = $default_battalions;	
+			if(null!=$this->input->post('battalions')){					//user has given battalion input from front end
+				$battalions_input = $this->input->post('battalions');
+				$battalions = array();
+				foreach($battalions_input as $k=>$v){
+					$battalions[$v] = $default_battalions[$v];
+				}
+			}else{
+				$battalions = $default_battalions;						//default
+			}
+			$battalions = $this->sortBattalions($battalions);
+			//var_dump($battalions);
+			$battalions = array($this->session->userdata('userid')=>$battalions[$this->session->userdata('userid')]);
+			//$data['battalions'] = $battalions;								
+			$data['battalion_id'] = $this->session->userdata('userid');
+			$weapon_objects = $this->Weapon_model->weaponlist();			//fetching all weapons name/name
+			$default_weapons = array();
+			foreach($weapon_objects as $k=>$v){
+				$default_weapons[$v->arm] = $v->arm;
+			}
+			asort($default_weapons);
+			$data['weapons'] = $default_weapons;
+			if(null!=$this->input->post('weapons')){
+				$weapons_input = $this->input->post('weapons');
+				$weapons = array();
+				foreach($weapons_input as $k=>$v){
+					if(isset($default_weapons[$v])){
+						$weapons[$v] = $default_weapons[$v];
+					}
+				}
+			}else{
+				$weapons = $default_weapons;
+			}
+			asort($weapons);
+			//$data['weapons'] = $weapons;//=  array('LMG 7.62 MM'=>'LMG 7.62 MM');									//default
+			//$data['weapons'] = $weapons =  array('AK-47'=>'AK-47');									//default
+			
+			$weapons_status = $this->getWeaponStatus();
+			
+			//initialization
+			$data_2 = $this->initialize_weapon_all_figures_for_battalion($weapons,$battalions,$weapons_status);
+			//var_dump($data_2);
+			$weapons_data = $data_2['weapons_data'];
+			$grand_total = $data_2['grand_total'];
+		
+			//calculations 
+			$data1 = $this->Weapon_model->getWeaponData($battalions,$weapons);
+			foreach($data1 as $k=>$weapon){
+				if(isset($weapons_data[$weapon->tow])){
+				
+					$weapon->tow = trim($weapon->tow);
+					$weapons_data[$weapon->tow][$this->getStatusKey($weapon->staofserv)]++;
+					$weapons_data[$weapon->tow]['total']++;
+					$grand_total[$this->getStatusKey($weapon->staofserv)]++;
+					$grand_total['total']++;
+				}
+			}
+			
+			if(null!=$this->input->post('hideZeroWeapons')){
+				$wdszb = $this->skipZeroBattalionsInAllFiguresForBattalion($weapons_data,$grand_total);
+				$weapons_data = $wdszb['weapons_data'];
+				$grand_total = $wdszb['grand_total'];
+				
+			}
+			if(null!=$this->input->post('download')){
+				$this->downloadallFigureForBattalion($weapons_data,$grand_total,$battalions,$weapons);
+			}
+			$data['weapons_data'] = $weapons_data;
+			
+			$data['grand_total'] = $grand_total;
+			$this->load->view('Weapon/bat_figures',$data);
+		}
+		public function downloadAllFigureForBattalion($weapons_data,$grand_total,$battalions,$weapons){
+			error_reporting(0);	
+			$this->load->library('excel');
+			$objPHPExcel = new PHPExcel();
+			$objPHPExcel->getProperties()->setCreator("ERMS-PAP")
+										 ->setLastModifiedBy("ERMS-PAP")
+										 ->setTitle("Office 2007 XLSX Test Document")
+										 ->setSubject("Office 2007 XLSX Test Document")
+										 ->setDescription("Kot(Weapon management Section) all consolidate figures, Generated by ERMS-PAP.")
+										 ->setKeywords("Figures of vehicles/battalion in MT")
+										 ->setCategory("Kot Overall figure view");
+			$counti= 0;
+			$objPHPExcel->createSheet($counti);
+			$objPHPExcel->setActiveSheetIndex($counti);
+			$objPHPExcel->getActiveSheet()->setTitle('Weapons Figure View'); 
+			$counter = 0;
+			$row=1;
+			$titleStyle = array(
+				'font'  => array(
+					'size'  => 13,
+					'name'  => 'Verdana',
+					'fill' => array(
+						'type' => PHPExcel_Style_Fill::FILL_SOLID,
+						'color' => array('rgb' => 'FF00a0')
+					)
+				));
+			
+			$objPHPExcel->setActiveSheetIndex($counti)->setCellValue('A1', 'All Figures of  Weapons in '.$battalions[$this->session->userdata('userid')].'');
+			
+			$objPHPExcel->getActiveSheet()->getStyle('A1')->applyFromArray($titleStyle);
+			$objPHPExcel->setActiveSheetIndex($counti)->mergeCells("A1:I1");
+			$objPHPExcel->getActiveSheet()->getStyle('A1')->getAlignment()->setHorizontal(PHPExcel_Style_Alignment::HORIZONTAL_CENTER);
+
+			$row++;
+			$objPHPExcel->setActiveSheetIndex($counti)->setCellValue('A'.$row,'Showing Weapons.'); //name of vechicel
+			$objPHPExcel->setActiveSheetIndex($counti)->mergeCells("A".$row.":I".$row);
+			$objPHPExcel->getActiveSheet()->getStyle('A'.$row)->getAlignment()->setHorizontal(PHPExcel_Style_Alignment::HORIZONTAL_CENTER);
+			$row++;
+			$cols = ['A','B','C','D','E','F','G','H','I'];
+			$j=0;
+			$objPHPExcel->getActiveSheet()->getColumnDimension('B')->setWidth(20);
+			$objPHPExcel->getActiveSheet()->getColumnDimension('C')->setWidth(15);
+			$objPHPExcel->getActiveSheet()->getColumnDimension('D')->setWidth(15);
+			$objPHPExcel->getActiveSheet()->getColumnDimension('E')->setWidth(10);
+			$objPHPExcel->getActiveSheet()->getColumnDimension('F')->setWidth(15);
+			$objPHPExcel->getActiveSheet()->getColumnDimension('G')->setWidth(20);
+			$objPHPExcel->getActiveSheet()->getColumnDimension('H')->setWidth(20);
+			$objPHPExcel->getActiveSheet()->getColumnDimension('I')->setWidth(20);
+			foreach($cols as $k=>$v){
+				$objPHPExcel->getActiveSheet()->getStyle($cols[$j].$row)->applyFromArray(
+					array(
+						'fill' => array(
+							'type' => PHPExcel_Style_Fill::FILL_SOLID,
+							'color' => array('rgb' => 'F3F5F7')
+						)
+					)
+				);
+				$objPHPExcel->getActiveSheet()->getStyle($v.$row)->getFont()->setBold(true);
+				$j++;
+			}
+			$objPHPExcel->setActiveSheetIndex($counti)->setCellValue('A'.$row, 'S. No.'); 
+			$objPHPExcel->setActiveSheetIndex($counti)->setCellValue('B'.$row, 'Weapon Name'); 
+			$objPHPExcel->setActiveSheetIndex($counti)->setCellValue('C'.$row, 'Holding(Total)'); 
+			$objPHPExcel->setActiveSheetIndex($counti)->setCellValue('D'.$row, 'Issued'); 
+			$objPHPExcel->setActiveSheetIndex($counti)->setCellValue('E'.$row, 'Lost'); 
+			$objPHPExcel->setActiveSheetIndex($counti)->setCellValue('F'.$row, 'Case Property in Kot'); 
+			$objPHPExcel->setActiveSheetIndex($counti)->setCellValue('G'.$row, 'Case Property in PS'); 
+			$objPHPExcel->setActiveSheetIndex($counti)->setCellValue('H'.$row, 'Condemn Non-Serviceable'); 
+			$objPHPExcel->setActiveSheetIndex($counti)->setCellValue('I'.$row, 'In Kot(Available/Serviceable in Kot)'); 
+			$i=1;
+			foreach($weapons_data  as $weapon_name=>$parameters){ 
+			
+				if(empty($parameters)){
+					$row++;
+					$objPHPExcel->setActiveSheetIndex($counti)->setCellValue('A'.$row, 'No data found'); 
+					$objPHPExcel->setActiveSheetIndex($counti)->mergeCells("A".$row.":I".$row);
+					$objPHPExcel->getActiveSheet()->getStyle('A'.$row)->getAlignment()->setHorizontal(PHPExcel_Style_Alignment::HORIZONTAL_CENTER);
+				}else{
+
+					$row++;
+					$objPHPExcel->setActiveSheetIndex($counti)->setCellValue('A'.$row, $i); 
+					$objPHPExcel->setActiveSheetIndex($counti)->setCellValue('B'.$row, $weapon_name); 
+					$objPHPExcel->setActiveSheetIndex($counti)->setCellValue('C'.$row, $parameters['total']); 
+					$objPHPExcel->setActiveSheetIndex($counti)->setCellValue('D'.$row, $parameters['issued']); 
+					$objPHPExcel->setActiveSheetIndex($counti)->setCellValue('E'.$row, $parameters['lost']); 
+					$objPHPExcel->setActiveSheetIndex($counti)->setCellValue('F'.$row, $parameters['case_property_in_kot']); 
+					$objPHPExcel->setActiveSheetIndex($counti)->setCellValue('G'.$row, $parameters['case_property_in_ps']); 
+					$objPHPExcel->setActiveSheetIndex($counti)->setCellValue('H'.$row, $parameters['condemn']); 
+					$objPHPExcel->setActiveSheetIndex($counti)->setCellValue('I'.$row, $parameters['in_kot']); 
+					$i++;
+				}
+			}
+			$row++;
+			$objPHPExcel->setActiveSheetIndex($counti)->setCellValue('A'.$row, ''); 
+			$objPHPExcel->setActiveSheetIndex($counti)->setCellValue('B'.$row, 'Grand Total'); 
+			$objPHPExcel->setActiveSheetIndex($counti)->setCellValue('C'.$row, $grand_total['total']); 
+			$objPHPExcel->setActiveSheetIndex($counti)->setCellValue('D'.$row, $grand_total['issued']); 
+			$objPHPExcel->setActiveSheetIndex($counti)->setCellValue('E'.$row, $grand_total['lost']); 
+			$objPHPExcel->setActiveSheetIndex($counti)->setCellValue('F'.$row, $grand_total['case_property_in_kot']); 
+			$objPHPExcel->setActiveSheetIndex($counti)->setCellValue('G'.$row, $grand_total['case_property_in_ps']); 
+			$objPHPExcel->setActiveSheetIndex($counti)->setCellValue('H'.$row, $grand_total['condemn']); 
+			$objPHPExcel->setActiveSheetIndex($counti)->setCellValue('I'.$row, $grand_total['in_kot']); 
+			foreach($cols as $k=>$v){
+				$objPHPExcel->getActiveSheet()->getStyle($v.$row)->applyFromArray(
+					array(
+						'fill' => array(
+							'type' => PHPExcel_Style_Fill::FILL_SOLID,
+							'color' => array('rgb' => 'F3F5F7')
+						)
+					)
+				);
+				$objPHPExcel->getActiveSheet()->getStyle($v.$row)->getFont()->setBold(true);
+			}
+			$row++;
+			
+			// Redirect output to a client’s web browser (Excel2007)
+			header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+			header('Content-Disposition: attachment;filename="All-figures-of-weapon.'.EXCEL_EXTENSION.'"');
+			header('Cache-Control: max-age=0');
+			// If you're serving to IE 9, then the following may be needed
+			header('Cache-Control: max-age=1');
+
+			// If you're serving to IE over SSL, then the following may be needed
+			header ('Expires: Mon, 26 Jul 1997 05:00:00 GMT'); // Date in the past
+			header ('Last-Modified: '.gmdate('D, d M Y H:i:s').' GMT'); // always modified
+			header ('Cache-Control: cache, must-revalidate'); // HTTP/1.1
+			header ('Pragma: public'); // HTTP/1.0
+
+			$objWriter = PHPExcel_IOFactory::createWriter($objPHPExcel, 'Excel2007');
+			$objWriter->save('php://output');
+			exit;
+		
+		}
+                public function downloadWeaponReportForBattalion($weapons_data,$grand_total,$battalions,$weapons){
+			error_reporting(0);	
+			$this->load->library('excel');
+			$objPHPExcel = new PHPExcel();
+			$objPHPExcel->getProperties()->setCreator("ERMS-PAP")
+										 ->setLastModifiedBy("ERMS-PAP")
+										 ->setTitle("Office 2007 XLSX Test Document")
+										 ->setSubject("Office 2007 XLSX Test Document")
+										 ->setDescription("Kot(Weapon management Section) all consolidate figures, Generated by ERMS-PAP.")
+										 ->setKeywords("Figures of vehicles/battalion in MT")
+										 ->setCategory("Kot Overall figure view");
+			$counti= 0;
+			$objPHPExcel->createSheet($counti);
+			$objPHPExcel->setActiveSheetIndex($counti);
+			$objPHPExcel->getActiveSheet()->setTitle('Weapons Figure View'); 
+			$counter = 0;
+			$row=1;
+			$titleStyle = array(
+				'font'  => array(
+					'size'  => 13,
+					'name'  => 'Verdana',
+					'fill' => array(
+						'type' => PHPExcel_Style_Fill::FILL_SOLID,
+						'color' => array('rgb' => 'FF00a0')
+					)
+				));
+			
+                        
+			$objPHPExcel->setActiveSheetIndex($counti)->setCellValue('A1', 'STATEMENT OF ARMS '.$val[0].' ON '.strtoupper(date('d-M-Y h:i:s a')));
+			
+			$objPHPExcel->getActiveSheet()->getStyle('A1')->applyFromArray($titleStyle);
+			$objPHPExcel->setActiveSheetIndex($counti)->mergeCells("A1:G1");
+			$objPHPExcel->getActiveSheet()->getStyle('A1')->getAlignment()->setHorizontal(PHPExcel_Style_Alignment::HORIZONTAL_CENTER);
+
+			$row++;
+			
+			$cols = ['A','B','C','D','E','F','G'];
+			$j=0;
+			$objPHPExcel->getActiveSheet()->getColumnDimension('B')->setWidth(20);
+			$objPHPExcel->getActiveSheet()->getColumnDimension('C')->setWidth(15);
+			$objPHPExcel->getActiveSheet()->getColumnDimension('D')->setWidth(15);
+			$objPHPExcel->getActiveSheet()->getColumnDimension('E')->setWidth(10);
+			$objPHPExcel->getActiveSheet()->getColumnDimension('F')->setWidth(15);
+			$objPHPExcel->getActiveSheet()->getColumnDimension('G')->setWidth(20);
+			foreach($cols as $k=>$v){
+				$objPHPExcel->getActiveSheet()->getStyle($cols[$j].$row)->applyFromArray(
+					array(
+						'fill' => array(
+							'type' => PHPExcel_Style_Fill::FILL_SOLID,
+							'color' => array('rgb' => 'F3F5F7')
+						)
+					)
+				);
+				$objPHPExcel->getActiveSheet()->getStyle($v.$row)->getFont()->setBold(true);
+				$j++;
+			}
+			$objPHPExcel->setActiveSheetIndex($counti)->setCellValue('A'.$row, 'S. No.'); 
+			$objPHPExcel->setActiveSheetIndex($counti)->setCellValue('B'.$row, 'Weapon Name'); 
+			$objPHPExcel->setActiveSheetIndex($counti)->setCellValue('C'.$row, 'Sanction'); 
+			$objPHPExcel->setActiveSheetIndex($counti)->setCellValue('D'.$row, 'Holding'); 
+			$objPHPExcel->setActiveSheetIndex($counti)->setCellValue('E'.$row, 'Issued'); 
+			$objPHPExcel->setActiveSheetIndex($counti)->setCellValue('F'.$row, 'Total'); 
+			$objPHPExcel->setActiveSheetIndex($counti)->setCellValue('G'.$row, 'Remarks'); 
+			$i=1;
+			foreach($weapons_data  as $weapon_name=>$parameters){ 
+			
+				if(empty($parameters)){
+					$row++;
+					$objPHPExcel->setActiveSheetIndex($counti)->setCellValue('A'.$row, 'No data found'); 
+					$objPHPExcel->setActiveSheetIndex($counti)->mergeCells("A".$row.":G".$row);
+					$objPHPExcel->getActiveSheet()->getStyle('A'.$row)->getAlignment()->setHorizontal(PHPExcel_Style_Alignment::HORIZONTAL_CENTER);
+				}else{
+
+					$row++;
+					$objPHPExcel->setActiveSheetIndex($counti)->setCellValue('A'.$row, $i); 
+					$objPHPExcel->setActiveSheetIndex($counti)->setCellValue('B'.$row, $weapon_name); 
+					$objPHPExcel->setActiveSheetIndex($counti)->setCellValue('C'.$row, $parameters['sanction']); 
+					$objPHPExcel->setActiveSheetIndex($counti)->setCellValue('D'.$row, $parameters['total']); 
+					$objPHPExcel->setActiveSheetIndex($counti)->setCellValue('E'.$row, $parameters['issued']); 
+					$objPHPExcel->setActiveSheetIndex($counti)->setCellValue('F'.$row, ($parameters['total']-$parameters['issued'])); 
+					$objPHPExcel->setActiveSheetIndex($counti)->setCellValue('G'.$row, $parameters['remarks']); 
+					$i++;
+				}
+			}
+			$row++;
+			$objPHPExcel->setActiveSheetIndex($counti)->setCellValue('A'.$row, ''); 
+			$objPHPExcel->setActiveSheetIndex($counti)->setCellValue('B'.$row, 'Grand Total'); 
+			$objPHPExcel->setActiveSheetIndex($counti)->setCellValue('C'.$row, $grand_total['sanction']); 
+			$objPHPExcel->setActiveSheetIndex($counti)->setCellValue('D'.$row, $grand_total['total']); 
+			$objPHPExcel->setActiveSheetIndex($counti)->setCellValue('E'.$row, $grand_total['issued']); 
+			$objPHPExcel->setActiveSheetIndex($counti)->setCellValue('F'.$row, ($grand_total['total']-$grand_total['issued'])); 
+			
+			foreach($cols as $k=>$v){
+				$objPHPExcel->getActiveSheet()->getStyle($v.$row)->applyFromArray(
+					array(
+						'fill' => array(
+							'type' => PHPExcel_Style_Fill::FILL_SOLID,
+							'color' => array('rgb' => 'F3F5F7')
+						)
+					)
+				);
+				$objPHPExcel->getActiveSheet()->getStyle($v.$row)->getFont()->setBold(true);
+			}
+			$row++;
+			
+			// Redirect output to a client’s web browser (Excel2007)
+			header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+			header('Content-Disposition: attachment;filename="Weapon Report.'.EXCEL_EXTENSION.'"');
+			header('Cache-Control: max-age=0');
+			// If you're serving to IE 9, then the following may be needed
+			header('Cache-Control: max-age=1');
+
+			// If you're serving to IE over SSL, then the following may be needed
+			header ('Expires: Mon, 26 Jul 1997 05:00:00 GMT'); // Date in the past
+			header ('Last-Modified: '.gmdate('D, d M Y H:i:s').' GMT'); // always modified
+			header ('Cache-Control: cache, must-revalidate'); // HTTP/1.1
+			header ('Pragma: public'); // HTTP/1.0
+
+			$objWriter = PHPExcel_IOFactory::createWriter($objPHPExcel, 'Excel2007');
+			$objWriter->save('php://output');
+			exit;
+		
+		}
+		public function skipZeroBattalionsInAllFiguresForBattalion($weapons_data,$grand_total){
+			$processed_data = $weapons_data;
+			foreach($weapons_data as $weapon_name=>$parameters){
+                            if(!($parameters['issued']!=0 || $parameters['lost']!=0 || $parameters['case_property_in_kot']!=0 || $parameters['case_property_in_ps']!=0 || $parameters['condemn']!=0 || $parameters['in_kot']!=0 || (isset($parameters['sanction'])?$parameters['sanction']!=0:true))){
+                                    unset($processed_data[$weapon_name]);
+                            }
+			}
+			return array('weapons_data'=>$processed_data,'grand_total'=>$grand_total);
+		}
+		public function initialize_weapon_all_figures_for_battalion($weapons,$battalions,$weapons_status){
+			$weapons_data = array();
+			$grand_total = array();
+			foreach($weapons as $weapon_name_key=>$weapon_name_value){
+				foreach($weapons_status as $status_value=>$status_id){
+					$weapons_data[trim($weapon_name_value)][$status_id] = 0;
+				}
+                                $weapons_data[trim($weapon_name_value)]['remarks'] = '';
+                                $weapons_data[trim($weapon_name_value)]['sanction'] = 0;
+			}
+			foreach($weapons_status as $status_value=>$status_id){
+				$grand_total[$status_id] = 0;
+			}
+			return array('weapons_data'=>$weapons_data,'grand_total'=>$grand_total);
+		}
+		/***
+		*
+		*/
+		public function khc_figures(){
+			//error_reporting(0);
+			
+			$data = array();
+			$pageType = $this->input->get('page');
+			if($pageType =='ALL_FIGURES' || null==$this->input->get('page')){
+				$data['subpage'] = 'all_figures.php';
+                                
+				$battalion_objects = $this->Weapon_model->getBattalions($this->session->userdata('userid'));
+				$default_battalions = array();
+				foreach($battalion_objects as $k=>$v){
+					$default_battalions[$v->users_id] = $v->user_name;
+				}
+				$default_battalions = $this->sortBattalions($default_battalions);
+				$data['battalions'] = $default_battalions;	
+				if(null!=$this->input->post('battalions')){					//user has given battalion input from front end
+					$battalions_input = $this->input->post('battalions');
+					$battalions = array();
+					foreach($battalions_input as $k=>$v){
+						$battalions[$v] = $default_battalions[$v];
+					}
+				}else{
+					$battalions = $default_battalions;						//default
+				}
+				$battalions = $this->sortBattalions($battalions);
+				$weapon_objects = $this->Weapon_model->weaponlist();			//fetching all weapons name/name
+				$default_weapons = array();
+				foreach($weapon_objects as $k=>$v){
+					$default_weapons[$v->arm] = $v->arm;
+				}
+				asort($default_weapons);
+				$data['weapons'] = $default_weapons;
+				if(null!=$this->input->post('weapons')){
+					$weapons_input = $this->input->post('weapons');
+					$weapons = array();
+					foreach($weapons_input as $k=>$v){
+						if(isset($default_weapons[$v])){
+							$weapons[$v] = $default_weapons[$v];
+						}
+					}
+				}else{
+					$weapons = $default_weapons;
+				}
+				asort($weapons);
+				$weapons_status = $this->getWeaponStatus();
+				//initialization
+				$data_2 = $this->initialize_weapon_all_figures($weapons,$battalions,$weapons_status);
+				$weapons_data = $data_2['weapons_data'];
+				$grand_total = $data_2['grand_total'];
+				//calculations 
+				$data1 = $this->Weapon_model->getWeaponData($battalions,$weapons);
+				foreach($data1 as $k=>$weapon){
+					if(isset($weapons_data[$weapon->tow])){
+						$weapon->tow = trim($weapon->tow);
+						$weapons_data[$weapon->tow][$weapon->bat_id][$this->getStatusKey($weapon->staofserv)]++;
+						$weapons_data[$weapon->tow][$weapon->bat_id]['total']++;
+						$grand_total[$weapon->tow][$this->getStatusKey($weapon->staofserv)]++;
+						$grand_total[$weapon->tow]['total']++;
+					}
+				}
+				$hideZeroBattalions = true;
+                                $hideZeroWeapons = true;
+                                if(null!=$this->input->post('submit')){
+                                    if(null!=$this->input->post('hideZeroBattalions')){
+                                       
+                                        $hideZeroBattalions = true;
+                                    }else{
+                                        $hideZeroBattalions = false;
+                                    }
+                                    if(null!=$this->input->post('hideZeroWeapons')){
+                                        $hideZeroWeapons = true;
+                                    }else{
+                                        $hideZeroWeapons = false;
+                                    }
+                                }
+				if($hideZeroBattalions){
+					$wdszb = $this->skipZeroBattalionsInAllFigures($weapons_data,$grand_total);
+					$weapons_data = $wdszb['weapons_data'];
+					$grand_total = $wdszb['grand_total'];
+				}
+                                if($hideZeroWeapons){
+                                        $wdszw = $this->skipZeroWeaponsInAllFigures($weapons_data,$grand_total);
+                                        $weapons_data = $wdszw['weapons_data'];
+                                        $grand_total = $wdszw['grand_total'];
+                                }
+				if(null!=$this->input->post('download')){
+					$this->downloadAllFigure($weapons_data,$grand_total,$battalions,$weapons);
+				}
+                                $data['hideZeroWeapons'] = $hideZeroWeapons;
+                                $data['hideZeroBattalions'] = $hideZeroBattalions;
+				$data['weapons_data'] = $weapons_data;
+				$data['grand_total'] = $grand_total;
+				//var_dump($result);
+				
+			}elseif($pageType =='WEAPON_FIGURES'){			//-------------------------- ---------------------------------- WEAPON FIGURES ------------------------------------------
+				error_reporting(0);
+				$data['subpage'] = 'weapon_figures.php';
+                                //die($this->session->userdata('userid'));
+                                if($this->session->userdata('userid')==211){
+                                    $data['units'] = array('cdo'=>'CDO');	//all the units
+                                     $selected_unit = 'cdo';
+                                }else if($this->session->userdata('userid')==209){
+                                    $data['units'] = array('irb'=>'IRB');	//all the units
+                                     $selected_unit = 'irb';
+                                }else{
+                                    $data['units'] = array('pap'=>'PAP','irb'=>'IRB','cdo'=>'CDO');	//all the units
+                                    if(null!=$this->input->post('units')){
+					$selected_unit = $this->input->post('units');
+                                    }else{
+                                            $selected_unit = 'pap';
+                                    }
+                                }
+				
+				
+				$battalions = $this->getBattalionByUnit($selected_unit);
+				$data['battalions'] = $battalions;
+				$data['default_unit'] = $selected_unit;
+				$data['columns'] = $columns = count($battalions)+3;
+				$weapon_objects = $this->Weapon_model->weaponlist();			//fetching all weapons name/name
+				$default_weapons = array();
+				foreach($weapon_objects as $k=>$v){
+					$default_weapons[$v->arm] = $v->arm;
+				}
+				
+				asort($default_weapons);
+				$data['weapons'] = $default_weapons;
+				if(null!=$this->input->post('weapons')){
+					$weapons_input = $this->input->post('weapons');
+					$weapons = array();
+					foreach($weapons_input as $k=>$v){
+						if(isset($default_weapons[$v])){
+							$weapons[$v] = $default_weapons[$v];
+						}
+					}
+				}else{
+					$weapons = $default_weapons;
+				}
+				asort($weapons);
+				$data['selected_weapons'] = $weapons;
+				$data['types']= $this->getWeaponStatusForWeaponFigurePage();
+				$types = $data['types'];
+				if(null!=$this->input->post('type')){
+					if(isset($data['types'][$this->input->post('type')])){
+						$selected_type = $this->input->post('type');
+					}else{
+						$selected_type = 'holding';
+					}
+				}else{
+					$selected_type = 'holding';
+				}
+				$data['default_type'] = $selected_type;
+				//initialize
+				$weapon_figures = $this->initialize_weapon_figures($battalions,$weapons,$types,$selected_type);
+				//calculations 
+				$weapon_figure_data = $this->Weapon_model->get_weapon_figure_data($battalions,$weapons,$types,$selected_type);
+				$weapon_figures = $this->calculate_weapon_figures_data($weapon_figure_data,$weapon_figures,$battalions,$weapons,$types,$selected_type);
+				//skip zero
+				if(null!=$this->input->post('hideZeroWeapons')){
+						$weapons_and_battalions = $this->skip_zero_battalion_weapon_figure($weapon_figures,$battalions,$weapons,$types,$selected_type);
+						$data['selected_weapons'] = $weapons_and_battalions['weapons'];
+				}
+				if(null!=$this->input->post('download')){
+					$this->download_weapon_figure($weapon_figures,$battalions,$weapons,$types,$selected_type,$data['default_type'],$data['selected_weapons'],$columns,$data['types'][$selected_type],$data['units'][$selected_unit]);
+				}
+				//dowlnload
+				$data['weapon_figures'] = $weapon_figures;
+			}elseif($pageType =='CONSOLIDATE'){
+				$data['subpage'] = 'consolidate.php';
+				//weapons
+				$weapon_objects = $this->Weapon_model->weaponlist();			//fetching all weapons name/name
+				$default_weapons = array();
+				foreach($weapon_objects as $k=>$v){
+					$v->arm = trim($v->arm);
+					$default_weapons[$v->arm] = $v->arm;
+				}
+				
+				asort($default_weapons);
+				$data['weapons'] = $default_weapons;
+				
+				if(null!=$this->input->post('weapon')){
+					$weapons_input = $this->input->post('weapon');
+					$weapons = array();
+					foreach($weapons_input as $k=>$v){
+						if(isset($default_weapons[$v])){
+							$weapons[$v] = $default_weapons[$v];
+						}
+					}
+				}else{
+					$weapons = $default_weapons;
+				}
+				asort($weapons);
+				$data['selected_weapons'] = $weapons;
+				// selection type
+				$data['types']= $this->getWeaponStatusForWeaponFigurePage();
+				
+				$types = $data['types'];
+				if(null!=$this->input->post('type')){
+					if(isset($data['types'][$this->input->post('type')])){
+						$selected_type = $this->input->post('type');
+					}else{
+						$selected_type = 'holding';
+					}
+				}else{
+					$selected_type = 'holding';
+				}
+				$data['default_type'] = $selected_type;
+				
+				//units
+                                if($this->session->userdata('userid')==211){
+                                    $data['units'] = array('cdo'=>'CDO');	//all the units
+                                     $selected_unit = 'cdo';
+                                }else if($this->session->userdata('userid')==209){
+                                    $data['units'] = array('irb'=>'IRB');	//all the units
+                                     $selected_unit = 'irb';
+                                }else{
+                                    $data['units'] = array('pap'=>'PAP','irb'=>'IRB','cdo'=>'CDO');	//all the units
+                                    /*if(null!=$this->input->post('units')){
+					$selected_unit = $this->input->post('units');
+                                    }else{
+                                            $selected_unit = 'pap';
+                                    }*/
+                                }
+                                $units = $data['units'];
+				//$data['units'] = $units = array('pap'=>'PAP','irb'=>'IRB','cdo'=>'CDO');	//all the units
+				//initialization
+				$data['weapon_consolidate_figures'] = $this->initialize_consolidate_weapons($weapons,$units,$data['types']);
+				//var_dump($data['weapon_consolidate_figures']);
+				
+				$battalion_objects = $this->Weapon_model->getBattalions($this->session->userdata('userid'));
+				$default_battalions = array();
+				foreach($battalion_objects as $k=>$v){
+					$default_battalions[$v->users_id] = $v->user_name;
+				}
+				$default_battalions = $this->sortBattalions($default_battalions);
+				
+				$weapon_figure_data = $this->Weapon_model->get_weapon_figures_for_consolidate_data($default_battalions,$weapons);
+				$data['all_status'] = $all_status = $this->getWeaponStatus2();//a
+				$data['weapon_consolidate_figures'] = $this->calculate_consolidate_weapons($weapon_figure_data,$data['weapon_consolidate_figures'],$weapons,$units);
+				//var_dump($data['weapon_consolidate_figures']);
+				if(null!=($this->input->post('hideZeroWeapons'))){
+					$data1 = $this->skip_zero_consolidate_weapons($data['weapon_consolidate_figures'], $weapons, $units,$data['default_type']);
+					$data['selected_weapons']=$data1;
+				}
+				if(null!=$this->input->post('download_cons_wep')){
+					$this->download_weapon_consolidate_figures($data['weapon_consolidate_figures'],$data['selected_weapons'], $units,$data['types'], $data['default_type']);
+				}
+			}
+			
+			$this->load->view('Weapon/figures',$data);
+		}
+		/** initialize the all figures 
+		*	
+		*/
+		public function initialize_weapon_all_figures($weapons,$battalions,$weapons_status){
+			$weapons_data = array();
+			$grand_total = array();
+			foreach($weapons as $weapon_name_key=>$weapon_name_value){
+				foreach($battalions as $battalion_id=>$battalion_name){
+					foreach($weapons_status as $status_value=>$status_id){
+						$weapons_data[trim($weapon_name_value)][$battalion_id][$status_id] = 0;
+					}
+					
+				}
+				foreach($weapons_status as $status_value=>$status_id){
+					$grand_total[trim($weapon_name_value)][$status_id] = 0;
+				}
+			}
+			return array('weapons_data'=>$weapons_data,'grand_total'=>$grand_total);
+		}
+		public function download_weapon_consolidate_figures( $weapon_consolidate_figures, $weapons, $units,$types,$default_type){
+			error_reporting(0);
+			$this->load->library('excel');
+			$objPHPExcel = new PHPExcel();
+			$objPHPExcel->getProperties()->setCreator("ERMS-PAP")
+										 ->setLastModifiedBy("ERMS-PAP")
+										 ->setTitle("Office 2007 XLSX Test Document")
+										 ->setSubject("Office 2007 XLSX Test Document")
+										 ->setDescription("Kot(Weapon management Section) all consolidate figures, Generated by ERMS-PAP.")
+										 ->setKeywords("Figures of Weapons in KHC")
+										 ->setCategory("Weapon figures view");
+			$counti= 0;
+			$objPHPExcel->createSheet($counti);
+			$objPHPExcel->setActiveSheetIndex($counti);
+			$objPHPExcel->getActiveSheet()->setTitle('Weapons Consolidated Figures'); 
+			$counter = 0;
+			$row=1;
+			$titleStyle = array(
+				'font'  => array(
+					'size'  => 13,
+					'name'  => 'Verdana',
+					'fill' => array(
+						'type' => PHPExcel_Style_Fill::FILL_SOLID,
+						'color' => array('rgb' => 'FF00a0')
+					)
+				));
+			$cols = ['A','B','C','D','E','F'];
+			$objPHPExcel->setActiveSheetIndex($counti)->setCellValue('A1', 'Weapon-Battalion consolidated figures');
+			
+			$objPHPExcel->getActiveSheet()->getStyle('A1')->applyFromArray($titleStyle);
+			$objPHPExcel->setActiveSheetIndex($counti)->mergeCells("A1:F1");
+			$objPHPExcel->getActiveSheet()->getStyle('A1')->getAlignment()->setHorizontal(PHPExcel_Style_Alignment::HORIZONTAL_CENTER);
+
+			$row++;
+			$objPHPExcel->setActiveSheetIndex($counti)->setCellValue('A'.$row,'Showing '.$types[$default_type].' Weapon consolidated figures'); //name of vechicel '.$types[$default_type].'
+			$objPHPExcel->setActiveSheetIndex($counti)->mergeCells("A".$row.":F".$row);
+			$objPHPExcel->getActiveSheet()->getStyle('A'.$row)->getAlignment()->setHorizontal(PHPExcel_Style_Alignment::HORIZONTAL_CENTER);
+			
+			
+			$objPHPExcel->getActiveSheet()->getColumnDimension('B')->setWidth(25);
+			$row++;
+			$objPHPExcel->setActiveSheetIndex($counti)->setCellValue('A'.$row, 'S. No.'); 
+			$objPHPExcel->setActiveSheetIndex($counti)->setCellValue('B'.$row, 'Weapon');
+			$i=2;
+			foreach($units as $k=>$v){
+				$objPHPExcel->setActiveSheetIndex($counti)->setCellValue($cols[$i].$row,$v);
+				$i++;
+			}
+			$objPHPExcel->setActiveSheetIndex($counti)->setCellValue($cols[$i].$row,'Total');
+			$row++;
+			$serial_no = 0;
+			foreach($weapons as $wep_id=>$v){ 
+				$serial_no++;
+				$objPHPExcel->setActiveSheetIndex($counti)->setCellValue('A'.$row, $serial_no); 
+				$objPHPExcel->setActiveSheetIndex($counti)->setCellValue('B'.$row, $wep_id);
+				$j=2;
+				foreach($units as $unit_id=>$unit_name){
+					$objPHPExcel->setActiveSheetIndex($counti)->setCellValue($cols[$j].$row, $weapon_consolidate_figures[$wep_id][$unit_id][$default_type]);
+					$j++;
+				}
+				$objPHPExcel->setActiveSheetIndex($counti)->setCellValue($cols[$j].$row, $weapon_consolidate_figures[$wep_id][$default_type]);
+				$row++;
+			}
+			$objPHPExcel->setActiveSheetIndex($counti)->setCellValue('B'.$row,'Total');
+			$j=2;
+			foreach($units as $unit_id=>$unit_name){
+				$objPHPExcel->setActiveSheetIndex($counti)->setCellValue($cols[$j].$row, $weapon_consolidate_figures[$unit_id][$default_type]);
+				$j++;
+			}
+			$objPHPExcel->setActiveSheetIndex($counti)->setCellValue($cols[$j].$row,$weapon_consolidate_figures[$default_type]['grand_total']);
+			// Redirect output to a client’s web browser (Excel2007)
+			header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+			header('Content-Disposition: attachment;filename="All-figures-of-weapon.'.EXCEL_EXTENSION.'"');
+			header('Cache-Control: max-age=0');
+			// If you're serving to IE 9, then the following may be needed
+			header('Cache-Control: max-age=1');
+
+			// If you're serving to IE over SSL, then the following may be needed
+			header ('Expires: Mon, 26 Jul 1997 05:00:00 GMT'); // Date in the past
+			header ('Last-Modified: '.gmdate('D, d M Y H:i:s').' GMT'); // always modified
+			header ('Cache-Control: cache, must-revalidate'); // HTTP/1.1
+			header ('Pragma: public'); // HTTP/1.0
+
+			$objWriter = PHPExcel_IOFactory::createWriter($objPHPExcel, 'Excel2007');
+			$objWriter->save('php://output');
+			exit;
+
+		}
+		public function skip_zero_consolidate_weapons($weapon_consolidate_figures, $weapons, $units,$type){
+			
+			$weapons_not_zero = array();
+			foreach($weapons as $wep_key=>$wep_val){
+				$use_weapon = false;
+				foreach($units as $unit_key=>$unit_val){
+					if($weapon_consolidate_figures[$wep_key][$unit_key][$type]!=0){
+						$use_weapon = true;
+						break;
+					}
+				}
+				if($use_weapon==true){
+					$weapons_not_zero[$wep_key]=$wep_val;
+				}
+			}
+			return $weapons_not_zero;
+		}
+		public function getUnitByBatId($bat_id){
+			$unit_battalion = array(
+				'pap'=>array(
+					31=>'7 - PAP',
+					103=>'9 - PAP',
+					132=>'13 - PAP',
+					45=>'27 - PAP',
+					184=>'36 - PAP',
+					6=>'75 - PAP',
+					52=>'80 - PAP',
+					137=>'82 - PAP',
+					73=>'RTC - PAP',
+					126=>'ISTC',
+					216=>'Control Room PAP'
+				),
+				'irb'=>array(
+					//68=>'CSO PAP',
+					//61=>'ADGP PAP',
+					190=>'1 - IRB',
+					165=>'2 - IRB',
+					154=>'3 - IRB',
+					113=>'4 - IRB',
+					108=>'5 - IRB',
+					160=>'6 - IRB',
+					120=>'7 - IRB',
+					202=>'RTC LADDA KOTHI - IRB'
+					//214=>'IGP - IRB',
+				),
+				'cdo'=>array(
+					
+					99=>'1 - CDO',
+					172=>'2 - CDO',
+					142=>'3 - CDO',
+					148=>'4 - CDO',
+					178=>'5 - CDO',
+					196=>'CTC - BG'
+					//215=>'IGP - CDO',
+				)
+			);
+			if(in_array($bat_id,array_keys($unit_battalion['pap']))){
+				return 'pap';
+			}elseif(in_array($bat_id,array_keys($unit_battalion['irb']))){
+				return 'irb';
+			}if(in_array($bat_id,array_keys($unit_battalion['cdo']))){
+				return 'cdo';
+			}else{
+				return 'other';
+			}
+		}
+		public function calculate_consolidate_weapons($weapon_figure_data,$weapon_consolidate_figures,$weapons,$units){
+			$all_status = $this->getWeaponStatus2();
+			
+			foreach($weapon_figure_data as $key=>$weapon){
+				//$weapon->tow = trim($weapon->tow);
+				$weapon->staofserv = trim($weapon->staofserv);	
+				if(isset($weapons[$weapon->tow])){// && !in_array(trim($weapon->staofserv),array('','In KotMinor Damage','In KotCondemn'))){
+					//echo '<br>name '.$weapon->tow.' Unit '.$this->getUnitByBatId($weapon->bat_id).' status '.$all_status[$weapon->staofserv];
+					
+					$weapon_consolidate_figures[trim($weapon->tow)][$this->getUnitByBatId($weapon->bat_id)][$all_status[$weapon->staofserv]]++;
+					$weapon_consolidate_figures[trim($weapon->tow)][$this->getUnitByBatId($weapon->bat_id)]['holding']++;
+					$weapon_consolidate_figures[trim($weapon->tow)][$all_status[$weapon->staofserv]]++;
+					$weapon_consolidate_figures[trim($weapon->tow)]['holding']++;
+					$weapon_consolidate_figures[$this->getUnitByBatId($weapon->bat_id)][$all_status[$weapon->staofserv]]++;
+					$weapon_consolidate_figures[$this->getUnitByBatId($weapon->bat_id)]['holding']++;
+					$weapon_consolidate_figures[$all_status[$weapon->staofserv]]['grand_total']++;
+					$weapon_consolidate_figures['holding']['grand_total']++;
+				}
+			}
+			
+			return $weapon_consolidate_figures;	
+		}
+		public function initialize_consolidate_weapons($weapons,$units,$types){
+			$weapon_consolidate_figures = array();
+			foreach($weapons as $weapon_id=>$weapon_name){
+				foreach($units as $unit_id=>$unit_name){
+					foreach($types as $type_id=>$type_val){
+						$weapon_consolidate_figures[$weapon_id][$unit_id][$type_id] =  0;
+					}
+				}
+				foreach($types as $type_id=>$type_val){
+					$weapon_consolidate_figures[$weapon_id][$type_id] = 0;
+				}
+			}
+			foreach($units as $unit_id=>$unit_name){
+				foreach($types as $type_id=>$type_val){
+					$weapon_consolidate_figures[$unit_id][$type_id] =  0;
+				}
+			}
+			foreach($types as $type_id=>$type_val){
+				$weapon_consolidate_figures[$type_id]['grand_total'] = 0;
+			}
+			return $weapon_consolidate_figures;
+		}
+		public function download_weapon_figure($weapon_figures,$battalions,$weapons,$types,$selected_type,$default_type,$selected_weapons,$columns,$selected_unit_name){
+			//error_reporting(0);	
+			$this->load->library('excel');
+			$objPHPExcel = new PHPExcel();
+			$objPHPExcel->getProperties()->setCreator("ERMS-PAP")
+										 ->setLastModifiedBy("ERMS-PAP")
+										 ->setTitle("Office 2007 XLSX Test Document")
+										 ->setSubject("Office 2007 XLSX Test Document")
+										 ->setDescription("Kot(Weapon management Section) all consolidate figures, Generated by ERMS-PAP.")
+										 ->setKeywords("Figures of vehicles/battalion in MT")
+										 ->setCategory("Weapon figures view");
+			$counti= 0;
+			$objPHPExcel->createSheet($counti);
+			$objPHPExcel->setActiveSheetIndex($counti);
+			$objPHPExcel->getActiveSheet()->setTitle('Weapons Figures'); 
+			$counter = 0;
+			$row=1;
+			$titleStyle = array(
+				'font'  => array(
+					'size'  => 13,
+					'name'  => 'Verdana',
+					'fill' => array(
+						'type' => PHPExcel_Style_Fill::FILL_SOLID,
+						'color' => array('rgb' => 'FF00a0')
+					)
+				));
+			$cols = ['A','B','C','D','E','F','G','H','I','J','K','L','M','N'];
+			$objPHPExcel->setActiveSheetIndex($counti)->setCellValue('A1', 'Weapon-Battalion consolidated figures');
+			
+			$objPHPExcel->getActiveSheet()->getStyle('A1')->applyFromArray($titleStyle);
+			$objPHPExcel->setActiveSheetIndex($counti)->mergeCells("A1:".$cols[($columns-1)]."1");
+			$objPHPExcel->getActiveSheet()->getStyle('A1')->getAlignment()->setHorizontal(PHPExcel_Style_Alignment::HORIZONTAL_CENTER);
+
+			$row++;
+			$objPHPExcel->setActiveSheetIndex($counti)->setCellValue('A'.$row,'Showing '.$selected_type.' Weapon-figures in '.$selected_unit_name); //name of vechicel
+			$objPHPExcel->setActiveSheetIndex($counti)->mergeCells("A".$row.":".$cols[($columns-1)].$row);
+			$objPHPExcel->getActiveSheet()->getStyle('A'.$row)->getAlignment()->setHorizontal(PHPExcel_Style_Alignment::HORIZONTAL_CENTER);
+			
+			
+			$objPHPExcel->getActiveSheet()->getColumnDimension('B')->setWidth(25);
+			$row++;
+			$objPHPExcel->setActiveSheetIndex($counti)->setCellValue('A'.$row, 'S. No.'); 
+			$objPHPExcel->setActiveSheetIndex($counti)->setCellValue('B'.$row, 'Battalion');
+			$i=2;
+			foreach($battalions as $k=>$v){
+				$objPHPExcel->setActiveSheetIndex($counti)->setCellValue($cols[$i].$row,$v);
+				$i++;
+			}
+			$objPHPExcel->setActiveSheetIndex($counti)->setCellValue($cols[$i].$row,'Total');
+			$row++;
+			$serial_no = 0;
+			foreach($selected_weapons as $wep_id=>$v){ 
+				$serial_no++;
+				$objPHPExcel->setActiveSheetIndex($counti)->setCellValue('A'.$row, $serial_no); 
+				$objPHPExcel->setActiveSheetIndex($counti)->setCellValue('B'.$row, $wep_id);
+				$j=2;
+				foreach($battalions as $bat_id=>$bat_name){
+					$objPHPExcel->setActiveSheetIndex($counti)->setCellValue($cols[$j].$row, $weapon_figures[$wep_id][$bat_id][$default_type]);
+					$j++;
+				}
+				$objPHPExcel->setActiveSheetIndex($counti)->setCellValue($cols[$j].$row, $weapon_figures[$wep_id][$default_type]['grand_total']);
+				$row++;
+			}
+			$objPHPExcel->setActiveSheetIndex($counti)->setCellValue('B'.$row,'Total');
+			$j=2;
+			foreach($battalions as $bat_id=>$bat_name){
+				$objPHPExcel->setActiveSheetIndex($counti)->setCellValue($cols[$j].$row, $weapon_figures[$bat_id][$default_type]['grand_total']);
+				$j++;
+			}
+			$objPHPExcel->setActiveSheetIndex($counti)->setCellValue($cols[$j].$row,$weapon_figures[$default_type]['grand_total']);
+			// Redirect output to a client’s web browser (Excel2007)
+			header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+			header('Content-Disposition: attachment;filename="All-figures-of-weapon.'.EXCEL_EXTENSION.'"');
+			header('Cache-Control: max-age=0');
+			// If you're serving to IE 9, then the following may be needed
+			header('Cache-Control: max-age=1');
+
+			// If you're serving to IE over SSL, then the following may be needed
+			header ('Expires: Mon, 26 Jul 1997 05:00:00 GMT'); // Date in the past
+			header ('Last-Modified: '.gmdate('D, d M Y H:i:s').' GMT'); // always modified
+			header ('Cache-Control: cache, must-revalidate'); // HTTP/1.1
+			header ('Pragma: public'); // HTTP/1.0
+
+			$objWriter = PHPExcel_IOFactory::createWriter($objPHPExcel, 'Excel2007');
+			$objWriter->save('php://output');
+			exit;
+		}
+		
+		//Generate Categorised statement of weapons
+		public function download_categorised_weapon_figure($weapon_figures,$battalions,$weapons,$types,$selected_type,$default_type,$selected_weapons,$columns,$selected_unit_name,$categorised_selected_weapons, $weapon_main_categories,$sub_categories){
+			//var_dump($selected_unit_name);
+			//var_dump($weapon_main_categories);
+			//var_Dump($a);
+			//error_reporting(0);	
+			$this->load->library('excel');
+			$objPHPExcel = new PHPExcel();
+			$objPHPExcel->getProperties()->setCreator("ERMS-PAP")
+										 ->setLastModifiedBy("ERMS-PAP")
+										 ->setTitle("Office 2007 XLSX Test Document")
+										 ->setSubject("Office 2007 XLSX Test Document")
+										 ->setDescription("Kot(Weapon management Section) all consolidate figures, Generated by ERMS-PAP.")
+										 ->setKeywords("Figures of vehicles/battalion in MT")
+										 ->setCategory("Weapon figures view");
+			$counti= 0;
+			$objPHPExcel->createSheet($counti);
+			$objPHPExcel->setActiveSheetIndex($counti);
+			$objPHPExcel->getActiveSheet()->setTitle('Weapons Figures'); 
+			$counter = 0;
+			$row=1;
+			$titleStyle = array(
+				'font'  => array(
+					'size'  => 13,
+					'name'  => 'Verdana',
+					'fill' => array(
+						'type' => PHPExcel_Style_Fill::FILL_SOLID,
+						'color' => array('rgb' => 'FF00a0')
+					)
+				));
+			$cols = ['A','B','C','D','E','F','G','H','I','J','K','L','M','N'];
+			$objPHPExcel->setActiveSheetIndex($counti)->setCellValue('A1', 'Weapon-Battalion consolidated figures');
+			
+			$objPHPExcel->getActiveSheet()->getStyle('A1')->applyFromArray($titleStyle);
+			$objPHPExcel->setActiveSheetIndex($counti)->mergeCells("A1:".$cols[($columns-1)]."1");
+			$objPHPExcel->getActiveSheet()->getStyle('A1')->getAlignment()->setHorizontal(PHPExcel_Style_Alignment::HORIZONTAL_CENTER);
+
+			$row++;
+			$objPHPExcel->setActiveSheetIndex($counti)->setCellValue('A'.$row,'Showing '.$selected_type.' Weapon-figures in '.$selected_unit_name); //name of vechicel
+			$objPHPExcel->setActiveSheetIndex($counti)->mergeCells("A".$row.":".$cols[($columns-1)].$row);
+			$objPHPExcel->getActiveSheet()->getStyle('A'.$row)->getAlignment()->setHorizontal(PHPExcel_Style_Alignment::HORIZONTAL_CENTER);
+			
+			
+			$objPHPExcel->getActiveSheet()->getColumnDimension('B')->setWidth(25);
+			$row++;
+			//#######################################################################
+			
+			$count =1;
+			if($categorised_selected_weapons=='NO WEAPONS'){ 
+				$objPHPExcel->setActiveSheetIndex($counti)->setCellValue('A'.$row, 'No Weapon Found'); 
+			}else{
+				foreach($categorised_selected_weapons as $main_id=>$sub_categories_){
+					//$row++;
+					$objPHPExcel->setActiveSheetIndex($counti)->setCellValue('A'.$row, $weapon_main_categories[$main_id]); 
+					#merge 14
+					#<table class="table">
+					#<tr><td colspan="14" class="text-center main_type" ><?php echo $weapon_main_categories[$main_id];</td></tr>
+					$row++;
+					$objPHPExcel->setActiveSheetIndex($counti)->setCellValue('A'.$row, 'S. No.'); 
+					$objPHPExcel->setActiveSheetIndex($counti)->setCellValue('B'.$row, 'Weapon'); 
+					#<tr><th>S.No.</th><th style="width:30%;">Weapon</th>
+					$columns_bat = ['C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W'];
+					$index=0;
+					foreach($battalions as $k=>$v){
+						#echo '<th>'.$v.'</th>';
+						//$col = chr(
+						$objPHPExcel->setActiveSheetIndex($counti)->setCellValue($columns_bat[$index].$row, $v); 
+						$index++;
+					}
+					$objPHPExcel->setActiveSheetIndex($counti)->setCellValue($columns_bat[$index].$row, 'Total'); 
+					#<th>Total</th>
+					#</tr>
+					
+					foreach($sub_categories_ as $sub_id=>$weapons){
+						$row++;
+						#echo '<tr>';
+						$objPHPExcel->setActiveSheetIndex($counti)->setCellValue('A'.$row, $sub_categories[$sub_id]); 
+						#echo '<td  style="width:30%;color:red;" colspan="14">'.$sub_categories[$sub_id].'</td></tr>';
+						foreach($weapons as $weapon_name=>$battalions_weapons){
+							if(in_array($weapon_name,$selected_weapons)){
+								$row++;
+								$objPHPExcel->setActiveSheetIndex($counti)->setCellValue('A'.$row, $count); 
+								#echo '<tr>';
+								#echo '<td>'.$count.'</td>';
+								$count++;
+								$objPHPExcel->setActiveSheetIndex($counti)->setCellValue('B'.$row, $weapon_name); 
+								#echo '<td  style="width:25%;">'.$weapon_name.'</td>';
+								$columns_bat2 = ['C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W'];
+								$index2= 0;
+								foreach($battalions as $bat_id=>$bat_name){ 
+									$objPHPExcel->setActiveSheetIndex($counti)->setCellValue($columns_bat2[$index2].$row, $battalions_weapons[$weapon_name][$bat_id][$default_type]);
+									$index2++;
+									#echo '<td>'.$battalions_weapons[$weapon_name][$bat_id][$default_type].'</td>';
+								}
+								$objPHPExcel->setActiveSheetIndex($counti)->setCellValue($columns_bat2[$index2].$row,$weapon_figures[$weapon_name][$default_type]['grand_total']);
+								#echo '<td>'.$weapon_figures[$weapon_name][$default_type]['grand_total'].'</td>';
+								#echo '</tr>';
+							}
+						}
+						
+						#echo '</tr>';
+					}
+					#echo '</table>';
+					$row++;
+				}
+				$row++;
+				$objPHPExcel->setActiveSheetIndex($counti)->setCellValue('A'.$row,'Grand Total');
+				$row++;
+				#echo '<TABLE class="table"><TBODY>';
+					#echo '<tr><th colspan="14" class="text-center green">Grand Total</th></tr>';
+					#echo '<tr><th></th><th style="width:30%;">&nbsp;</th>';
+					$columns_bat3 = ['C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W'];
+					$index3=0;
+					foreach($battalions as $k=>$v){
+						$objPHPExcel->setActiveSheetIndex($counti)->setCellValue($columns_bat3[$index3].$row, $v); 
+						$index3++;
+						//echo '<th>'.$v.'</th>';
+					}
+					#echo '</tr><tr>';
+					$row++;
+					#echo '<td>&nbsp;</td>';
+					#echo '<td>Total</td>';
+					$objPHPExcel->setActiveSheetIndex($counti)->setCellValue('B'.$row, 'Total'); 
+					$columns_bat4 = ['C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W'];
+					$index4=0;
+					foreach($battalions as $bat_id=>$bat_name){ 
+						$objPHPExcel->setActiveSheetIndex($counti)->setCellValue($columns_bat4[$index4].$row, $weapon_figures[$bat_id][$default_type]['grand_total']);
+						#echo '<td>'.$weapon_figures[$bat_id][$default_type]['grand_total'].'</td>';
+						$index4++;
+					} 
+					$objPHPExcel->setActiveSheetIndex($counti)->setCellValue($columns_bat4[$index4].$row, $weapon_figures[$default_type]['grand_total']);
+					#echo '<td><h1>'; echo $weapon_figures[$default_type]['grand_total']; echo '</h1></td>';
+					#echo '</tr>';
+			 } 
+			
+			// Redirect output to a client’s web browser (Excel2007)
+			header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+			header('Content-Disposition: attachment;filename="All-figures-of-weapon.'.EXCEL_EXTENSION.'"');
+			header('Cache-Control: max-age=0');
+			// If you're serving to IE 9, then the following may be needed
+			header('Cache-Control: max-age=1');
+
+			// If you're serving to IE over SSL, then the following may be needed
+			header ('Expires: Mon, 26 Jul 1997 05:00:00 GMT'); // Date in the past
+			header ('Last-Modified: '.gmdate('D, d M Y H:i:s').' GMT'); // always modified
+			header ('Cache-Control: cache, must-revalidate'); // HTTP/1.1
+			header ('Pragma: public'); // HTTP/1.0
+
+			$objWriter = PHPExcel_IOFactory::createWriter($objPHPExcel, 'Excel2007');
+			$objWriter->save('php://output');
+			exit;
+		}
+		
+		
+		/**
+		*	skipping zero value battalions
+		*/
+		public function skip_zero_battalion_weapon_figure($weapon_figures,$battalions,$weapons,$types,$selected_type){
+
+			foreach($weapons as $wep_id=>$wep_name){
+				$hide_weapon = true;
+				foreach($battalions as $bat_id=>$bat_name){
+					if($weapon_figures[$wep_id][$bat_id][$selected_type] != 0){// $selected_type;
+						$hide_weapon = false;
+						break;
+					}
+				}
+				if($hide_weapon==true){
+					unset($weapons[$wep_id]);
+				}
+			}
+			return array('battalions'=>$battalions,'weapons'=>$weapons);
+		}
+		// Calculation of issude holding etc is donw here1
+		public function calculate_weapon_figures_data($weapon_figure_data,$weapon_figures,$battalions,$weapons,$types,$selected_type){
+			$all_status = $this->getWeaponStatus2();
+			
+			//var_dump($all_status);
+			foreach($weapon_figure_data as $k=>$weapon){
+				if(isset($weapon_figures[$weapon->tow])){
+					$weapon->staofserv = trim($weapon->staofserv);
+					if($weapon->staofserv==''){
+						//echo "'".$weapon->staofserv."'";
+						//echo $all_status[$weapon->staofserv];
+					}
+					$weapon_figures[$weapon->tow][$weapon->bat_id][$all_status[$weapon->staofserv]]++;
+					$weapon_figures[$weapon->tow][$weapon->bat_id]['holding']++;
+					$weapon_figures[$weapon->bat_id][$all_status[$weapon->staofserv]]['grand_total']++;
+					$weapon_figures[$weapon->bat_id]['holding']['grand_total']++;
+					$weapon_figures[$weapon->tow][$all_status[$weapon->staofserv]]['grand_total']++;
+					$weapon_figures[$weapon->tow]['holding']['grand_total']++;
+					$weapon_figures[$all_status[$weapon->staofserv]]['grand_total']++;
+					$weapon_figures['holding']['grand_total']++;
+				}
+			}
+			return $weapon_figures;
+		}
+		public function initialize_weapon_figures($battalions,$weapons,$types,$selected_type){
+			$weapon_figures = array();
+			foreach($weapons as $wep_id=>$wep_name){
+				foreach($battalions as $bat_id=>$bat_name){
+					foreach($types as $type_id=>$type_name){
+						$weapon_figures[$wep_id][$bat_id][$type_id] = 0;// $selected_type;
+					}
+				}
+			}
+			foreach($battalions as $bat_id=>$bat_name){
+				foreach($types as $type_id=>$type_name){
+					$weapon_figures[$bat_id][$type_id]['grand_total'] = 0;//'bat_total';
+				}
+			}
+			foreach($weapons as $weapon_id=>$weapon_name){
+				foreach($types as $type_id=>$type_name){
+					$weapon_figures[$weapon_id][$type_id]['grand_total'] = 0;//'weapon_total';
+				}
+			}
+			foreach($types as $type_id=>$type_name){
+				$weapon_figures[$type_id]['grand_total'] = 0;//'grand_total';
+			}
+			return $weapon_figures;
+		}
+		public function getBattalionByUnit($selected_unit){
+			$unit_battalion = array(
+				'pap'=>array(
+					31=>'7 - PAP',
+					103=>'9 - PAP',
+					132=>'13 - PAP',
+					45=>'27 - PAP',
+					184=>'36 - PAP',
+					6=>'75 - PAP',
+					52=>'80 - PAP',
+					137=>'82 - PAP',
+					73=>'RTC - PAP',
+					126=>'ISTC',
+					216=>'Control Room PAP'
+				),
+				'irb'=>array(
+					//68=>'CSO PAP',
+					//61=>'ADGP PAP',
+					190=>'1 - IRB',
+					165=>'2 - IRB',
+					154=>'3 - IRB',
+					113=>'4 - IRB',
+					108=>'5 - IRB',
+					160=>'6 - IRB',
+					120=>'7 - IRB',
+					202=>'RTC LADDA KOTHI - IRB'
+					//214=>'IGP - IRB',
+				),
+				'cdo'=>array(
+					
+					99=>'1 - CDO',
+					172=>'2 - CDO',
+					142=>'3 - CDO',
+					148=>'4 - CDO',
+					178=>'5 - CDO',
+					//215=>'IGP - CDO',
+					196=>'CTC - BG'
+				)
+			);
+			return $unit_battalion[$selected_unit];
+		}
+		public function skipZeroWeaponsInAllFigures($weapons_data,$grand_total){
+			$processed_data = array();
+			foreach($weapons_data as $weapon_name=>$battalions){
+				$skip_zero_battalion =true;
+				foreach($battalions as $bat_id=>$parameters){
+					if($parameters['issued']!=0 || $parameters['lost']!=0 || $parameters['case_property_in_kot']!=0 || $parameters['case_property_in_ps']!=0 || $parameters['condemn']!=0 || $parameters['in_kot']!=0){
+						$processed_data[$weapon_name][$bat_id] = $parameters;
+						$skip_zero_battalion = false;
+						break;
+					}
+				}
+				if($skip_zero_battalion==false){
+					$processed_data[$weapon_name]=$battalions;
+				}
+			}
+			return array('weapons_data'=>$processed_data,'grand_total'=>$grand_total);
+		}
+		
+		public function skipZeroBattalionsInAllFigures($weapons_data,$grand_total){
+			$processed_data = $weapons_data;
+			foreach($weapons_data as $weapon_name=>$battalions){
+				foreach($battalions as $bat_id=>$parameters){
+					if(!($parameters['issued']!=0 || $parameters['lost']!=0 || $parameters['case_property_in_kot']!=0 || $parameters['case_property_in_ps']!=0 || $parameters['condemn']!=0 || $parameters['in_kot']!=0)){
+						unset($processed_data[$weapon_name][$bat_id]);
+					}
+				}
+			}
+			return array('weapons_data'=>$processed_data,'grand_total'=>$grand_total);
+		}
+		public function getStatusKey($status){
+			return $this->getWeaponStatus()[trim($status)];
+		}
+		public function getWeaponStatus(){
+			return array(
+				'Total'=>'total',
+				'Issued' =>'issued',
+				'issued' =>'issued',
+				'Lost'	=>'lost',
+				'Case Property in Kot'=>'case_property_in_kot',
+				'Case Property in kot'=>'case_property_in_kot',
+				'Case Property in PS' =>'case_property_in_ps',
+				'Condemn'=>'condemn',
+				'CondemnMinor Damage'=>'condemn',
+				'Condemn In KotMinor Damage'=>'condemn',
+				'Condemn In KotCondemn'=>'condemn',
+				'Minor Damage'=>'condemn',
+				'Major Damage'=>'condemn',
+				'In KotMinor Damage'=>'in_kot',
+				'In KotMajor Damage'=>'in_kot',
+				'In KotCondemn'=>'in_kot',
+				'In kot'=>'in_kot',
+				'In Kot'=>'in_kot',
+				''=>'empty',
+				'Sanction'=>'sanction'
+                                
+			);
+		}
+		/**
+		* used in weapon figures consolidate data
+		*/
+		public function getWeaponStatus2(){
+			return array(
+				'Total'=>'total',
+				'Holding'=>'holding',
+				'Issued' =>'issued',
+				'issued' =>'issued',
+				'Lost'	=>'lost',
+				'Case Property in Kot'=>'case_property_in_kot',
+				'Case Property in kot'=>'case_property_in_kot',
+				'Case Property in PS' =>'case_property_in_ps',
+				'Condemn'=>'condemn',
+				'CondemnMinor Damage'=>'condemn',
+				'Minor Damage'=>'condemn',
+				'Major Damage'=>'condemn',
+				'In kot'=>'in_kot',
+				'In Kot'=>'in_kot',
+				'In KotMinor Damage'=>'in_kot',
+				'In KotCondemn'=>'in_kot',
+				''=>'empty'
+			);
+		}
+		public function getWeaponStatusForWeaponFigurePage(){
+			return array(
+				'holding'=>'Holding',
+				'issued'=>'Issued',
+				'lost'=>'Lost',
+				'case_property_in_kot'=>'Case Property in Kot',
+				'case_property_in_ps'=>'Case Property in PS',
+				'condemn'=>'Condemn',
+				'in_kot'=>'In Kot(Available/Serviceable in kot)',
+				'empty'=>'Empty'
+				//'empty'=>'Empty'
+				//'in_kot_minor_damage'=>'In KotMinor Damage'
+			);
+		}
+		
+		/**
+		* This function will return the status/conditions of  Weapon from the weapon type(serviceable, non-serviceable
+		*/
+		public function get_weapon_conditions(){
+			$this->load->library('form_validation');
+			$this->load->helper('security');
+			$condition = $this->input->post('weapon_type');
+			if($condition=='Serviceable'){
+				$data = $this->get_status_of_serviceable_weapon_type();
+			}elseif($condition=='Non-Serviceable'){
+				$data = $this->get_status_of_non_serviceable_weapon_type();
+			}else{
+
+				$data = array(
+					'Invalid Selection'=>'Invalid selection'
+				);
+			}
+			echo json_encode($data);
+		}
+		
+		/**
+		* depositing the weapons and ammunition back to the kot
+		* shifted from Battalion
+		*/
+		public function issuedepositid($id){
+			//die('hi');
+                    //var_dump($_POST);
+			$this->load->library('form_validation');
+			$this->load->helper('security');
+			$this->load->helper('common_helper');
+			
+			$dtype = $this->input->post("dtype",TRUE);
+			$atype = $this->input->post("atype",TRUE);
+			$lcarts = $this->input->post("lcarts",TRUE);
+			$mcarts = $this->input->post("mcarts",TRUE);
+			$ecarts = $this->input->post("ecarts",TRUE);
+	
+			$locarts = $this->input->post("locarts",TRUE);
+			$mcartp = $this->input->post("mcartp",TRUE);
+			$ecratp = $this->input->post("ecratp",TRUE);
+			$locartp = $this->input->post("locartp",TRUE);
+			$amqunt = $this->input->post("amqunt",TRUE);
+			
+			$abc = $this->input->post("abc",TRUE);
+			$wlocarts = $this->input->post("wlcarts",TRUE);
+			$wmcartp = $this->input->post("wmcarts",TRUE);
+			$wecratp = $this->input->post("wecarts",TRUE);
+			$wlocartp = $this->input->post("wlocarts",TRUE);
+			$wamqunt = $this->input->post("wamqunt",TRUE);
+
+			$abcp = $this->input->post("abcp",TRUE);
+			$wlocartsp = $this->input->post("wlcartp",TRUE);
+		
+			$wmcartpp = $this->input->post("wmcartp",TRUE);
+			$wecratpp = $this->input->post("wecartp",TRUE);
+			$wlocartpp = $this->input->post("wlocartp",TRUE);
+			$wamquntp = $this->input->post("wamquntp",TRUE);
+
+			$cw = $this->input->post("cw",TRUE);
+			$cw2 = $this->input->post("cw2",TRUE);
+			$cw3 = $this->input->post("cw3",TRUE);
+			$ssw = $this->input->post("ssw",TRUE);
+			$suw = $this->input->post("suw",TRUE);
+
+			$llcartp = $this->input->post("llcartp",TRUE);
+			
+			
+
+			$this->form_validation->set_rules("dtype", "Deposit Type", "required|callback_valid_deposit_type");
+			
+			if($this->form_validation->run()){
+				if($dtype=='Ammunition'){
+					//$this->form_validation->set_rules("atype", "Type", "required|callback_valid_type_of_ammunition");
+					if($atype=='Service'){
+						//$this->form_validation->set_rules('lcarts','Live Cartridges',"required|is_numeric");
+						//$this->form_validation->set_rules('mcarts','Miss Cartridges',"required|is_numeric");
+						//$this->form_validation->set_rules('ecarts','Empty Cartridges',"required|is_numeric");
+						//$this->form_validation->set_rules('locarts','Lost Cartridges',"required|is_numeric|callback_valid_quantity[".$lcarts.','.$mcarts.','.$ecarts.','.$locarts."]");
+						$this->form_validation->set_rules('ammuQtys','Ammunition Quantity',"required|is_numeric|callback_valid_quantity_service");
+						$amqunt =  $this->input->post("ammuQtys",TRUE);
+					}elseif($atype=='Practice'){
+						$this->form_validation->set_rules('lcarts','Live Cartridges',"required|is_numeric");
+						$this->form_validation->set_rules('mcarts','Miss Cartridges',"required|is_numeric");
+						$this->form_validation->set_rules('ecarts','Empty Cartridges',"required|is_numeric");
+						$this->form_validation->set_rules('locarts','Lost Cartridges',"required|is_numeric|callback_valid_quantity[".$lcarts.','.$mcarts.','.$ecarts.','.$locarts."]");
+						//$this->form_validation->set_rules('amqunt','Ammunition Quantity',"required|is_numeric|callback_valid_quantity");
+						
+					}
+					//echo 'hi';
+					if ($this->form_validation->run()){
+                                            //echo $dtype;    
+						$add_web = $this->Weapon_model->depositissue_arm($id,$dtype,$atype,$lcarts,$mcarts,$ecarts,$locarts,$mcartp,$ecratp,$locartp,$amqunt,$wlocarts,$wmcartp,$wecratp,$wlocartp,$wamqunt,$abc,$cw,$ssw,$suw,$abcp,$wlocartsp,$wmcartpp,$wecratpp,$wlocartpp,$wamquntp,$llcartp);
+                                                //die('i');
+						//echo 'bi';
+						if($add_web == 1){
+							$this->session->set_flashdata('success_msg','Arms has created succesfully !');
+							redirect('bt-issuedeposit');
+						}else{
+							$this->session->set_flashdata('error_msg','Arms has not created.');
+							redirect('bt-issuedeposit');
+						}	
+					}
+				}elseif($dtype=='Weapon'){
+					//$this->form_validation->set_rules("magp", "Magazine Quantity", "required|is_numeric");
+					$this->form_validation->set_rules("cw", "Weapon Condition", "required|callback_valid_deposit_weapon_condition");
+					if($cw=='Serviceable'){
+						$this->form_validation->set_rules("ssw", "Status Of Serviceable Weapon", "required|callback_valid_status_of_serviceable_weapon");
+					}else if($cw=='Non-Serviceable'){
+						$this->form_validation->set_rules("suw", "Status Of Non-Serviceable Weapon", "required|callback_valid_status_of_non_serviceable_weapon");
+					}
+					$this->form_validation->set_rules("wlcarts", "Live Cartridges", "is_numeric");
+					$this->form_validation->set_rules("wmcarts", "Miss Cartridges", "is_numeric");
+					$this->form_validation->set_rules("wecarts", "Empty Cartridges", "is_numeric");
+					$this->form_validation->set_rules("wlocarts", "Lost Cartridges", "is_numeric");
+					//$this->form_validation->set_rules("wamqunt", "Ammunition Quantity", "required|is_numeric");
+					if($this->form_validation->run()){
+						
+						if(in_array($ssw,array('Case Property in PS','Lost'))){
+							//by using  issue id  get  issue_arm table
+							$this->db->select('*');
+							$this->db->where('bat_id',$this->session->userdata('userid'));
+							$this->db->where('issue_arm_id',$id);
+							$query = $this->db->get('issue_arm');
+							$info = $query->row();
+							// get the wbodyno from issue arm table
+							$wbodyno = $info->wbodyno;
+							//update the old_weapon sta_of_serv to case property in pz
+							$data = array('staofserv'=>$ssw);
+							$this->db->where('old_weapon_id',$wbodyno);
+							$this->db->where('bat_id',$this->session->userdata('userid'));
+							$task = $this->db->update('old_weapon',$data);
+							$this->session->set_flashdata('success_msg','Arms has Updated succesfully !');
+							redirect('bt-issuedeposit');
+						}else{
+							
+							$add_web = $this->Weapon_model->depositissue_arm($id,$dtype,$atype,$lcarts,$mcarts,$ecarts,$locarts,$mcartp,$ecratp,$locartp,$amqunt,$wlocarts,$wmcartp,$wecratp,$wlocartp,$wamqunt,$abc,$cw,$ssw,$suw,$abcp,$wlocartsp,$wmcartpp,$wecratpp,$wlocartpp,$wamquntp,$llcartp);
+							if($add_web == 1){
+								$this->session->set_flashdata('success_msg','Arms has deposited succesfully !');
+								redirect('bt-issuedeposit');
+							}else{
+								$this->session->set_flashdata('error_msg','Arms has not deposited.');
+								redirect('bt-issuedeposit');
+							}
+						}
+					}
+				}
+			}
+				$data['arms'] = $this->Weapon_model->fetchinfo('old_weapon',array('bat_id' => $this->session->userdata('userid'),'staofserv' => 'In Kot'));
+				$data['weaponop'] = $this->Weapon_model->fetchinfo('battallion_issue',array('ito' => $this->session->userdata('userid')));
+				$info = $this->Weapon_model->fetchoneinfo('users',array('users_id' => $this->session->userdata('userid')));
+				$info2 = $this->Weapon_model->fetchinfo('users',array('pid' => $info->pid));
+
+				$ninfo = array();
+				foreach ($info2 as $value) {
+					if($value->user_log == 4){
+						$ninfo[] = $value->users_id;
+					}
+				}
+
+				$data['weaponi'] = $this->Weapon_model->weaponlist();
+				/*$data['body'] = $this->Btalion_model->fetchinfo('newosi',array('osi_status' => 1));*/
+				/*$data['arp'] = $this->Btalion_model->fetchinfo('newosi',array('bat_id' => 92));
+				$data['ssg'] = $this->Btalion_model->fetchinfo('newosi',array('bat_id' => 91));
+				$data['sdrf'] = $this->Btalion_model->fetchinfo('newosi',array('bat_id' => 94));
+				$data['cr'] = $this->Btalion_model->fetchinfo('newosi',array('bat_id' => 87));*/
+				$data['weapon'] = $this->Weapon_model->fetchinfo('newwepon_data',array('status' => 1 ));
+				$data['depositTypes'] = $this->getDepositType();
+				$data['ammuWeapTypes'] = $this->getAmmunitionType();
+				$data['uname'] = $this->Weapon_model->fetchinfo('users',array('user_log' => 3 ));
+				$data['ssw'] = $this->get_status_of_serviceable_weapon_type2();
+				$data['weapon_conditions'] = $this->get_deposit_weapon_condition_types();
+				$this->load->view('Weapon/depositall',$data);
+			
+		}/*Close*/
+		// -------------- Deposit Weapon Ammunition Validations-------------------------
+		public function valid_quantity_service($quantity){
+			if($quantity<=0){
+				$this->form_validation->set_message('valid_quantity_service',"Quantity should be greator than Zero(0)");
+				return false;
+			}else if($quantity>0){
+				//get value from db
+				$wp = fetchoneinfo('issue_arm',array('issue_arm_id' => $this->uri->segment('2')));	
+				
+				if($wp->atype=='Service'){
+					$higher_limit=$wp->amqunt;
+				}else{
+					$higher_limit = $wp->ammupqty;
+				}
+				
+				if($quantity>$higher_limit){
+					$this->form_validation->set_message('valid_quantity_service',"Total Quantity should be less than equal to ".$higher_limit);
+					return false;
+				}else{
+					return true;
+				}
+			}
+		}
+		/** 
+		*	validating deposit type
+		*/
+		public function valid_quantity($quantity,$values){
+			//die($values);
+			$values_array = explode(',',$values);
+			$lcart = $values_array[0];
+			$mcart = $values_array[1];
+			$ecart = $values_array[2];
+			$locart = $values_array[3];
+			$quantity = $lcart+$mcart+$ecart+$locart;
+			if($quantity<=0){
+				$this->form_validation->set_message('valid_quantity',"Quantity should be greator than Zero(0)");
+				return false;
+			}else if($quantity>0){
+				//get value from db
+				$wp = fetchoneinfo('issue_arm',array('issue_arm_id' => $this->uri->segment('2')));	
+				
+				if($wp->atype=='Service'){
+					$higher_limit=$wp->amqunt;
+				}else{
+					$higher_limit = $wp->ammupqty;
+				}
+				
+				if($quantity!=$higher_limit){
+					$this->form_validation->set_message('valid_quantity',"Total Quantity should be  ".$higher_limit);
+					return false;
+				}else{
+					return true;
+				}
+			}
+		}
+		public function valid_type_of_ammunition($ammu_type){
+			
+			if(in_array($ammu_type,$this->getAmmunitionType())){
+				return true;
+			}
+			$this->form_validation->set_message('valid_type_of_ammunition',"Invalid Selection");
+			return false;
+		}
+		public function valid_deposit_type($deposit_type){
+			
+			if(in_array($deposit_type,$this->getDepositType())){
+				return true;
+			}
+			$this->form_validation->set_message('valid_deposit_type',"Invalid Selection s");
+			return false;
+		}
+		public function valid_deposit_weapon_condition($condition){
+			
+			if(in_array($condition,$this->get_deposit_weapon_condition_types())){
+				return true;
+			}
+			$this->form_validation->set_message('valid_deposit_weapon_condition','Invalid Selection');
+			return false;
+		}
+		public function valid_status_of_serviceable_weapon($status){
+			if(in_array($status,$this->get_status_of_serviceable_weapon_type2())){
+				return true;
+			}
+			$this->form_validation->set_message('valid_status_of_serviceable_weapon','Invalid Selection');
+			return false;
+		}
+		public function valid_status_of_non_serviceable_weapon($status){
+			if(in_array($status,$this->get_status_of_non_serviceable_weapon_type2())){
+				return true;
+			}
+			$this->form_validation->set_message('valid_status_of_non_serviceable_weapon','Invalid Selection');
+			return false;
+		}
+		/**  GETTERS ---------------------- */
+		public function getDepositType(){
+			return array('Ammunition' => 'Ammunition','Weapon' => 'Weapon');
+		}
+		public function getAmmunitionType(){
+			return array('Service' => 'Service','Practice' => 'Practice');
+		}
+		public function get_deposit_weapon_condition_types(){
+			return array('Serviceable'=>'Serviceable','Non-Serviceable'=>'Non-Serviceable');
+		}
+		public function get_status_of_serviceable_weapon_type2(){
+			return $data = array(//"Condemn": "Condemn",
+					'In Kot'=>'In Kot',
+					//'Issued':'Issued',
+					'Case Property in kot'=>'Case Property in kot',
+					'Case Property in PS'=>'Case Property in PS',
+					'Lost'=>'Lost'
+				);
+		}
+		public function get_status_of_non_serviceable_weapon_type2(){
+			return $data = array(
+				'Minor Damage' => 'Minor Damage',
+				'Major Damage' => 'Major Damage', 
+				'Condemn' => 'Condemn',
+				'Expired' => 'Expired'
+			);
+		}
+		/*Add New Arm start*/
+		public function bkhcarms_edit($id){
+			$this->load->library('form_validation');
+			$this->load->helper('security');
+			//$this->load->model('Btalion/Btalion_model');
+			$this->load->model('Weapon/Weapon_model');
+
+			$tow = $this->input->post("tow",TRUE);
+			$wbodyno = $this->input->post("wbodyno",TRUE);
+			$wbuttno = $this->input->post("wbuttno",TRUE);
+			$vdate = $this->input->post("vdate",TRUE);
+			$tows = $this->input->post("tows",TRUE);
+			$mq = $this->input->post("mq",TRUE);
+			$rcvno = $this->input->post("rcvno",TRUE);
+			$rdate =  $this->input->post("rdate",TRUE);
+
+			$cw = $this->input->post("cw",TRUE);
+			$ssw = $this->input->post("ssw",TRUE);
+			$suw =  $this->input->post("suw",TRUE);
+			$doi = $this->input->post("doi",TRUE);
+			$data['armslist'] = $this->Weapon_model->fetchoneinfo('old_weapon',array('old_weapon_id' => $id));
+			
+			if($data['armslist']->conofwap=='Serviceable' && $data['armslist']->staofserv=='Issued'){
+				$this->session->set_flashdata('error_msg','Unable to update the Weapon because it is issued. First, Deposit the weapon.');
+				redirect('bt-bkhcarms');
+			}
+
+			/*$this->form_validation->set_rules("wbuttno", "Arm Butt No", "trim");
+			
+			$this->form_validation->set_rules("vdate", "Receive Date", "trim");
+			$this->form_validation->set_rules("tows", "Magazine Qty", "trim");
+			$this->form_validation->set_rules("mq", "RC/Voucher No", "trim");
+			$this->form_validation->set_rules("rcvno", "Voucher Date", "trim");*/
+			
+			$this->form_validation->set_rules("tow", "Weapon", "required|callback_valid_weapon");
+			$this->form_validation->set_rules("wbodyno", "Body Number", "required|regex_match[/^[A-Za-z0-9]+$/]");
+			$this->form_validation->set_rules("wbuttno", "Butt Number", "required|regex_match[/^[0-9]+$/]");
+			$this->form_validation->set_rules('vdate', 'Recieved From','required|regex_match[/^[.a-zA-Z0-9\/ ()]+$/]');
+			$this->form_validation->set_rules('tows', 'Recieved Mode','required|callback_valid_receive_mode');
+			//$this->form_validation->set_rules('mq', 'Magazine Quantity','required|is_numeric');
+			$this->form_validation->set_rules('rcvno', 'RC/Voucher Number','required|regex_match[/^[.a-zA-Z0-9\/ ]+$/]');
+			$this->form_validation->set_rules('rdate','RC/Voucher Date','required|callback_valid_date');
+			$this->form_validation->set_rules('cw','Weapon Type','required|callback_valid_weapon_type');
+			$this->form_validation->set_rules('ssw','Status of Serviceable Arm','required|callback_valid_serviceable_arm[cw]');
+			if($cw=='Non-Serviceable'){
+				$this->form_validation->set_rules('suw','Status of Non-Serviceable Arm','required');
+			}
+			//$this->form_validation->set_rules('doi','Issue Date','required');
+			
+			if($this->form_validation->run()){
+				$add_web = $this->Weapon_model->edit_arm($id,$tow,$wbodyno,$wbuttno,$vdate,$tows,$mq,$rcvno,$rdate,$cw,$ssw,$suw);//,$doi); 	
+				if($add_web == 1){
+					$this->session->set_flashdata('success_msg','Arms has created succesfully !');
+					redirect('bt-bkhcarms');
+				}else{
+					$this->session->set_flashdata('error_msg','Arms has not created.');
+					redirect('bt-bkhcarms');
+				}	
+			}
+			$data['weapon'] = $this->Weapon_model->fetchinfo('newwepon_data',array('status' => 1 ));
+			
+			if($cw=='' || $cw==null){
+				$conofwap = $data['armslist']->conofwap;
+			}else{
+				$conofwap = $cw;
+			}
+			
+			if($conofwap=='Serviceable'){
+				$data['status_of_weapons'] = $this->get_status_of_serviceable_weapon_type();
+			}else if($conofwap=="Non-Serviceable"){
+				$data['status_of_weapons'] = $this->get_status_of_non_serviceable_weapon_type();
+				
+			}else{
+				$data['status_of_weapons'] = array(''=>'Invalid Selection');
+			}
+			$data['condemn'] = explode('Condemn',$data['armslist']->staofserv);
+			if(isset($data['condemn'][1])){
+				$data['nextStageStatusOfNonServiceableArm'] = $data['condemn'][1];
+			}else{
+				$data['nextStageStatusOfNonServiceableArm'] = 'Condemn';
+			}
+			//$this->load->view(F_BTALION.'arms/editarms',$data);
+			$this->load->view('Weapon/edit_weapon',$data);
+		}/*Close*/
+		/*-------------------GETTERS-----------------------*/
+		public function getValidRecievedModesOnEdit(){
+			return array('Temporary'=>'Temporary','Permanent'=>'Permanent');
+		}
+		public function getWeaponConditionsOnEdit(){
+			return array('Serviceable'=>'Serviceable','Non-Serviceable'=>'Non-Serviceable');
+		}
+		/**
+		*	returning the status/condition of serviceable weapons
+		*/
+		public function get_status_of_serviceable_weapon_type(){
+			return $data = array('Select status'=>'',//"Condemn": "Condemn",
+					'In Kot'=>'In Kot',
+					//'Issued':'Issued',
+					'Case Property in kot'=>'Case Property in kot',
+					'Case Property in PS'=>'Case Property in PS',
+					'Lost'=>'Lost'
+				);
+		}
+		/**
+		*	this function is returning the status/condition of non_services weapons 
+		*/
+		public function get_status_of_non_serviceable_weapon_type(){
+			return $data = array(
+				"Condemn"=>"Condemn"
+			);
+		}
+		///-------------------------------------EDIT ARM validations-----------------------
+		public function valid_serviceable_arm($status,$cw){
+			$status_type = $this->input->post($cw);
+			if($status_type=="Serviceable"){
+				if(in_array($status,$this->get_status_of_serviceable_weapon_type())){
+					return true;
+				}else{
+					$this->form_validation->set_message('valid_serviceable_arm','Invalid status of serviceable Arm');
+					return false;
+				}
+				
+			}else if($status_type=='Non-Serviceable'){
+				if(in_array($status,$this->get_status_of_non_serviceable_weapon_type())){
+					return true;
+				}else{
+					$this->form_validation->set_message('valid_serviceable_arm','Invalid status of Non-Serviceable Arm');
+					return false;
+				}
+			}else{
+				$this->form_validation->set_message('valid_serviceable_arm','Invalid status of serviceable Arm');
+				return false;
+			}
+		}
+		/**
+		* validating weapon over here edit Arm
+		* if invalid weapon selected result in error
+		*/
+		public function valid_receive_mode($mode){
+			$valid_modes = $this->getValidRecievedModesOnEdit();
+			if(in_array($mode,array_keys($valid_modes))){
+				return true;
+			}else{
+				$this->form_validation->set_message('valid_receive_mode','Invalid Recieved Mode is selected');
+				return false;
+			}
+		}
+		public function valid_weapon_type($type){
+			$weapon_conditions = $this->getWeaponConditionsOnEdit();
+			if(in_array($type,array_keys($weapon_conditions))){
+				return true;
+			}else{
+				//die(';lk');
+				$this->form_validation->set_message('valid_weapon_type','Invalid Weapon Type is Selected');
+				return false;
+			}
+		}
+		public function valid_weapon($weapon_name){
+			$weapons = $this->Weapon_model->fetchinfo('newwepon_data',array('status' => 1 ));
+			$weaponExists = false;
+			foreach ($weapons as $value) {
+			   $tow[$value->arm] = $value->arm;
+			   if($weapon_name == $value->arm){
+				   $weaponExists = true;
+				   break;
+			   }
+			 }
+			 if($weaponExists){
+				 return true;
+			 }else{
+				 $this->form_validation->set_message('valid_weapon','Invalid Weapon is selected');
+				 return false;
+			 }
+			
+		}
+		public function valid_date($date){
+			$this->form_validation->set_message('valid_date', 'Invalid Date!!');
+			//echo $date;
+			if(preg_match('/^(0[1-9]|[1-2][0-9]|3[0-1])\/(0[1-9]|1[0-2])\/[0-9]{4}$/',$date)){
+				return true;
+			}else{
+				return false;
+			}
+		}
+		public function move_to_ca(){ 
+			//var_dump($this->input->post());
+			$this->load->library('form_validation');
+			//var_dump($this->input->post());
+			$a = $this->input->post('moveWeaponToCA');// die;
+			//if(isset($this->input->post('moveWeaponToCA')){
+			$errors =NULL;
+			$validations = NULL;	
+			$checked = array();
+			if($this->input->post('moveWeaponToCA')=="Submit"){
+				$i=0;
+				$count = 0;
+				$errors = array();
+				if($this->input->post('ids')!=NULL){
+					foreach($this->input->post('ids') as $k=>$v) {
+						$key = $k;
+						$error[$key] = array();
+						$checked[$key]=$key;
+						
+						$wbodyno = $v; 
+						$ammu_qty =$this->input->post('ammu_qty')[$key]; 
+						$rcno = $this->input->post('rcno')[$key];
+						$rcdate = $this->input->post('rcdate')[$key];
+						$location = $this->input->post('departments');
+						if($location=='DISTRICT'){
+							$district = $this->input->post('districts');
+							$location.=';'.$district;
+							if($district =='other'){
+								$other = $this->input->post('other');
+								$location.=';'.$other;
+							}
+						}elseif($location=='OTHER'){
+							$other=$this->input->post('other');
+							$location.=';'.$other;
+						}
+						//echo ',AQ:'.$ammu_qty;					//echo ',Rc No:'.$rcno;					//echo ',Rc Date:'.$rcdate;
+						$validations[$key] = new CI_Form_validation();
+						
+						//$validations[$key]->set_rules("ammu_qty[$key]","Ammunition Quantity",'required');
+						$validations[$key]->set_rules("ammu_qty[$key]",'Ammunition Quantity1',"required|callback_check_qty_in_db[$ammu_qty@$wbodyno]",array('check_qty_in_db'=>'Ammunition quantity is large.','required'=>'Please provide ammunition Quantity'));
+						$validations[$key]->set_rules("wbodyno[$key]","Body Number",'required');
+						$validations[$key]->set_rules("rcno[$key]","RC Number", 'required');
+						$validations[$key]->set_rules("rcdate[$key]","RC Date", 'required');
+						$validations[$key]->set_rules("departments","Location of weapon",'required');
+						
+						if($validations[$key]->run()){
+							//echo '<br>Count = '.$count;			//			echo 'validations passed = '.$key.'<br>';
+							$error[0]['success'] = true;
+							$a = $this->Weapon_model->weaponca($wbodyno,$rcno,$rcdate,$ammu_qty,$location); //in this		loop save data one by one 
+							//var_dump($a);
+							$this->session->set_flashdata('success_msg','Weapon/Ammunition has been deposited Successfully!');
+						}else{
+							$errors[$key] = $validations[$key]->error_array();
+				//			echo 'fail';
+						}
+						$i++;$count++;
+						$this->form_validation->reset_validation();
+					}
+				}
+			}	
+			$dis = $this->Weapon_model->getDistricts('PUNJAB');
+			foreach($dis as $k=>$v){
+				$districts[$v->state_list_id]=$v->city;
+			}
+			$districts['other'] = 'OTHER';
+			$data['districts'] = $districts;
+			$config = array();
+			$selected_arms = $this->input->post('arms');	//selected ones
+			$selected_body_numbers = $this->input->post('body_numbers');	//selected body no.s
+			//var_dump($this->input->post('selected_page_number'));
+			$config["uri_segment"] = 2;		// location from where starting point be fetched
+			//echo '<br>Selected ARms/weapons<br>';
+			$config["per_page"] =15;
+			$config["total_rows"] = $this->Weapon_model->get_count($selected_arms,$selected_body_numbers);  //records matching search
+
+			$data['total_rows'] =  $config['total_rows'] ;
+			$data['per_page'] =$config['per_page'];
+			
+			$page_from_web_page = $this->input->post('selected_page_number'); 
+		    $starting_point = 0;
+		    
+		    if($page_from_web_page!=NULL && isset($page_from_web_page) && $page_from_web_page!='' && $page_from_web_page>0)		//form is submitted
+			{
+				$starting_point=($page_from_web_page-1)*$config['per_page'];
+				$page = ((int)($starting_point/$config["per_page"]));
+
+				//echo '<br>Starting point:'.$starting_point;
+			}else{															//from is not submitted  so get it from address bar
+				$page_from_address_bar = ($this->uri->segment(2)) ? $this->uri->segment(2) :0;
+				if(isset($page_from_address_bar) && $page_from_address_bar!='' &&$page_from_address_bar>=0){
+					$starting_point = $page_from_address_bar;
+					$page =((int)($starting_point/$config["per_page"]));
+				}else{
+					$page=0;
+					$starting_point = 0;
+				}
+			}
+		    if($starting_point>=$config['total_rows']){
+		    	$starting_point=0;
+		    }
+		    
+		    $data['page_number'] = $page_from_web_page;
+		    $config["base_url"] = base_url() . "khc";
+			$config["num_links"] = 3;
+			$config['use_page_numbers'] = TRUE;
+			$config['reuse_query_string'] = FALSE;
+			$config['full_tag_open'] = "<ul class='pagination'>";
+			$config['full_tag_close'] ="</ul>";
+			$config['num_tag_open'] = '<li onClick="setPage(this);return false;">';
+			$config['num_tag_close'] = '</li>';
+			$config['cur_tag_open'] = "<li class='active'><a href='#'>";
+			$config['cur_tag_close'] = "<span class='sr-only'></span></a></li>";
+			$config['next_tag_open'] = '<li onClick="setPage2('.($page_from_web_page+1).');return false;">';
+			$config['next_tagl_close'] = "</li>";
+			$config['prev_tag_open'] = '<li  onClick="setPage2('.($page_from_web_page-1).');return false;">';
+			$config['prev_tagl_close'] = "</li>";
+			$config['first_tag_open'] = '<li onClick="setPage2(1);return false;">';
+			$config['first_tagl_close'] = "</li>";
+			$last_page = ceil($config['total_rows']/$config['per_page']);
+			$config['last_tag_open'] = '<li onClick="setPage2('.$last_page.');return false;">';
+			$config['last_tagl_close'] = "</li>";
+			
+			$data['checked']=$checked;
+			$data['errors']=$errors;
+			$data['validations']= $validations;
+			$data['arms'] = $this->Weapon_model->get_arms();
+			
+			$armsarray = array();
+			foreach($data['arms'] as $k=>$v){
+				$armsarray[$v->arm] = $v->arm;
+			}
+			$data['all_arms'] = $armsarray;		//all the weapons are here
+			$bodynosarray = array();//array(2=>'A155','lksdf'=>'kj','klsd'=>'slkdjf');
+			//we have the selected body numbers in $body_numbers array
+			//get the body numbers of selected weapons
+			$array=array();
+			if(!empty($selected_arms)){
+				$bodynosarray = $this->Weapon_model->getBodyNumbersOfSelectedWeapons($selected_arms,$this->session->userdata('userid'));
+				$array = array();
+				foreach($bodynosarray as $k=>$v){
+					$array[$v->bono] = $v->bono.'-'.$v->bore;
+				}
+			}
+			$data['body_numbers2'] = $array;		// all of the body numbers of selected weapon
+                        //var_dump($selected_body_numbers);
+                        if($selected_body_numbers!=null){
+                           $config['per_page'] = null; 
+                        }
+			$data['weapons'] = $this->Weapon_model->getAllWeapons($config['per_page'], $starting_point,$selected_arms,$selected_body_numbers);		//get all the weapons
+			
+			$this->pagination->initialize($config);
+			$this->pagination->cur_page = $page_from_web_page;
+			$data["links"] = $this->pagination->create_links();
+                        $data['starting_point'] = $starting_point;
+			$this->load->view('Weapon/weapontoca',$data);
+		}
+
+		public function check_qty_in_db($qty,$wbodyno){
+			$arr = explode('@',$wbodyno);
+			$bodyno = $arr[1];
+			return $this->Weapon_model->quantity_check($qty,$bodyno);
+		}
+
+		public function get_body_numbers()
+		{
+			$arms = $this->input->post('arms');
+			$exc_body_numbers = $this->input->post('exclude_body_numbers');
+			$bat_id = $this->session->userdata('userid');
+			$body_numbers = $this->Weapon_model->getBodyNumbers($arms,$exc_body_numbers,$bat_id);
+			//var_dump($body_numbers);
+			$body_no = array();
+			foreach($body_numbers as $k=>$v){
+				$body_no[$v->bono] = $v->bono.'-['.$v->bore.']';
+			}
+			$query = $this->db->last_query();
+			//echo $query;
+			echo json_encode($body_no);
+		}
+		public function move_to_ca2(){
+				//var_dump($this->input->post());
+			$this->load->library('form_validation');
+			//var_dump($this->input->post());
+			$a = $this->input->post('moveWeaponToCA');// die;
+			//if(isset($this->input->post('moveWeaponToCA')){
+			$errors =NULL;
+			$validations = NULL;	
+			$checked = array();
+			if($this->input->post('moveWeaponToCA')=="Submit"){
+				$i=0;
+				$count = 0;
+				$errors = array();
+				if($this->input->post('ids')!=NULL){
+					foreach($this->input->post('ids') as $k=>$v) {
+						$key = $k;
+						$error[$key] = array();
+						$checked[$key]=$key;
+						
+						$wbodyno = $v; 
+						$ammu_qty =$this->input->post('ammu_qty')[$key]; 
+						$rcno = $this->input->post('rcno')[$key];
+						$rcdate = $this->input->post('rcdate')[$key];
+						//echo ',AQ:'.$ammu_qty;					//echo ',Rc No:'.$rcno;					//echo ',Rc Date:'.$rcdate;
+						$validations[$key] = new CI_Form_validation();
+
+						//$validations[$key]->set_rules("ammu_qty[$key]","Ammunition Quantity",'required');
+						$validations[$key]->set_rules("ammu_qty[$key]",'Ammunition Quantity1',"required|callback_check_qty_in_db[$ammu_qty@$wbodyno]",array('check_qty_in_db'=>'Ammunition quantity is large.','required'=>'Please provide ammunition Quantity'));
+						$validations[$key]->set_rules("wbodyno[$key]","Body Number",'required');
+						$validations[$key]->set_rules("rcno[$key]","RC Number", 'required');
+						$validations[$key]->set_rules("rcdate[$key]","RC Date", 'required');
+						
+						if($validations[$key]->run()){
+							//echo '<br>Count = '.$count;			//			echo 'validations passed = '.$key.'<br>';
+							$error[0]['success'] = true;
+							$a = $this->Weapon_model->weaponca($wbodyno,$rcno,$rcdate,$ammu_qty); //in this		loop save data one by one 
+							//var_dump($a);
+							$this->session->set_flashdata('success_msg','Weapon/Ammunition has been deposited Successfully!');
+						}else{
+							$errors[$key] = $validations[$key]->error_array();
+				//			echo 'fail';
+						}
+						$i++;$count++;
+						$this->form_validation->reset_validation();
+					}
+				}
+			}	
+			
+			$config = array();
+			$selected_arms = $this->input->post('arms');	//selected ones
+			$selected_body_numbers = $this->input->post('body_numbers');	//selected body no.s
+			//var_dump($this->input->post('selected_page_number'));
+			$config["uri_segment"] = 2;		// location from where starting point be fetched
+			//echo '<br>Selected ARms/weapons<br>';
+			$config["per_page"] =15;
+			$config["total_rows"] = $this->Weapon_model->get_count($selected_arms,$selected_body_numbers);  //records matching search
+
+			$data['total_rows'] =  $config['total_rows'] ;
+			$data['per_page'] =$config['per_page'];
+
+			$page_from_web_page = $this->input->post('selected_page_number'); 
+		    $starting_point = 0;
+		    
+		    if($page_from_web_page!=NULL && isset($page_from_web_page) && $page_from_web_page!='' && $page_from_web_page>0)		//form is submitted
+			{
+				$starting_point=($page_from_web_page-1)*$config['per_page'];
+				$page = ((int)($starting_point/$config["per_page"]));
+
+				//echo '<br>Starting point:'.$starting_point;
+			}else{															//from is not submitted  so get it from address bar
+				$page_from_address_bar = ($this->uri->segment(2)) ? $this->uri->segment(2) :0;
+				if(isset($page_from_address_bar) && $page_from_address_bar!='' &&$page_from_address_bar>=0){
+					$starting_point = $page_from_address_bar;
+					$page =((int)($starting_point/$config["per_page"]));
+				}else{
+					$page=0;
+					$starting_point = 0;
+				}
+			}
+		    if($starting_point>=$config['total_rows']){
+		    	$starting_point=0;
+		    }
+		    
+		    $data['page_number'] = $page_from_web_page;
+		    $config["base_url"] = base_url() . "khc";
+			$config["num_links"] = 3;
+			$config['use_page_numbers'] = TRUE;
+			$config['reuse_query_string'] = FALSE;
+			$config['full_tag_open'] = "<ul class='pagination'>";
+			$config['full_tag_close'] ="</ul>";
+			$config['num_tag_open'] = '<li onClick="setPage(this);return false;">';
+			$config['num_tag_close'] = '</li>';
+			$config['cur_tag_open'] = "<li class='active'><a href='#'>";
+			$config['cur_tag_close'] = "<span class='sr-only'></span></a></li>";
+			$config['next_tag_open'] = '<li onClick="setPage2('.($page_from_web_page+1).');return false;">';
+			$config['next_tagl_close'] = "</li>";
+			$config['prev_tag_open'] = '<li  onClick="setPage2('.($page_from_web_page-1).');return false;">';
+			$config['prev_tagl_close'] = "</li>";
+			$config['first_tag_open'] = '<li onClick="setPage2(1);return false;">';
+			$config['first_tagl_close'] = "</li>";
+			$last_page = ceil($config['total_rows']/$config['per_page']);
+			$config['last_tag_open'] = '<li onClick="setPage2('.$last_page.');return false;">';
+			$config['last_tagl_close'] = "</li>";
+			
+			$data['checked']=$checked;
+			$data['errors']=$errors;
+			$data['validations']= $validations;
+			$data['arms'] = $this->Weapon_model->get_arms();
+			
+			$armsarray = array();
+			foreach($data['arms'] as $k=>$v){
+				$armsarray[$v->arm] = $v->arm;
+			}
+			$data['all_arms'] = $armsarray;		//all the weapons are here
+			$bodynosarray = array();//array(2=>'A155','lksdf'=>'kj','klsd'=>'slkdjf');
+			//we have the selected body numbers in $body_numbers array
+			//get the body numbers of selected weapons
+			$array=array();
+			if(!empty($selected_arms)){
+				$bodynosarray = $this->Weapon_model->getBodyNumbersOfSelectedWeapons($selected_arms,$this->session->userdata('userid'));
+				$array = array();
+				foreach($bodynosarray as $k=>$v){
+					$array[$v->bono] = $v->bono.'-'.$v->bore;
+				}
+			}
+			$data['body_numbers2'] = $array;		// all of the body numbers of selected weapon
+			$data['weapons'] = $this->Weapon_model->getAllWeapons($config['per_page'], $starting_point,$selected_arms,$selected_body_numbers);		//get all the weapons
+			
+			$this->pagination->initialize($config);
+			$this->pagination->cur_page = $page_from_web_page;
+			$data["links"] = $this->pagination->create_links();
+
+			$this->load->view('Weapon/weapontoca2',$data);
+		}
+		public function detail(){
+			/* ------------------INPUT DATA--------------- */
+
+			$data['battalions'] = $this->getBattalions();
+			//$data['weapons'] = $this->getWeapons();
+			$data['weapons'] = $this->Weapon_model->get_arms();
+			$weapons2 = array();
+			foreach($data['weapons'] as $k=>$v){
+				$weapons2[$v->nwep_id] = $v->arm;
+			}
+			$data['weapons2'] = $weapons2;
+			/*$data['weapons'] = array(
+				'rifle_slr'=>'Rifle SLR',
+				'ak_47'=>'AK-47',
+				'pistol_9_mm'=>'Pistol 9 MM'
+			);*/
+			$data['columns'] = array(
+				'sanction'=>'Sanction',
+				'issued'=>'Issued',
+				'in_kot'=>'In kot',
+				'total'=>'Total',
+				'remarks'=>'Remarks',
+				'lost'=>'Lost',
+				'condemn'=>'Condemn',
+				'empty'=>'Empty'
+			);
+			$this->load->view('Weapon/weapon_detail',$data);
+		}
+
+		public function getColumnKeyValue(){
+			return  array(
+				'sanction'=>'Sanction',
+				'issued'=>'Issued',
+				'in_kot'=>'In kot',
+				'total'=>'Total',
+				'remarks'=>'Remarks',
+				'lost'=>'Lost',
+				'condemn'=>'Condemn',
+				'empty'=>'Empty'
+			);
+		}
+
+		public function getColumnTitles($columnInput){
+			$col = $this->getColumnKeyValue();
+			$columns = [];
+			
+			foreach($columnInput as $k=>$v){
+				if(in_array($v,array_keys($col))){
+					$columns[$v] = $col[$v];
+				}
+			}
+			return $columns;
+		}
+
+		public function ajaxDetail(){
+			/* ------------------INPUT DATA--------------- */
+			
+			if(false){
+				$data['battalions'] = '6';
+				$data['weapons'] = $this->getWeapons2();
+				/*$data['weapons'] = array(
+					0=>8
+				);*/
+				$data['columns'] = array(
+					0=>'sanction',
+					1=>'issued',
+					2=>'in_kot',
+					3=>'total',
+					4=>'remarks',
+					5=>'lost',
+					6=>'condemn',
+					7=>'empty'
+				);
+				/*$data['columns'] = array(
+					0=>'sanction',
+					1=>'issued',
+					2=>'in_kot',
+					3=>'total',
+					4=>'remarks'
+					
+				);*/
+				$battalion_id_input = $data['battalions'];
+				$weapons_input = $data['weapons'];
+				$columns_input = $data['columns'];
+			}else{
+				//var_dump($this->input->post());
+				$battalion_id_input = $this->input->post('bat_id');
+				$weapons_input = $this->input->post('arms');		//ids
+				$columns_input = $this->input->post('columns');
+			}
+
+			$data = $this->getWeaponsDetail( $battalion_id_input, $weapons_input, $columns_input);
+			
+			echo json_encode($data);
+			
+		}
+		public function getWeaponsDetail( $battalion_id_input, $weapons_input, $columns_input){
+			$weaponObj = array();
+			foreach($weapons_input as $k=>$v){
+				$weaponObj[$v] = array();
+				foreach($columns_input as $k1=>$v1){
+					$weaponObj[$v][$v1] = 0;
+				}
+			}
+
+			$db_weapons = $this->Weapon_model->get_weapon_names($weapons_input);
+
+			$tow = array();
+			foreach($db_weapons as $k=>$v){
+				$tow[] = $v->arm;
+			}
+			$detail = $this->getWeaponDetail($battalion_id_input,$tow,$columns_input);		// getting all the matched weapons
+			$outputDataArray = Array();
+			//increment the issue and in kot
+			//var_dump($columns_input); 
+			$i=0;
+			foreach($detail as $k=>$v){
+				$weapon_name = $v->tow;
+				if(empty($weapon_name)){
+			//		echo "Empty";
+				}
+				//error_reporting(0);
+
+				$weaponId = $this->getWeaponId(trim($weapon_name),$db_weapons);	//weapon id
+				if(str_replace('','_',trim($v->staofserv))==''){
+					$v->staofserv = 'empty';
+					$statusId = 7;
+				}else{
+					$statusId = $this->getStatusId(str_replace('','_',trim($v->staofserv)),$columns_input);	
+				}
+				
+				if($statusId!='OTHER@OTHER'){
+					//$weapon[$weaponId][$statusId]++;
+					$weaponObj[$weaponId][strtolower(str_replace(' ', '_',trim($v->staofserv)))]++;
+				}else{
+					//$weapon[$weaponId][11]++;
+					//$weaponObj[$weaponId]['other']++;
+				}
+				$i++;
+				
+			}
+			//var_dump($weapon);
+			//echo json_encode($weapon);
+			
+			$battalion['battalionName']=$this->Weapon_model->getBattalionNameById($battalion_id_input);
+			//echo $battalion['battalionName'];
+			//die;$battalion['battalionName']
+			
+			$battalion['columns'] = $this->getColumnTitles($columns_input);
+			//	var_dump($battalion['columns']);
+			$weapon_names_ = array();
+			foreach($weapons_input as $k=>$v){
+				foreach($db_weapons as $k1=>$v1){
+					if($v1->nwep_id==$v){
+						$weapon_names_[$v] = $v1->arm;	
+					}
+					
+				}
+			}
+			$battalion['weaponNames'] = $weapon_names_;
+				//var_dump($db_weapons);
+
+			//echo '<hr>';
+			foreach($weaponObj as $k=>$v){			//here $k is weapo id
+				
+				$weaponObj[$k]['total'] = $weaponObj[$k]['issued'] + $weaponObj[$k]['in_kot'] +$weaponObj[$k]['lost']+$weaponObj[$k]['condemn'] + $weaponObj[$k]['empty'];
+				
+				$this->load->helper('common');
+				$a = $this->getWeaponNameFromID($k,$db_weapons);
+				if($a!=NULL){
+					$issued = info_fetch_countarmsan($a,$battalion_id_input); 
+					if($issued!='')
+					{
+						if($issued->remarkwep==null){
+							$weaponObj[$k]['remarks'] = '--';	
+						}else{
+							$weaponObj[$k]['remarks'] = $issued->remarkwep;
+						}
+	                }else{
+	                	$weaponObj[$k]['remarks'] = '-';
+	                }
+            	}
+			}
+			
+			$battalion['weaponObj_detail'] = $weaponObj;
+			return $battalion;
+		}
+
+		public function getWeaponNameFromID($id,$weapon){
+			foreach($weapon as $k=>$v){
+				if($v->nwep_id==$id){
+					return $v->arm;
+				}
+			}
+		}
+		public function getWeaponId($weapon_name,$db_weapons){
+			foreach($db_weapons as $id=>$v){
+				if(strtolower(trim($v->arm))==strtolower(trim($weapon_name))) {
+					return $v->nwep_id;
+				}
+
+			}
+		}
+
+		public function getStatusId($status,$columns){
+			$status = str_replace(' ', '_', strtolower($status));
+			/*$columns = array(
+					0=>'sanction',
+					1=>'issued',
+					2=>'in kot',
+					3=>'total',
+					4=>'remarks',
+					5=>'lost'
+				);*/
+			foreach($columns as $k=>$v){
+				if(trim(strtolower($v))==trim(strtolower($status))){
+					return $k;
+				}
+			}
+			return 'OTHER@OTHER';
+			
+		}
+
+		public function getBattalions(){
+			$battalion_objects = $this->Weapon_model->getBattalions();
+			$battalion_array = array();
+			foreach($battalion_objects as $bat){
+				$battalion_array[$bat->users_id] = $bat->user_name;
+			}
+			return $battalion_array;
+		}
+
+		public function getWeapons(){
+			$arms = $this->Weapon_model->get_arms();
+			$weapons = array();
+			foreach($arms as $arm){
+				$weapons[$arm->arm] = $arm->arm;
+			}
+			return $weapons;
+		}
+
+		public function getWeapons2(){
+			$arms = $this->Weapon_model->get_arms();
+			$weapons = array();
+			foreach($arms as $arm){
+				$weapons[] = $arm->nwep_id;
+			}
+			return $weapons;
+		}
+
+		public function getWeaponCount($bat_id,$weapon_name,$status){
+			$total = $this->Weapon_model->getWeaponCount($bat_id,$weapon_name,$status);
+		}
+
+		public function getWeaponDetail($bat_id,$weapon_names,$status_ids){
+			$detail = $this->Weapon_model->getBattalionWeaponsDetail($bat_id,$weapon_names,$status_ids);
+			//echo $this->db->last_query();
+			return $detail;
+		}
+		public function getColumns(){
+			return array(
+					'sanction'=>'Sanction',
+					'issued'=>'Issued',
+					'in_kot'=>'In kot',
+					'total'=>'Total',
+					'remarks'=>'Remarks',
+					'lost'=>'Lost',
+					'condemn'=>'Condemn'
+				);
+		}
+
+		public function generateExcel(){
+			if(false){
+				$data['battalions'] = '6';
+				$data['weapons'] = $this->getWeapons2();
+				/*$data['weapons'] = array(
+					0=>8
+				);*/
+				$data['columns'] = array(
+					0=>'sanction',
+					1=>'issued',
+					2=>'in_kot',
+					3=>'total',
+					4=>'remarks',
+					5=>'lost',
+					6=>'condemn',
+					7=>'empty'
+				);
+				//sanction,issued,in_kot,total,remarks,lost,condemn,empty
+				$battalion_id_input = $data['battalions'];
+				$weapons_input = $data['weapons'];
+				$columns_input = $data['columns'];
+			}else{
+				//var_dump($this->input->post());
+				$battalion_id_input = $this->input->post('battalions');
+				$weapons_input = explode(',', $this->input->post('arms'));		//ids
+				$columns_input = explode(',',$this->input->post('columns'));
+			}
+			
+			$battalion = $this->getWeaponsDetail( $battalion_id_input, $weapons_input, $columns_input);
+			$this->load->library('excel');
+
+			$objPHPExcel = new PHPExcel();
+
+			// Set document properties
+			$objPHPExcel->getProperties()->setCreator("ERMS-PAP")
+										 ->setLastModifiedBy("ERMS-PAP")
+										 ->setTitle("Office 2007 XLSX Test Document")
+										 ->setSubject("Office 2007 XLSX Test Document")
+										 ->setDescription("WEapon Detail, Generated by ERMS-PAP.")
+										 ->setKeywords("Weapons Excel PAP ERMS")
+										 ->setCategory("Weapon Detail");
+
+			$objPHPExcel->setActiveSheetIndex(0);
+			
+			$objPHPExcel->getActiveSheet()->setTitle($battalion['battalionName']);
+
+			// Add some data
+			$objPHPExcel->setActiveSheetIndex(0)
+			            ->setCellValue('A1', 'S.No.')
+			            ->setCellValue('B1', 'Weapon Name')
+			            ->setCellValue('C1', 'Sanction')
+			            ->setCellValue('D1', 'Total')
+			            ->setCellValue('E1', 'Issued')
+			            ->setCellValue('F1', 'In Kot')
+			            ->setCellValue('G1', 'Lost')
+			            ->setCellValue('H1', 'Condemn')
+			            ->setCellValue('I1', 'Empty')
+			            ->setCellValue('J1', 'Remarks');
+
+
+			// Miscellaneous glyphs, UTF-8
+
+			//adding weapon name in the cells
+			$weapons2 = $battalion['weaponObj_detail'];
+			            $i=2;
+			            
+			foreach($battalion['weaponNames'] as $k=>$v){
+
+				$objPHPExcel->getActiveSheet()->setCellValue('A'.$i,$i-1);
+				$objPHPExcel->getActiveSheet()->setCellValue('B'.$i,$v);
+				$objPHPExcel->getActiveSheet()->setCellValue('C'.$i,$weapons2[$k]['sanction']);
+				$objPHPExcel->getActiveSheet()->setCellValue('D'.$i,$weapons2[$k]['total']);
+				$objPHPExcel->getActiveSheet()->setCellValue('E'.$i,$weapons2[$k]['issued']);
+				$objPHPExcel->getActiveSheet()->setCellValue('F'.$i,$weapons2[$k]['in_kot']);
+				$objPHPExcel->getActiveSheet()->setCellValue('G'.$i,$weapons2[$k]['lost']);
+				$objPHPExcel->getActiveSheet()->setCellValue('H'.$i,$weapons2[$k]['condemn']);
+				$objPHPExcel->getActiveSheet()->setCellValue('I'.$i,$weapons2[$k]['empty']);
+				$objPHPExcel->getActiveSheet()->setCellValue('J'.$i,$weapons2[$k]['remarks']);
+				$i++;
+			}
+
+						
+
+			// Rename worksheet
+			//$objPHPExcel->getActiveSheet()->setTitle('Simple');
+
+
+			// Set active sheet index to the first sheet, so Excel opens this as the first sheet
+			$objPHPExcel->setActiveSheetIndex(0);
+
+
+			// Redirect output to a client’s web browser (Excel2007)
+			header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+			header('Content-Disposition: attachment;filename="weapons'.EXCEL_EXTENSION.'"');
+			header('Cache-Control: max-age=0');
+			// If you're serving to IE 9, then the following may be needed
+			header('Cache-Control: max-age=1');
+
+			// If you're serving to IE over SSL, then the following may be needed
+			header ('Expires: Mon, 26 Jul 1997 05:00:00 GMT'); // Date in the past
+			header ('Last-Modified: '.gmdate('D, d M Y H:i:s').' GMT'); // always modified
+			header ('Cache-Control: cache, must-revalidate'); // HTTP/1.1
+			header ('Pragma: public'); // HTTP/1.0
+
+			$objWriter = PHPExcel_IOFactory::createWriter($objPHPExcel, 'Excel2007');
+			$objWriter->save('php://output');
+			exit;
+		}
+		/**
+		* sort the battalions by key/id
+		*/
+		public function sortBattalions($battalions){
+			$battalionOrder = array(
+				31=>'7 - PAP',
+				103=>'9 - PAP',
+				132=>'13 - PAP',
+				45=>'27 - PAP',
+				184=>'36 - PAP',
+				6=>'75 - PAP',
+				52=>'80 - PAP',
+				137=>'82 - PAP',
+				73=>'RTC - PAP',
+				126=>'ISTC',
+				216=>'Control Room PAP',
+				//68=>'CSO PAP',
+				//61=>'ADGP PAP',
+				190=>'1 - IRB',
+				165=>'2 - IRB',
+				154=>'3 - IRB',
+				113=>'4 - IRB',
+				108=>'5 - IRB',
+				160=>'6 - IRB',
+				120=>'7 - IRB',
+				//214=>'IGP - IRB',
+				202=>'RTC LADDA KOTHI - IRB',
+				99=>'1 - CDO',
+				172=>'2 - CDO',
+				142=>'3 - CDO',
+				148=>'4 - CDO',
+				178=>'5 - CDO',
+				//215=>'IGP - CDO',
+				196=>'CTC - BG',
+				220=>'ARP-PAP'
+			);
+			$sortedBattalions = array();
+			foreach($battalionOrder as $id=>$name){
+				if(isset($battalions[$id])){
+					$sortedBattalions[$id] = $name;
+				}
+			}
+			return $sortedBattalions;
+		}
+		public function downloadAllFigure($weapons_data,$grand_total,$battalions,$weapons){
+			error_reporting(0);	
+			$this->load->library('excel');
+			$objPHPExcel = new PHPExcel();
+			$objPHPExcel->getProperties()->setCreator("ERMS-PAP")
+										 ->setLastModifiedBy("ERMS-PAP")
+										 ->setTitle("Office 2007 XLSX Test Document")
+										 ->setSubject("Office 2007 XLSX Test Document")
+										 ->setDescription("Kot(Weapon management Section) all consolidate figures, Generated by ERMS-PAP.")
+										 ->setKeywords("Figures of vehicles/battalion in MT")
+										 ->setCategory("Kot Overall figure view");
+			$counti= 0;
+			$objPHPExcel->createSheet($counti);
+			$objPHPExcel->setActiveSheetIndex($counti);
+			$objPHPExcel->getActiveSheet()->setTitle('Weapons Figure View'); 
+			$counter = 0;
+			$row=1;
+			$titleStyle = array(
+				'font'  => array(
+					'size'  => 13,
+					'name'  => 'Verdana',
+					'fill' => array(
+						'type' => PHPExcel_Style_Fill::FILL_SOLID,
+						'color' => array('rgb' => 'FF00a0')
+					)
+				));
+			
+			$objPHPExcel->setActiveSheetIndex($counti)->setCellValue('A1', 'All Figures of  Weapons in all Battalions');
+			
+			$objPHPExcel->getActiveSheet()->getStyle('A1')->applyFromArray($titleStyle);
+			$objPHPExcel->setActiveSheetIndex($counti)->mergeCells("A1:I1");
+			$objPHPExcel->getActiveSheet()->getStyle('A1')->getAlignment()->setHorizontal(PHPExcel_Style_Alignment::HORIZONTAL_CENTER);
+
+			$row++;
+			$objPHPExcel->setActiveSheetIndex($counti)->setCellValue('A'.$row,'Showing Weapons.'); //name of vechicel
+			$objPHPExcel->setActiveSheetIndex($counti)->mergeCells("A".$row.":I".$row);
+			$objPHPExcel->getActiveSheet()->getStyle('A'.$row)->getAlignment()->setHorizontal(PHPExcel_Style_Alignment::HORIZONTAL_CENTER);
+			foreach($weapons_data  as $weapon_name=>$battalion){ 
+			$row++;
+				$objPHPExcel->setActiveSheetIndex($counti)->setCellValue('A'.$row,$weapon_name);
+				$objPHPExcel->getActiveSheet()->getStyle('A'.$row)->applyFromArray(
+					array(
+						'fill' => array(
+							'type' => PHPExcel_Style_Fill::FILL_SOLID,
+							'color' => array('rgb' => 'c0c0c0')
+						)
+					)
+				);
+				$objPHPExcel->setActiveSheetIndex($counti)->mergeCells("A".$row.":I".$row);
+				$objPHPExcel->getActiveSheet()->getStyle('A'.$row)->getAlignment()->setHorizontal(PHPExcel_Style_Alignment::HORIZONTAL_CENTER);
+				
+				$row++;
+				$cols = ['A','B','C','D','E','F','G','H','I'];
+				$j=0;
+				$objPHPExcel->getActiveSheet()->getColumnDimension('B')->setWidth(20);
+				$objPHPExcel->getActiveSheet()->getColumnDimension('C')->setWidth(15);
+				$objPHPExcel->getActiveSheet()->getColumnDimension('D')->setWidth(15);
+				$objPHPExcel->getActiveSheet()->getColumnDimension('E')->setWidth(10);
+				$objPHPExcel->getActiveSheet()->getColumnDimension('F')->setWidth(15);
+				$objPHPExcel->getActiveSheet()->getColumnDimension('G')->setWidth(20);
+				$objPHPExcel->getActiveSheet()->getColumnDimension('H')->setWidth(20);
+				$objPHPExcel->getActiveSheet()->getColumnDimension('I')->setWidth(20);
+				foreach($cols as $k=>$v){
+					$objPHPExcel->getActiveSheet()->getStyle($cols[$j].$row)->applyFromArray(
+						array(
+							'fill' => array(
+								'type' => PHPExcel_Style_Fill::FILL_SOLID,
+								'color' => array('rgb' => 'F3F5F7')
+							)
+						)
+					);
+					$objPHPExcel->getActiveSheet()->getStyle($v.$row)->getFont()->setBold(true);
+					$j++;
+				}
+				$objPHPExcel->setActiveSheetIndex($counti)->setCellValue('A'.$row, 'S. No.'); 
+				$objPHPExcel->setActiveSheetIndex($counti)->setCellValue('B'.$row, 'Battalion'); 
+				$objPHPExcel->setActiveSheetIndex($counti)->setCellValue('C'.$row, 'Holding(Total)'); 
+				$objPHPExcel->setActiveSheetIndex($counti)->setCellValue('D'.$row, 'Issued'); 
+				$objPHPExcel->setActiveSheetIndex($counti)->setCellValue('E'.$row, 'Lost'); 
+				$objPHPExcel->setActiveSheetIndex($counti)->setCellValue('F'.$row, 'Case Property in Kot'); 
+				$objPHPExcel->setActiveSheetIndex($counti)->setCellValue('G'.$row, 'Case Property in PS'); 
+				$objPHPExcel->setActiveSheetIndex($counti)->setCellValue('H'.$row, 'Condemn Non-Serviceable'); 
+				$objPHPExcel->setActiveSheetIndex($counti)->setCellValue('I'.$row, 'In Kot(Available/Serviceable in Kot)'); 
+				
+				if(empty($battalion)){
+					$row++;
+					$objPHPExcel->setActiveSheetIndex($counti)->setCellValue('A'.$row, 'No data found'); 
+					$objPHPExcel->setActiveSheetIndex($counti)->mergeCells("A".$row.":I".$row);
+					$objPHPExcel->getActiveSheet()->getStyle('A'.$row)->getAlignment()->setHorizontal(PHPExcel_Style_Alignment::HORIZONTAL_CENTER);
+				}else{
+					$i=0;
+					foreach($battalion as $battalion_id=>$parameters){ $i++;
+						$row++;
+						$objPHPExcel->setActiveSheetIndex($counti)->setCellValue('A'.$row, $i); 
+						$objPHPExcel->setActiveSheetIndex($counti)->setCellValue('B'.$row, $battalions[$battalion_id]); 
+						$objPHPExcel->setActiveSheetIndex($counti)->setCellValue('C'.$row, $parameters['total']); 
+						$objPHPExcel->setActiveSheetIndex($counti)->setCellValue('D'.$row, $parameters['issued']); 
+						$objPHPExcel->setActiveSheetIndex($counti)->setCellValue('E'.$row, $parameters['lost']); 
+						$objPHPExcel->setActiveSheetIndex($counti)->setCellValue('F'.$row, $parameters['case_property_in_kot']); 
+						$objPHPExcel->setActiveSheetIndex($counti)->setCellValue('G'.$row, $parameters['case_property_in_ps']); 
+						$objPHPExcel->setActiveSheetIndex($counti)->setCellValue('H'.$row, $parameters['condemn']); 
+						$objPHPExcel->setActiveSheetIndex($counti)->setCellValue('I'.$row, $parameters['in_kot']); 
+					}
+				}
+				$row++;
+				$objPHPExcel->setActiveSheetIndex($counti)->setCellValue('A'.$row, ''); 
+				$objPHPExcel->setActiveSheetIndex($counti)->setCellValue('B'.$row, 'Grand Total'); 
+				$objPHPExcel->setActiveSheetIndex($counti)->setCellValue('C'.$row, $grand_total[$weapon_name]['total']); 
+				$objPHPExcel->setActiveSheetIndex($counti)->setCellValue('D'.$row, $grand_total[$weapon_name]['issued']); 
+				$objPHPExcel->setActiveSheetIndex($counti)->setCellValue('E'.$row, $grand_total[$weapon_name]['lost']); 
+				$objPHPExcel->setActiveSheetIndex($counti)->setCellValue('F'.$row, $grand_total[$weapon_name]['case_property_in_kot']); 
+				$objPHPExcel->setActiveSheetIndex($counti)->setCellValue('G'.$row, $grand_total[$weapon_name]['case_property_in_ps']); 
+				$objPHPExcel->setActiveSheetIndex($counti)->setCellValue('H'.$row, $grand_total[$weapon_name]['condemn']); 
+				$objPHPExcel->setActiveSheetIndex($counti)->setCellValue('I'.$row, $grand_total[$weapon_name]['in_kot']); 
+				foreach($cols as $k=>$v){
+					$objPHPExcel->getActiveSheet()->getStyle($v.$row)->applyFromArray(
+						array(
+							'fill' => array(
+								'type' => PHPExcel_Style_Fill::FILL_SOLID,
+								'color' => array('rgb' => 'F3F5F7')
+							)
+						)
+					);
+					$objPHPExcel->getActiveSheet()->getStyle($v.$row)->getFont()->setBold(true);
+				}
+				$row++;
+			}
+			// Redirect output to a client’s web browser (Excel2007)
+			header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+			header('Content-Disposition: attachment;filename="All figures of weapon.'.EXCEL_EXTENSION.'"');
+			header('Cache-Control: max-age=0');
+			// If you're serving to IE 9, then the following may be needed
+			header('Cache-Control: max-age=1');
+
+			// If you're serving to IE over SSL, then the following may be needed
+			header ('Expires: Mon, 26 Jul 1997 05:00:00 GMT'); // Date in the past
+			header ('Last-Modified: '.gmdate('D, d M Y H:i:s').' GMT'); // always modified
+			header ('Cache-Control: cache, must-revalidate'); // HTTP/1.1
+			header ('Pragma: public'); // HTTP/1.0
+
+			$objWriter = PHPExcel_IOFactory::createWriter($objPHPExcel, 'Excel2007');
+			$objWriter->save('php://output');
+			exit;
+		
+		}
+		//2020.12.25
+		//Weapon list
+		public function weapon_list(){
+			
+			$this->load->model('Weapon/Weapon_model');
+			$weapon_main_categories=[];
+			$weapon_main_categories_objs = $this->Weapon_model->getWeaponMainCategories();
+			foreach($weapon_main_categories_objs as $k=>$val){
+				$weapon_main_categories[$val->id] = $val->name;
+			}
+			//sub_mani_categories
+			//All Weapons
+			$data['weapon_main_categories'] = $weapon_main_categories;
+			$this->load->view('Ca/weapon/list',$data);
+		}
+		public function weapon_sub_category_list_ajax(){
+			$this->load->model('Weapon/Weapon_model');
+			$ids = null;
+			if(null!=$this->input->post('weapon_category_ids') && !empty($this->input->post('weapon_category_ids'))){
+				$ids = $this->input->post('weapon_category_ids');	
+			}
+			$sub_categories_objs = $this->Weapon_model->getWeaponSubCategoriesByWeaponMainCategoryIds($ids,'name','asc');
+			$sub_categories = [];
+			foreach($sub_categories_objs as $k=>$sub_cat){
+				$sub_categories[$sub_cat->id] = $sub_cat->name;
+			}
+			echo json_encode(['sub_categories'=>$sub_categories]);
+			die;
+		}
+		public function weapon_list_ajax(){
+			$this->load->model('Weapon_model');
+			if(null!=$this->input->post('main_categories') && count($this->input->post('main_categories'))>0){
+				$main_categoriesIds = $this->input->post('main_categories');
+			}else{
+				$main_categoriesIds = null;
+			}
+			if(null!=$this->input->post('sub_categories') && count(null!=$this->input->post('sub_categories'))>0){
+				$sub_categoriesIds = $this->input->post('sub_categories');
+			}else{
+				$sub_categoriesIds = null;
+			}
+			if(null!=$this->input->post('weapon_name') && $this->input->post('weapon_name')!=''){
+				$weapon_names = $this->input->post('weapon_name');
+			}else{
+				$weapon_names = null;
+			}
+			$length = 10;
+			$start = 0;
+			//echo $length;
+			//echo $start;
+			if(isset($_POST['length']) && $_POST["length"] != -1){
+				
+				$length = $_POST["length"];
+				$start = $_POST['start'];
+			}
+			//echo $length;
+			//echo $start;
+			$orderby = 'arm';
+			$order = 'asc';
+			$weapons = $this->Weapon_model->getWeaponsByMainSubCategoryWeaponName($main_categoriesIds,$sub_categoriesIds,$weapon_names,$length,$start,$orderby,$order);
+			$data = [];
+			$sno=1+$start;
+			foreach($weapons as $k=>$weapon){
+				$wep = [];
+				$wep['sno'] = $sno;
+				$wep['weapon_name'] = $weapon->weapon_name;
+				$wep['liability_head_name'] = 'hi';
+				
+				$wep['sub_category'] = ($weapon->sub_category!=null)?$weapon->sub_category:'--';
+				$wep['main_category'] = ($weapon->main_category!=null)?$weapon->main_category:'--';
+				$wep['created'] = $weapon->created;
+				$wep['action'] = '<a href="'.base_url().'ca-khc-weapon-edit/'.$weapon->nwep_id.'" class="glyphicon glyphicon-pencil black"></a> | <a class="glyphicon glyphicon-trash red"></a>'; 
+				$data[] = $wep;
+				$sno++;
+			}
+			$total_filtered_weapons = $this->Weapon_model->getTotalFilteredWeaponsByMainSubCategoryWeaponName($main_categoriesIds,$sub_categoriesIds,$weapon_names);
+			$total_weapons = $this->Weapon_model->getTotalWeapons();
+			
+			$output = array(
+				//"draw" =>intval(isset($_POST['draw'])?$_POST['draw']:1),
+				"draw" =>intval($_POST['draw']),
+				"recordsTotal" =>$total_weapons,//$this->Posting_model->getTotalEmployees(),
+				"recordsFiltered" =>$total_filtered_weapons,//$this->Posting_model->getTotalFilteredEmployees(),
+				"data"	=>$data,
+			);
+			echo json_encode($output);
+		}
+		public function weapon_edit($id){
+			$this->load->model('Weapon/Weapon_model');
+			$this->load->library('form_validation');
+			
+			if($this->input->post('submit')!=null){
+				$weapon_sub_category_id = $this->input->post('weapon_sub_category');
+				$this->form_validation->set_rules("weapon_sub_category", "Sub Category", "required");
+				$this->form_validation->set_rules("weapon_main_category", "Main Category", "required|callback_valid_main_category");
+				if($this->form_validation->run()){
+					$status = $this->Weapon_model->updateWeapon($id,$weapon_sub_category_id);
+					if($status){
+						$this->session->set_flashdata('success_msg','Weapon has updated succesfully !');
+						redirect('ca-khc-weapon-list');
+					}else{
+						$this->session->set_flashdata('error_msg','Weapon Updation Failed.');
+					}
+				}
+			}
+			$weapon = $this->Weapon_model->getWeaponById($id);
+			$data['weapon'] = $weapon[0];
+			$categoryObjs = $this->Weapon_model->getMainWeaponCategories();
+			$categories = [];
+			$categories[0] = 'NOT SET';
+			foreach($categoryObjs as $k=>$cat){
+				$categories[$cat->id] = $cat->name;
+			}
+			$data['categories'] = $categories;
+			$subCategoryObj = $this->Weapon_model->getSubCategoryById($weapon[0]->main_category_id);
+			$subCategories = [];
+			$subCategories[''] = 'NOT SET';
+			foreach($subCategoryObj as $k=>$subCat){
+				$subCategories[$subCat->id] = $subCat->name;
+			}
+			$data['subCategories'] = $subCategories;
+			$this->load->view('Ca/weapon/edit',$data);
+		}
+		public function weapon_add(){
+			$this->load->model('Weapon/Weapon_model');
+			$this->load->library('form_validation');
+			
+			if($this->input->post('submit')!=null){
+				$weapon_name  = $this->input->post('arm');
+				$weapon_sub_category_id = $this->input->post('weapon_sub_category');
+				$this->form_validation->set_rules("arm", "Weapon Name", "required|callback_unique_weapon_name");
+				$this->form_validation->set_rules("weapon_sub_category", "Sub Category", "required");
+				$this->form_validation->set_rules("weapon_main_category", "Main Category", "required|callback_valid_main_category");
+				if($this->form_validation->run()){
+					//$status = $this->Weapon_model->addWeapon($weapon_name,$weapon_sub_category_id);
+					$status = $this->Weapon_model->addWeapon2($weapon_name,$weapon_sub_category_id);
+					if($status){
+						$this->session->set_flashdata('success_msg','Weapon has updated successfully. (Incomplete data, need discussion) !');
+						redirect('ca-khc-weapon-list');
+					}else{
+						$this->session->set_flashdata('error_msg','Weapon Updation Failed.');
+					}
+				}
+			}
+			/*$weapon = $this->Weapon_model->getWeaponById($id);
+			$data['weapon'] = $weapon[0];*/
+			$categoryObjs = $this->Weapon_model->getMainWeaponCategories();
+			$categories = [];
+			$categories[0] = 'NOT SET';
+			foreach($categoryObjs as $k=>$cat){
+				$categories[$cat->id] = $cat->name;
+			}
+			$data['categories'] = $categories;
+			$subCategoryObj = $this->Weapon_model->getSubCategoryById(1);
+			$subCategories = [];
+			$subCategories[''] = 'NOT SET';
+			foreach($subCategoryObj as $k=>$subCat){
+				$subCategories[$subCat->id] = $subCat->name;
+			}
+			$data['subCategories'] = $subCategories;
+			$this->load->view('Ca/weapon/add',$data);
+		}
+		public function valid_main_category($main_category){
+			if($main_category==0){
+				$this->form_validation->set_message('valid_main_category', 'Category Not Set.');
+				return false;
+			}else{
+				return true;
+			}
+		}
+		public function unique_weapon_name($name){
+			if($this->Weapon_model->uniqueWeaponName($name)){
+				return true;
+			}else{
+				$this->form_validation->set_message('unique_weapon_name', 'Weapon Name already exists.');
+				return false;
+			}
+		}
+		//WEapon Main category mgmt.
+		public function weapon_main_category_list(){
+			$this->load->model('Weapon/Weapon_model');
+			$data = [];
+			$this->load->view('Ca/weapon_main_category/list',$data);
+		}
+		public function weapon_main_category_list_ajax(){
+			$this->load->model('Weapon_model');
+			if(null!=$this->input->post('name') && $this->input->post('name')!=''){
+				$main_category_name = $this->input->post('name');
+			}else{
+				$main_category_name = null;
+			}
+			$length = 10;
+			$start = 0;
+			if(isset($_POST['length']) && $_POST["length"] != -1){
+				$length = $_POST["length"];
+				$start = $_POST['start'];
+			}
+			$orderby = 'name';
+			$order = 'asc';
+			$weapon_main_category_objs = $this->Weapon_model->getMainWeaponCategories($main_category_name,$length,$start,$orderby,$order);
+			$data = [];
+			$sno=1+$start;
+			foreach($weapon_main_category_objs as $k=>$weapon_main_cateogory_obj){
+				$wep_main_cat = [];
+				$wep_main_cat['sno'] = $sno;
+				$wep_main_cat['name'] = $weapon_main_cateogory_obj->name;
+				$wep_main_cat['created'] = $weapon_main_cateogory_obj->created;
+				$wep_main_cat['action'] = '<a href="'.base_url().'ca-khc-weapon-main-category-edit/'.$weapon_main_cateogory_obj->id.'" class="glyphicon glyphicon-pencil black"></a> | <a class="glyphicon glyphicon-trash red"></a>'; 
+				$data[] = $wep_main_cat;
+				$sno++;
+			}
+			$total_filtered_weapons = $this->Weapon_model->getTotalFilteredWeaponsMainCategory($main_category_name);
+			$total_weapons = $this->Weapon_model->getTotalWeaponMainCategory();
+			
+			$output = array(
+				//"draw" =>intval(isset($_POST['draw'])?$_POST['draw']:1),
+				"draw" =>intval($_POST['draw']),
+				"recordsTotal" =>$total_weapons,//$this->Posting_model->getTotalEmployees(),
+				"recordsFiltered" =>$total_filtered_weapons,//$this->Posting_model->getTotalFilteredEmployees(),
+				"data"	=>$data,
+				"post"=>$_POST
+			);
+			echo json_encode($output);
+		}
+		public function weapon_main_category_add(){
+			$this->load->model('Weapon/Weapon_model');
+			$this->load->library('form_validation');
+			
+			if($this->input->post('submit')!=null){
+				$name = $this->input->post('name');
+				
+				$this->form_validation->set_rules("name", "Weapon Main Category Name", "required|callback_unique_weapon_category_name");
+				if($this->form_validation->run()){
+					$created = date('Y-m-d H:i:s');
+					$status = $this->Weapon_model->addWeaponMainCategory($name,$created);
+					//$status = true;
+					if($status){
+						$this->session->set_flashdata('success_msg','Weapon Main Category has added succesfully!');
+						redirect('ca-khc-weapon-main-category-list');
+					}else{
+						$this->session->set_flashdata('error_msg','Weapon Main Category Addition Failed!');
+					}
+				}
+			}
+			/*$weapon = $this->Weapon_model->getWeaponById($id);
+			$data['weapon'] = $weapon[0];*/
+			$categoryObjs = $this->Weapon_model->getMainWeaponCategories();
+			$categories = [];
+			$categories[0] = 'NOT SET';
+			foreach($categoryObjs as $k=>$cat){
+				$categories[$cat->id] = $cat->name;
+			}
+			$data['categories'] = $categories;
+			$subCategoryObj = $this->Weapon_model->getSubCategoryById(1);
+			$subCategories = [];
+			$subCategories[''] = 'NOT SET';
+			foreach($subCategoryObj as $k=>$subCat){
+				$subCategories[$subCat->id] = $subCat->name;
+			}
+			$data['subCategories'] = $subCategories;
+			$this->load->view('Ca/weapon_main_category/add',$data);
+		}
+		public function weapon_main_category_edit($id){
+			$this->load->model('Weapon/Weapon_model');
+			$this->load->library('form_validation');
+			
+			if($this->input->post('submit')!=null){
+				$name = $this->input->post('name');
+				
+				$this->form_validation->set_rules("name", "Weapon Main Category Name", "required|callback_unique_weapon_category_name[$id]");
+				if($this->form_validation->run()){
+					$created = date('Y-m-d H:i:s');
+					$status = $this->Weapon_model->updateWeaponMainCategory($id,$name,$created);
+					//$status = true;
+					if($status){
+						$this->session->set_flashdata('success_msg','Weapon Main Category has updated succesfully!');
+						redirect('ca-khc-weapon-main-category-list');
+					}else{
+						$this->session->set_flashdata('error_msg','Weapon Main Category Updation Failed!');
+					}
+				}
+			}
+			/*$weapon = $this->Weapon_model->getWeaponById($id);
+			$data['weapon'] = $weapon[0];*/
+			$main_categoryObj = $this->Weapon_model->getMainWeaponCategoryById($id);
+			$data['category'] = $main_categoryObj[0];
+			$this->load->view('Ca/weapon_main_category/edit',$data);
+		}
+		//Sub category list
+		public function weapon_sub_category_list(){
+			$this->load->model('Weapon/Weapon_model');
+			$data = [];
+			$categoryObjs = $this->Weapon_model->getMainWeaponCategories();
+			$categories = [];
+			$categories[0] = 'NOT SET';
+			foreach($categoryObjs as $k=>$cat){
+				$categories[$cat->id] = $cat->name;
+			}
+			$data['categories'] = $categories;
+			$this->load->view('Ca/weapon_sub_category/list',$data);
+		}
+		public function weapon_sub_category_list_ajax2(){
+			$this->load->model('Weapon_model');
+			if(null!=$this->input->post('name') && $this->input->post('name')!=''){
+				$name = $this->input->post('name');
+			}else{
+				$name = null;
+			}
+			if(null!=$this->input->post('main_category') && count($this->input->post('main_category'))>0){
+				$main_category_ids = $this->input->post('main_category');
+			}else{
+				$main_category_ids = null;
+			}
+			$length=10;
+			$start = 0;
+			if(isset($_POST['length']) && $_POST["length"] != -1){
+				$length = $_POST["length"];
+				$start = $_POST['start'];
+			}
+			$orderby = 'weapon_sub_categories.name';
+			$order = 'asc';
+			$weapon_main_category_objs = $this->Weapon_model->getSubWeaponCategories($main_category_ids,$name,$length,$start,$orderby,$order);
+			$data = [];
+			$sno=1+$start;
+			foreach($weapon_main_category_objs as $k=>$weapon_main_cateogory_obj){
+				$wep_main_cat = [];
+				$wep_main_cat['sno'] = $sno;
+				$wep_main_cat['sub_name'] = $weapon_main_cateogory_obj->sub_name;
+				$wep_main_cat['main_category_name'] = $weapon_main_cateogory_obj->main_category_name;
+				$wep_main_cat['created'] = $weapon_main_cateogory_obj->created;
+				$wep_main_cat['action'] = '<a href="'.base_url().'ca-khc-weapon-sub-category-edit/'.$weapon_main_cateogory_obj->sub_id.'" class="glyphicon glyphicon-pencil black"></a> | <a class="glyphicon glyphicon-trash red"></a>'; 
+				$data[] = $wep_main_cat;
+				$sno++;
+			}
+			//$total_filtered_weapons = $this->Weapon_model->getTotalFilteredWeaponsMainCategory($main_category_name);
+			$total_filtered_weapons = $this->Weapon_model->getTotalFilteredSubWeaponCategories($main_category_ids,$name);
+			$total_weapons = $this->Weapon_model->getTotalSubWeaponCategories();
+			
+			$output = array(
+				//"draw" =>intval(isset($_POST['draw'])?$_POST['draw']:1),
+				"draw" =>intval($_POST['draw']),
+				"recordsTotal" =>$total_weapons,//$this->Posting_model->getTotalEmployees(),
+				"recordsFiltered" =>$total_filtered_weapons,//$this->Posting_model->getTotalFilteredEmployees(),
+				"data"	=>$data,
+				"post"=>$_POST
+			);
+			echo json_encode($output);
+		}
+		public function weapon_sub_category_list_ajax_2(){
+			$this->load->model('Weapon_model');
+			
+			if(null!=$this->input->post('main_category') && count($this->input->post('main_category'))>0){
+				$main_category_ids = $this->input->post('main_category');
+			}else{
+				$main_category_ids = null;
+			}
+			$name=null;
+			$length=null;
+			$start = null;
+			$orderby = 'weapon_sub_categories.name';
+			$order = 'asc';
+			$weapon_sub_category_objs = $this->Weapon_model->getSubWeaponCategories($main_category_ids,$name,$length,$start,$orderby,$order);
+			$subcategories = [];
+			$subcategories[''] = 'Select the sub category';
+			foreach($weapon_sub_category_objs as $k=>$weapon_sub_cateogory_obj){
+				$sub_categories[$weapon_sub_cateogory_obj->sub_id]=$weapon_sub_cateogory_obj->sub_name;
+			}
+			//var_dump($sub_categories);
+			//$total_filtered_weapons = $this->Weapon_model->getTotalFilteredWeaponsMainCategory($main_category_name);
+			
+			echo json_encode(['sub_categories'=>$sub_categories]);
+		}
+		public function weapon_sub_category_edit($id){
+			$this->load->model('Weapon/Weapon_model');
+			$this->load->library('form_validation');
+			if(null!=$this->input->post('submit')){
+				$name = $this->input->post('name');
+				$weapon_main_category = $this->input->post('weapon_main_category');
+				$this->form_validation->set_rules('name',"Name","required|callback_unique_sub_category[$id]");
+				$this->form_validation->set_rules('weapon_main_category',"Main Category",'required');
+				if($this->form_validation->run()){
+					$status = $this->Weapon_model->updateSubCategory($id,$name,$weapon_main_category);
+					if($status){
+						$this->session->set_flashdata('success_msg','Weapon Sub Category has updated succesfully!');
+						redirect('ca-khc-weapon-sub-category-list');
+					}else{
+						$this->session->set_flashdata('error_msg','Weapon Sub Category Updation Failed!');
+					}
+				}else{
+					echo validation_errors();
+					echo 'dalkkld';
+					$this->session->set_flashdata('error_msg','validation failed!');
+				}
+			}
+			$sub_category_obj = $this->Weapon_model->getWeaponSubCategoryById($id);
+			$sub_category = $sub_category_obj[0];
+			$data['sub_category'] = $sub_category;
+			$categoryObjs = $this->Weapon_model->getMainWeaponCategories();
+			$categories = [];
+			$categories[0] = 'NOT SET';
+			foreach($categoryObjs as $k=>$cat){
+				$categories[$cat->id] = $cat->name;
+			}
+			$data['categories'] = $categories;
+			$this->load->view('Ca/weapon_sub_category/edit',$data);
+		}
+		public function weapon_sub_category_add(){
+			$this->load->model('Weapon/Weapon_model');
+			$this->load->library('form_validation');
+			if(null!=$this->input->post('submit')){
+				$name = $this->input->post('name');
+				$weapon_main_category = $this->input->post('weapon_main_category');
+				$this->form_validation->set_rules('name',"Name","required|callback_unique_sub_category");
+				$this->form_validation->set_rules('weapon_main_category',"Main Category",'required');
+				if($this->form_validation->run()){
+					$created = date('Y-m-d H:i:s');
+					$status = $this->Weapon_model->addSubCategory($name,$weapon_main_category,$created);
+					if($status){
+						$this->session->set_flashdata('success_msg','Weapon Sub Category has added succesfully!');
+						redirect('ca-khc-weapon-sub-category-list');
+					}else{
+						$this->session->set_flashdata('error_msg','Weapon Sub Category Addition Failed!');
+					}
+				}else{
+					$this->session->set_flashdata('error_msg','Validation Failed!');
+				}
+			}
+			$categoryObjs = $this->Weapon_model->getMainWeaponCategories();
+			$categories = [];
+			$categories[0] = 'NOT SET';
+			foreach($categoryObjs as $k=>$cat){
+				$categories[$cat->id] = $cat->name;
+			}
+			$data['categories'] = $categories;
+			$this->load->view('Ca/weapon_sub_category/add',$data);
+		}
+		public function unique_sub_category($name,$id){
+			if($this->Weapon_model->unique_sub_category($name,$id)){
+				return true;
+			}else{
+				$this->form_validation->set_message('unique_sub_category','Sub Category name already exists');
+				return false;
+			}
+		}
+		public function unique_weapon_category_name($name){
+			if($this->Weapon_model->unique_weapon_category_name($name)){
+				return true;
+			}else{
+				$this->form_validation->set_message('unique_weapon_category_name','Category Already Exists');
+				return false;
+			}
+		}
+		public function required_body_numbers($ids){
+			if(null!=$ids){
+				return true;
+			}else{
+				$this->form_validation->set_message('required_body_numbers','Please select the body numbers.');
+				return false;
+			}
+		}
+		//battalion updating weapon name
+		public function updateWeaponDetailByBodyNumbers(){
+			$this->load->model('Weapon/Weapon_model');
+			$this->load->library('form_validation');
+			$selected_main_category_id = $this->input->post('main_category_id');
+			$selected_sub_category_id = $this->input->post('sub_category_id');
+			$weapon_id_from = $this->input->post('weapon_id_from');
+			$weapon_ids = $this->input->post('body_numbers');
+			$weapon_id_to = $this->input->post('weapon_id_to');
+			if(null!=$this->input->post('submit')){
+				
+				//validate the weapon name it should exists in db
+				if(null!=$weapon_ids){
+					foreach($weapon_ids as $k=>$val){
+						$weapon_ids[$k] = trim($val);
+					}
+				}
+				$this->form_validation->set_rules('weapon_id_from','Weapon to which you want to convert','required');
+				$this->form_validation->set_rules('body_numbers[]','Weapon body numbers','callback_required_body_numbers');
+				$this->form_validation->set_rules('weapon_id_to','Weapon into which you want to convert','required');
+				if($this->form_validation->run()){
+					$bat_id = $this->session->userdata('userid');
+					$new_weapon_obj = $this->Weapon_model->getSelectedToWeapon($weapon_id_to)[0];
+					$weapon_name_for_issue =$new_weapon_obj->arm;
+					$weapon_name_for_old = $new_weapon_obj->arm;
+					$status1 = $this->Weapon_model->updateNewWeaponNameByBodyNumber($weapon_ids,$weapon_name_for_old,$bat_id);
+					$status2 = $this->Weapon_model->updateIssueWeaponNameByBodyNumber($weapon_ids,$weapon_name_for_issue,$bat_id);
+					if($status1 && $status2){
+						$this->session->set_flashdata('success_msg','Weapon Names are udpated succesfully!');
+						redirect('bt-khc-update-weapons');
+					}else{
+						$this->session->set_flashdata('error_msg','Weapon Sub Category updatlion Failed!');
+					}
+				}
+			}
+			//main categry
+			$main_categories_objs = $this->Weapon_model->getMainWeaponCategories();
+			$main_categories = [];
+			$to_be_select_main_category_id = false;
+			foreach($main_categories_objs as $k=>$main_categories_obj){
+				if($to_be_select_main_category_id===false){
+					$to_be_select_main_category_id=$main_categories_obj->id;
+				}
+				$main_categories[$main_categories_obj->id] = $main_categories_obj->name;
+			}
+			$data['main_categories'] = $main_categories;
+			if($selected_main_category_id==null){
+				$selected_main_category_id = $to_be_select_main_category_id;
+			}
+			$selected_main_category_id = 1;
+			$data['selected_main_category_id'] = $selected_main_category_id;
+			//sub category
+			$sub_categories = [];
+			$sub_categories_objs = $this->Weapon_model->getSubCategoryById($selected_main_category_id);
+			$to_be_select_sub_category_id = false;
+			foreach($sub_categories_objs as $k=>$sub_categories_obj){
+				if($to_be_select_sub_category_id===false){
+					$to_be_select_sub_category_id = $sub_categories_obj->id;
+				}
+				$sub_categories[$sub_categories_obj->id] = $sub_categories_obj->name;
+			}
+			$data['sub_categories'] = $sub_categories;
+			if($selected_sub_category_id==null){
+				$selected_sub_category_id =$to_be_select_sub_category_id;
+			}
+			$data['selected_sub_category_id'] = $selected_sub_category_id;
+			//select weapons
+			$weapon_objs = $this->Weapon_model->getWeaoponsUnderSubCategory($selected_sub_category_id);
+			$weapons = [];
+			$weapons[''] = 'Select the Weapon Type into which you want to move the selected weapons';
+			foreach($weapon_objs as $k=>$weapon_obj){
+				$weapons[$weapon_obj->nwep_id] = $weapon_obj->arm.','.$weapon_obj->bore;
+			}
+			$data['weapons'] = $weapons;
+			if(null!=$weapon_id_from && trim($weapon_id_from)!=''){
+				$selected_weapon_id = $weapon_id_from;
+			}else{
+				$selected_weapon_id = 1;
+			}
+		/* 	$weapon_objs = $this->Weapon_model->getAllWeapons2();
+			$weapons = [];
+			$weapons[''] = 'Select the Weapon Type into which you want to move the selected weapons';
+			foreach($weapon_objs as $k=>$weapon_obj){
+				$weapons[$weapon_obj->nwep_id] = $weapon_obj->arm.','.$weapon_obj->bore;
+			} */
+			$data['selected_weapon_id'] = $selected_weapon_id;
+			
+			$weapon = $this->Weapon_model->getWeaponById($selected_weapon_id);
+			//var_dump($weapon);
+			$bat_id = $this->session->userdata('userid');
+			$weapon_objs2 = $this->Weapon_model->getWeaponBodyNumberByWeaponName($weapon[0]->arm,$bat_id);
+			
+			
+			$weapon_body_numbers = [];
+			foreach($weapon_objs2 as $k=>$weapon_obj2){
+				$weapon_body_numbers[$weapon_obj2->old_weapon_id]=$weapon_obj2->bono;
+			}
+			$data['weapon_body_numbers'] = $weapon_body_numbers;
+			$this->load->view('Weapon/update_weapon_name_by_body_number',$data);
+		}
+		public function getWeaponsUnderSubCategoryAjax(){
+			$this->load->model('Weapon/Weapon_model');
+			$selected_sub_category_id = $this->input->post('selected_sub_category_id');
+			$weapon_objs = $this->Weapon_model->getWeaoponsUnderSubCategory($selected_sub_category_id);
+			$weapons = [];
+			//$weapons[''] = 'Select the Weapon Type into which you want to move the selected weapons';
+			foreach($weapon_objs as $k=>$weapon_obj){
+				$weapons[$weapon_obj->nwep_id] = $weapon_obj->arm.','.$weapon_obj->bore;
+			}
+			echo json_encode(['weapons'=>$weapons]);
+		}
+		public function ajaxGetWeaponBodyNumbers(){
+			
+			$this->load->model('Weapon/Weapon_model');
+			$selected_weapon_id = $this->input->post('selected_weapon_id');
+			//$selected_weapon_id = 8;
+			$weapon = $this->Weapon_model->getWeaponById($selected_weapon_id);
+			//var_dump($weapon);
+			$weapon_body_numbers = [];
+			if(count($weapon)>0){
+				$bat_id = $this->session->userdata('userid');
+				$weapon_objs = $this->Weapon_model->getWeaponBodyNumberByWeaponName($weapon[0]->arm,$bat_id);
+				$data = [];
+				
+				
+				foreach($weapon_objs as $k=>$weapon_obj){
+					$weapon_body_numbers[$weapon_obj->old_weapon_id]=$weapon_obj->bono;
+				}
+			}
+			$data['weapon_body_numbers'] = $weapon_body_numbers;
+			echo json_encode($data);
+		}
+		public function khcFigureCategoryWise(){
+			$this->load->helper('common');
+			if($this->session->userdata('user_log')==3){	//battalion login
+				$this->battalionKhcFigureCategoryWise();
+			}else{
+				$this->officerKhcFigureCategoryWise();	// officer login
+			}
+		}
+		//2020.12.31
+		public function officerKhcFigureCategoryWise(){
+			//error_reporting(0);
+			$data['subpage'] = 'weapon_figures_category_wise.php';
+                        if($this->session->userdata('userid')==211){
+                            $data['units'] = array('cdo'=>'CDO');	//all the units
+                             $selected_unit = 'cdo';
+                        }else if($this->session->userdata('userid')==209){
+                            $data['units'] = array('irb'=>'IRB');	//all the units
+                             $selected_unit = 'irb';
+                        }else{
+                            $data['units'] = array('pap'=>'PAP','irb'=>'IRB','cdo'=>'CDO');	//all the units
+                            if(null!=$this->input->post('units')){
+                                $selected_unit = $this->input->post('units');
+                            }else{
+                                    $selected_unit = 'pap';
+                            }
+                        }
+			//$data['units'] = array('pap'=>'PAP','irb'=>'IRB','cdo'=>'CDO');	//all the units
+			/*if(null!=$this->input->post('units')){
+				$selected_unit = $this->input->post('units');
+			}else{
+				$selected_unit = 'pap';
+			}*/
+			$battalions = $this->getBattalionByUnit($selected_unit);
+			$data['battalions'] = $battalions;
+			$data['default_unit'] = $selected_unit;
+			$data['columns'] = $columns = count($battalions)+3;
+			//$weapon_objects = $this->Weapon_model->weaponlist();			//fetching all weapons name/name
+			
+			//Weapon Detail
+			$main_categoryIds=null;
+			$selected_main_category_id = '';	//default all
+			$sub_categoriesIds=null;$weapon_names=null;
+			$length=null;
+			$start=null;
+			$orderby=null;
+			$order=null;
+			if(null!=$this->input->post('main_category') && trim($this->input->post('main_category')!='')){
+				$main_categoryIds=[$this->input->post('main_category')];
+				$selected_main_category_id = $this->input->post('main_category');
+			}
+			
+			
+			//Main categories
+			$name = null;$orderColumn = 'name';$order='asc';
+			$weapon_main_categories_objs = $this->Weapon_model->getWeaponMainCategories($name,$orderColumn,$order);
+			$weapon_main_categories=[];
+			$weapon_main_categories[''] = "Select Main Category";
+			$to_be_select_main_category_id = false;
+			foreach($weapon_main_categories_objs as $k=>$weapon_main_categories_obj){
+				if($to_be_select_main_category_id===false){
+					$to_be_select_main_category_id=$weapon_main_categories_obj->id;
+					if(null!=$this->input->post('main_category')){
+						$to_be_select_main_category_id_for_sub_categores = $this->input->post('main_category');
+					}else{
+						$to_be_select_main_category_id_for_sub_categores=$weapon_main_categories_obj->id;
+					}
+				}
+				$weapon_main_categories[$weapon_main_categories_obj->id] = $weapon_main_categories_obj->name;
+			}
+			$data['selected_main_category'] = $selected_main_category_id;
+			//var_dump($weapon_main_categories);
+			$data['weapon_main_categories'] = $weapon_main_categories;
+			//sub categories
+			
+			$orderColumn='name';
+			$order='asc';
+			$sub_categories_objs = $this->Weapon_model->getWeaponSubCategoriesByWeaponMainCategoryIds($main_categoryIds,$orderColumn,$order);	
+			$sub_categories = [];
+			$sub_categories[''] = 'Select Sub Category';
+			$to_be_select_sub_category_id = false;
+			foreach($sub_categories_objs as $k=>$sub_categories_obj){
+
+				$sub_categories[$sub_categories_obj->id] = $sub_categories_obj->name;
+			}
+			$data['sub_categories'] = $sub_categories;
+			if(null!=$this->input->post('sub_category') && trim($this->input->post('sub_category')!='')){
+				$sub_categoriesIds=[$this->input->post('sub_category')];
+				$selected_sub_category_id = $this->input->post('sub_category');
+			}
+			
+			
+			//get weapon name linked with sub_category id
+			$default_weapons = array();
+			$weapon_objects = $sub_category_weapons_names_objs = $this->Weapon_model->getWeaponsUnderSubCategoryId($main_categoryIds,$sub_categoriesIds);
+			foreach($weapon_objects as $k=>$v){
+				$default_weapons[$v->weapon_name] = $v->weapon_name;
+			}
+			asort($default_weapons);
+			//var_dump($default_weapons);
+			//var_dump($sub_category_weapons_names_objs);
+			$sub_categories_weapon_names=[];
+			$weapon_front_data = [];
+			//---------------------------------------------
+			$data['weapons'] = $default_weapons;
+			if(null!=$this->input->post('weapons')){
+				$weapons_input = $this->input->post('weapons');
+				$weapons = array();
+				foreach($weapons_input as $k=>$v){
+					if(isset($default_weapons[$v])){
+						
+						$weapons[$v] = $default_weapons[$v];
+					}
+				}
+			}else{
+				$weapons = $default_weapons;
+			}
+			//asort($weapons);
+			$data['selected_weapons'] = $weapons;
+			$data['types']= $this->getWeaponStatusForWeaponFigurePage();
+			$types = $data['types'];
+			if(null!=$this->input->post('type')){
+				if(isset($data['types'][$this->input->post('type')])){
+					$selected_type = $this->input->post('type');
+				}else{
+					$selected_type = 'holding';
+				}
+			}else{
+				$selected_type = 'holding';
+			}
+			$data['default_type'] = $selected_type;
+			//initialize
+			//var_dump($weapons);
+			if(count($weapons)<=0){
+				$data['categorised_selected_weapons']='NO WEAPONS';
+				
+				$this->load->view('Weapon/figures',$data);
+				
+			}else{
+				$weapon_figures = $this->initialize_weapon_figures($battalions,$weapons,$types,$selected_type);
+				//calculations 
+				$weapon_figure_data = $this->Weapon_model->get_weapon_figure_data($battalions,$weapons,$types,$selected_type);
+				$weapon_figures = $this->calculate_weapon_figures_data($weapon_figure_data,$weapon_figures,$battalions,$weapons,$types,$selected_type);
+				//skip zero
+				if(null!=$this->input->post('hideZeroWeapons')){
+						$weapons_and_battalions = $this->skip_zero_battalion_weapon_figure($weapon_figures,$battalions,$weapons,$types,$selected_type);
+						$data['selected_weapons'] = $weapons_and_battalions['weapons'];
+				}
+				//var_dump($weapon_figures);
+				//break;
+				
+				
+				foreach($sub_category_weapons_names_objs as $k=>$sub_category_weapons_names_obj){
+					$weapon_front_data[$sub_category_weapons_names_obj->main_id][$sub_category_weapons_names_obj->sub_id][$sub_category_weapons_names_obj->weapon_name]=$weapon_figures;
+					//var_dump($weapon_figures[$sub_category_weapons_names_obj->weapon_name]);
+					//die;
+				}
+				$data['categorised_selected_weapons']=$weapon_front_data;
+				if(null!=$this->input->post('download')){
+					$this->download_categorised_weapon_figure($weapon_figures,$battalions,$weapons,$types,$selected_type,$data['default_type'],$data['selected_weapons'],$columns,$data['units'][$selected_unit],$data['categorised_selected_weapons'],$data['weapon_main_categories'],$data['sub_categories']);
+				}
+				//dowlnload
+				$data['weapon_figures'] = $weapon_figures;
+				
+				$this->load->view('Weapon/figures',$data);
+			}
+		}
+		public function battalionKhcFigureCategoryWise(){
+			//error_reporting(0);
+			$data['subpage'] = 'weapon_figures_category_wise.php';
+			$data['units'] = array('pap'=>'PAP','irb'=>'IRB','cdo'=>'CDO');	//all the units
+			
+			if(null!=$this->input->post('units')){
+				$selected_unit = $this->input->post('units');
+			}else{
+				$selected_unit = 'pap';
+			}
+			
+				//$battalions = 1;
+				$selected_unit = $this->getUnitByBatId($this->session->userdata['userid']);
+				$battalions_temp = $this->getBattalionByUnit($selected_unit);
+				$battalions = [$this->session->userdata['userid']=>$battalions_temp[$this->session->userdata['userid']]];
+			
+			
+			$data['battalions'] = $battalions;
+			$data['default_unit'] = $selected_unit;
+			$data['columns'] = $columns = count($battalions)+3;
+			//$weapon_objects = $this->Weapon_model->weaponlist();			//fetching all weapons name/name
+			
+			//Weapon Detail
+			$main_categoryIds=null;
+			$selected_main_category_id = '';	//default all
+			$sub_categoriesIds=null;$weapon_names=null;
+			$length=null;
+			$start=null;
+			$orderby=null;
+			$order=null;
+			if(null!=$this->input->post('main_category') && trim($this->input->post('main_category')!='')){
+				$main_categoryIds=[$this->input->post('main_category')];
+				$selected_main_category_id = $this->input->post('main_category');
+			}
+			
+			
+			//Main categories
+			$name = null;$orderColumn = 'name';$order='asc';
+			$weapon_main_categories_objs = $this->Weapon_model->getWeaponMainCategories($name,$orderColumn,$order);
+			$weapon_main_categories=[];
+			$weapon_main_categories[''] = "Select Main Category";
+			$to_be_select_main_category_id = false;
+			foreach($weapon_main_categories_objs as $k=>$weapon_main_categories_obj){
+				if($to_be_select_main_category_id===false){
+					$to_be_select_main_category_id=$weapon_main_categories_obj->id;
+					if(null!=$this->input->post('main_category')){
+						$to_be_select_main_category_id_for_sub_categores = $this->input->post('main_category');
+					}else{
+						$to_be_select_main_category_id_for_sub_categores=$weapon_main_categories_obj->id;
+					}
+				}
+				$weapon_main_categories[$weapon_main_categories_obj->id] = $weapon_main_categories_obj->name;
+			}
+			$data['selected_main_category'] = $selected_main_category_id;
+			//var_dump($weapon_main_categories);
+			$data['weapon_main_categories'] = $weapon_main_categories;
+			//sub categories
+			
+			$orderColumn='name';
+			$order='asc';
+			$sub_categories_objs = $this->Weapon_model->getWeaponSubCategoriesByWeaponMainCategoryIds($main_categoryIds,$orderColumn,$order);	
+			$sub_categories = [];
+			$sub_categories[''] = 'Select Sub Category';
+			$to_be_select_sub_category_id = false;
+			foreach($sub_categories_objs as $k=>$sub_categories_obj){
+
+				$sub_categories[$sub_categories_obj->id] = $sub_categories_obj->name;
+			}
+			$data['sub_categories'] = $sub_categories;
+			if(null!=$this->input->post('sub_category') && trim($this->input->post('sub_category')!='')){
+				$sub_categoriesIds=[$this->input->post('sub_category')];
+				$selected_sub_category_id = $this->input->post('sub_category');
+			}
+			
+			
+			//get weapon name linked with sub_category id
+			$default_weapons = array();
+			$weapon_objects = $sub_category_weapons_names_objs = $this->Weapon_model->getWeaponsUnderSubCategoryId($main_categoryIds,$sub_categoriesIds);
+			foreach($weapon_objects as $k=>$v){
+				$default_weapons[$v->weapon_name] = $v->weapon_name;
+			}
+			asort($default_weapons);
+			//var_dump($default_weapons);
+			//var_dump($sub_category_weapons_names_objs);
+			$sub_categories_weapon_names=[];
+			$weapon_front_data = [];
+			//---------------------------------------------
+			$data['weapons'] = $default_weapons;
+			if(null!=$this->input->post('weapons')){
+				$weapons_input = $this->input->post('weapons');
+				$weapons = array();
+				foreach($weapons_input as $k=>$v){
+					if(isset($default_weapons[$v])){
+						
+						$weapons[$v] = $default_weapons[$v];
+					}
+				}
+			}else{
+				$weapons = $default_weapons;
+			}
+			//asort($weapons);
+			$data['selected_weapons'] = $weapons;
+			$data['types']= $this->getWeaponStatusForWeaponFigurePage();
+			$types = $data['types'];
+			if(null!=$this->input->post('type')){
+				if(isset($data['types'][$this->input->post('type')])){
+					$selected_type = $this->input->post('type');
+				}else{
+					$selected_type = 'holding';
+				}
+			}else{
+				$selected_type = 'holding';
+			}
+			$data['default_type'] = $selected_type;
+			//initialize
+			//var_dump($weapons);
+			if(count($weapons)<=0){
+				$data['categorised_selected_weapons']='NO WEAPONS';
+				
+				$this->load->view('Weapon/figures',$data);
+				
+			}else{
+				$weapon_figures = $this->initialize_weapon_figures($battalions,$weapons,$types,$selected_type);
+				//calculations 
+				$weapon_figure_data = $this->Weapon_model->get_weapon_figure_data($battalions,$weapons,$types,$selected_type);
+				$weapon_figures = $this->calculate_weapon_figures_data($weapon_figure_data,$weapon_figures,$battalions,$weapons,$types,$selected_type);
+				//skip zero
+				if(null!=$this->input->post('hideZeroWeapons')){
+						$weapons_and_battalions = $this->skip_zero_battalion_weapon_figure($weapon_figures,$battalions,$weapons,$types,$selected_type);
+						$data['selected_weapons'] = $weapons_and_battalions['weapons'];
+				}
+				//var_dump($weapon_figures);
+				//break;
+				
+				
+				foreach($sub_category_weapons_names_objs as $k=>$sub_category_weapons_names_obj){
+					$weapon_front_data[$sub_category_weapons_names_obj->main_id][$sub_category_weapons_names_obj->sub_id][$sub_category_weapons_names_obj->weapon_name]=$weapon_figures;
+					//var_dump($weapon_figures[$sub_category_weapons_names_obj->weapon_name]);
+					//die;
+				}
+				//get the remarks\
+				$remarks_objs = $this->Weapon_model->getRemarks($data['selected_weapons'],$this->session->userdata('userid'));
+				$remarks=[];
+				foreach($remarks_objs as $k=>$remark_obj){
+					$remarks[$remark_obj->wep] = $remark_obj->remarkwep;
+				}
+				$data['categorised_selected_weapons']=$weapon_front_data;
+				if(null!=$this->input->post('download')){
+					$this->downloadBattalionKhcFigureCategoryWise($weapon_figures,$battalions,$weapons,$types,$selected_type,$data['default_type'],$data['selected_weapons'],$columns,$data['units'][$selected_unit],$data['categorised_selected_weapons'],$data['weapon_main_categories'],$data['sub_categories'],$remarks);
+				}
+				//dowlnload
+				
+				$data['remarks'] = $remarks;
+				$data['weapon_figures'] = $weapon_figures;
+				
+				$this->load->view('Weapon/battalion_figures',$data);
+			}
+		}
+		public function downloadBattalionKhcFigureCategoryWise($weapon_figures,$battalions,$weapons,$types,$selected_type,$default_type,$selected_weapons,$columns,$selected_unit,$categorised_selected_weapons,$weapon_main_categories,$sub_categories,$remarks){
+			error_reporting(0);	
+			$this->load->library('excel');
+			$objPHPExcel = new PHPExcel();
+			$objPHPExcel->getProperties()->setCreator("ERMS-PAP")
+										 ->setLastModifiedBy("ERMS-PAP")
+										 ->setTitle("KHC FIGURES of Battalion(".$battalions[$this->session->userdata('userid')].'")')	
+										 ->setSubject("Office 2007 XLSX Test Document")
+										 ->setDescription("Kot(Weapon management Section) all consolidate figures, Generated by ERMS-PAP.")
+										 ->setKeywords("Figures of vehicles/battalion in MT")
+										 ->setCategory("Kot Overall figure view");
+			$counti= 0;
+			$objPHPExcel->createSheet($counti);
+			$objPHPExcel->setActiveSheetIndex($counti);
+			$objPHPExcel->getActiveSheet()->setTitle('Weapons Figure View'); 
+			$counter = 0;
+			$row=1;
+			$titleStyle = array(
+				'font'  => array(
+					'size'  => 13,
+					'name'  => 'Verdana',
+					'fill' => array(
+						'type' => PHPExcel_Style_Fill::FILL_SOLID,
+						'color' => array('rgb' => 'FF00a0')
+					)
+				));
+			
+			$objPHPExcel->setActiveSheetIndex($counti)->setCellValue('A1', 'Weapon Figures of  '.$battalions[$this->session->userdata('userid')].'');
+			
+			$objPHPExcel->getActiveSheet()->getStyle('A1')->applyFromArray($titleStyle);
+			$objPHPExcel->setActiveSheetIndex($counti)->mergeCells("A1:I1");
+			$objPHPExcel->getActiveSheet()->getStyle('A1')->getAlignment()->setHorizontal(PHPExcel_Style_Alignment::HORIZONTAL_CENTER);
+			$row++;
+			if($categorised_selected_weapons=='NO WEAPONS'){
+				$objPHPExcel->setActiveSheetIndex($counti)->setCellValue('A'.$row,'No Weapon Found');
+			
+			}else{
+				foreach($categorised_selected_weapons as $main_id=>$sub_categories_){
+					$objPHPExcel->setActiveSheetIndex($counti)->setCellValue('A'.$row,$weapon_main_categories[$main_id] );
+					$row++;
+					$objPHPExcel->setActiveSheetIndex($counti)->setCellValue('A'.$row,'S.No.');
+					$objPHPExcel->setActiveSheetIndex($counti)->setCellValue('B'.$row,'Weapon');
+					$objPHPExcel->setActiveSheetIndex($counti)->setCellValue('C'.$row,'Holding');
+					$objPHPExcel->setActiveSheetIndex($counti)->setCellValue('D'.$row,'Issued');
+					$objPHPExcel->setActiveSheetIndex($counti)->setCellValue('E'.$row,'Lost');
+					$objPHPExcel->setActiveSheetIndex($counti)->setCellValue('F'.$row,'Case Property in Kot');
+					$objPHPExcel->setActiveSheetIndex($counti)->setCellValue('G'.$row,'Case Property in PS');
+					$objPHPExcel->setActiveSheetIndex($counti)->setCellValue('H'.$row,'Condemn Non-Serviceable');
+					$objPHPExcel->setActiveSheetIndex($counti)->setCellValue('I'.$row,'In Kot (Available/Serviceable in Kot');
+					$objPHPExcel->setActiveSheetIndex($counti)->setCellValue('J'.$row,'Remarks');
+					
+					
+					$row++;
+					foreach($sub_categories_ as $sub_id=>$weapons){
+						
+						$objPHPExcel->setActiveSheetIndex($counti)->setCellValue('A'.$row,$sub_categories[$sub_id]);
+						
+						//echo '<td  style="color:red;" colspan="14">'.$sub_categories[$sub_id].'</td></tr>';
+						foreach($weapons as $weapon_name=>$battalions_weapons){
+							if(in_array($weapon_name,$selected_weapons)){
+								$row++;
+								//echo '<tr>';
+								//echo '<td>'.$count.'</td>';
+								$objPHPExcel->setActiveSheetIndex($counti)->setCellValue('A'.$row,$count);
+								$count++;
+								$objPHPExcel->setActiveSheetIndex($counti)->setCellValue('B'.$row,($weapon_name));
+								//echo '<td  style="'.$weapon_name_width.'">'.break_name_into_spaces($weapon_name).'</td>';
+								foreach($battalions as $bat_id=>$bat_name){ 
+									//echo '<td>'.$battalions_weapons[$weapon_name][$bat_id]['holding'].'</td>';
+									$objPHPExcel->setActiveSheetIndex($counti)->setCellValue('C'.$row,$battalions_weapons[$weapon_name][$bat_id]['holding']);
+									//echo '<td>'.$battalions_weapons[$weapon_name][$bat_id]['issued'].'</td>';
+									$objPHPExcel->setActiveSheetIndex($counti)->setCellValue('D'.$row,$battalions_weapons[$weapon_name][$bat_id]['issued']);
+									//echo '<td>'.$battalions_weapons[$weapon_name][$bat_id]['lost'].'</td>';
+									$objPHPExcel->setActiveSheetIndex($counti)->setCellValue('E'.$row,$battalions_weapons[$weapon_name][$bat_id]['lost']);
+									
+									//echo '<td>'.$battalions_weapons[$weapon_name][$bat_id]['case_property_in_kot'].'</td>';
+									$objPHPExcel->setActiveSheetIndex($counti)->setCellValue('F'.$row,$battalions_weapons[$weapon_name][$bat_id]['case_property_in_kot']);
+									//echo '<td>'.$battalions_weapons[$weapon_name][$bat_id]['case_property_in_ps'].'</td>';
+									$objPHPExcel->setActiveSheetIndex($counti)->setCellValue('G'.$row,$battalions_weapons[$weapon_name][$bat_id]['case_property_in_ps']);
+									//echo '<td>'.$battalions_weapons[$weapon_name][$bat_id]['condemn'].'</td>';
+									$objPHPExcel->setActiveSheetIndex($counti)->setCellValue('H'.$row,$battalions_weapons[$weapon_name][$bat_id]['condemn']);
+									//echo '<td>'.$battalions_weapons[$weapon_name][$bat_id]['in_kot'].'</td>';
+									$objPHPExcel->setActiveSheetIndex($counti)->setCellValue('I'.$row,$battalions_weapons[$weapon_name][$bat_id]['in_kot']);
+									if(in_array($weapon_name,array_keys($remarks))){
+										$objPHPExcel->setActiveSheetIndex($counti)->setCellValue('J'.$row,$remarks[$weapon_name]);
+										//echo '<td>'.$remarks[$weapon_name].'</td>';
+									}else{
+										$objPHPExcel->setActiveSheetIndex($counti)->setCellValue('J'.$row,'');
+										//echo '<td>&nbsp;-</td>';
+									}
+								}
+							}
+						}
+						$row++;
+					}
+					
+				}
+				$row++;
+				//echo '<TABLE class="table"><TBODY>';
+				$objPHPExcel->setActiveSheetIndex($counti)->setCellValue('A'.$row,'Grand Total');
+				//make it bold
+				//echo '<tr><th colspan="14" class="text-center green">Grand Total</th></tr>';
+				$row++;
+				
+				//echo '<tr><th>&nbsp;&nbsp;&nbsp;</th><th style="'.$weapon_name_width.'">&nbsp;</th>';
+				//foreach($battalions as $k=>$v){
+					//echo '<th>'.$v.'</th>';
+				//}
+				$objPHPExcel->setActiveSheetIndex($counti)->setCellValue('C'.$row,'Holding');
+				$objPHPExcel->setActiveSheetIndex($counti)->setCellValue('D'.$row,'Issued');
+				$objPHPExcel->setActiveSheetIndex($counti)->setCellValue('E'.$row,'Lost');
+				$objPHPExcel->setActiveSheetIndex($counti)->setCellValue('F'.$row,'Case Property in Kot');
+				$objPHPExcel->setActiveSheetIndex($counti)->setCellValue('G'.$row,'Case Property in PS');
+				$objPHPExcel->setActiveSheetIndex($counti)->setCellValue('H'.$row,'Condemn Non-Serviceable');
+				$objPHPExcel->setActiveSheetIndex($counti)->setCellValue('I'.$row,'In Kot (Available/serviceable in Kot)');
+				
+				//echo '</tr><tr>';
+				$row++;
+				//echo '<td>&nbsp;</td>';
+				//echo '<td>Total</td>';
+				
+				$objPHPExcel->setActiveSheetIndex($counti)->setCellValue('B'.$row,'Total');
+				foreach($battalions as $bat_id=>$bat_name){ 
+					$objPHPExcel->setActiveSheetIndex($counti)->setCellValue('C'.$row,$weapon_figures[$bat_id]['holding']['grand_total']);
+					$objPHPExcel->setActiveSheetIndex($counti)->setCellValue('D'.$row,$weapon_figures[$bat_id]['issued']['grand_total']);
+					$objPHPExcel->setActiveSheetIndex($counti)->setCellValue('E'.$row,$weapon_figures[$bat_id]['lost']['grand_total']);
+					$objPHPExcel->setActiveSheetIndex($counti)->setCellValue('F'.$row,$weapon_figures[$bat_id]['case_property_in_kot']['grand_total']);
+					$objPHPExcel->setActiveSheetIndex($counti)->setCellValue('G'.$row,$weapon_figures[$bat_id]['case_property_in_ps']['grand_total']);
+					$objPHPExcel->setActiveSheetIndex($counti)->setCellValue('H'.$row,$weapon_figures[$bat_id]['condemn']['grand_total']);
+					$objPHPExcel->setActiveSheetIndex($counti)->setCellValue('I'.$row,$weapon_figures[$bat_id]['in_kot']['grand_total']);
+				} 
+			}
+			
+			// Redirect output to a client’s web browser (Excel2007)
+			header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+			header('Content-Disposition: attachment;filename="All-figures-of-weapon.'.EXCEL_EXTENSION.'"');
+			header('Cache-Control: max-age=0');
+			// If you're serving to IE 9, then the following may be needed
+			header('Cache-Control: max-age=1');
+
+			// If you're serving to IE over SSL, then the following may be needed
+			header ('Expires: Mon, 26 Jul 1997 05:00:00 GMT'); // Date in the past
+			header ('Last-Modified: '.gmdate('D, d M Y H:i:s').' GMT'); // always modified
+			header ('Cache-Control: cache, must-revalidate'); // HTTP/1.1
+			header ('Pragma: public'); // HTTP/1.0
+
+			$objWriter = PHPExcel_IOFactory::createWriter($objPHPExcel, 'Excel2007');
+			$objWriter->save('php://output');
+			exit;
+		}
+
+                public function weapon_list_report(){
+                    //error_reporting(0);
+			
+			$data = array();
+			$pageType = $this->input->get('page');
+			if($pageType =='ALL_FIGURES' || null==$this->input->get('page')){
+				$data['subpage'] = 'all_figures.php';
+				$battalion_objects = $this->Weapon_model->getBattalions();
+				$default_battalions = array();
+				foreach($battalion_objects as $k=>$v){
+					$default_battalions[$v->users_id] = $v->user_name;
+				}
+				$default_battalions = $this->sortBattalions($default_battalions);
+				$data['battalions'] = $default_battalions;	
+				if(null!=$this->input->post('battalions')){					//user has given battalion input from front end
+					$battalions_input = $this->input->post('battalions');
+					$battalions = array();
+					foreach($battalions_input as $k=>$v){
+						$battalions[$v] = $default_battalions[$v];
+					}
+				}else{
+					$battalions = $default_battalions;						//default
+				}
+				$battalions = $this->sortBattalions($battalions);
+				$weapon_objects = $this->Weapon_model->weaponlist();			//fetching all weapons name/name
+				$default_weapons = array();
+				foreach($weapon_objects as $k=>$v){
+					$default_weapons[$v->arm] = $v->arm;
+				}
+				asort($default_weapons);
+				$data['weapons'] = $default_weapons;
+				if(null!=$this->input->post('weapons')){
+					$weapons_input = $this->input->post('weapons');
+					$weapons = array();
+					foreach($weapons_input as $k=>$v){
+						if(isset($default_weapons[$v])){
+							$weapons[$v] = $default_weapons[$v];
+						}
+					}
+				}else{
+					$weapons = $default_weapons;
+				}
+				asort($weapons);
+				$weapons_status = $this->getWeaponStatus();
+				//initialization
+				$data_2 = $this->initialize_weapon_all_figures($weapons,$battalions,$weapons_status);
+                                //var_Dump($weapon_data);
+				$weapons_data = $data_2['weapons_data'];
+				$grand_total = $data_2['grand_total'];
+				//calculations 
+				$data1 = $this->Weapon_model->getWeaponData($battalions,$weapons);
+				foreach($data1 as $k=>$weapon){
+					if(isset($weapons_data[$weapon->tow])){
+						$weapon->tow = trim($weapon->tow);
+						$weapons_data[$weapon->tow][$weapon->bat_id][$this->getStatusKey($weapon->staofserv)]++;
+						$weapons_data[$weapon->tow][$weapon->bat_id]['total']++;
+						$grand_total[$weapon->tow][$this->getStatusKey($weapon->staofserv)]++;
+						$grand_total[$weapon->tow]['total']++;
+					}
+				}
+				
+				if(null!=$this->input->post('hideZeroBattalions')){
+					$wdszb = $this->skipZeroBattalionsInAllFigures($weapons_data,$grand_total);
+					$weapons_data = $wdszb['weapons_data'];
+					
+					$grand_total = $wdszb['grand_total'];
+					if(null!=$this->input->post('hideZeroWeapons')){
+						$wdszw = $this->skipZeroWeaponsInAllFigures($weapons_data,$grand_total);
+						$weapons_data = $wdszw['weapons_data'];
+						$grand_total = $wdszw['grand_total'];
+					}
+				}
+				if(null!=$this->input->post('download')){
+					$this->downloadAllFigure($weapons_data,$grand_total,$battalions,$weapons);
+				}
+				$data['weapons_data'] = $weapons_data;
+				$data['grand_total'] = $grand_total;
+				//var_dump($result);
+				
+			}elseif($pageType =='WEAPON_FIGURES'){			//-------------------------- ---------------------------------- WEAPON FIGURES ------------------------------------------
+				error_reporting(0);
+				$data['subpage'] = 'weapon_figures.php';
+				$data['units'] = array('pap'=>'PAP','irb'=>'IRB','cdo'=>'CDO');	//all the units
+				
+				if(null!=$this->input->post('units')){
+					$selected_unit = $this->input->post('units');
+				}else{
+					$selected_unit = 'pap';
+				}
+				$battalions = $this->getBattalionByUnit($selected_unit);
+				$data['battalions'] = $battalions;
+				$data['default_unit'] = $selected_unit;
+				$data['columns'] = $columns = count($battalions)+3;
+				$weapon_objects = $this->Weapon_model->weaponlist();			//fetching all weapons name/name
+				$default_weapons = array();
+				foreach($weapon_objects as $k=>$v){
+					$default_weapons[$v->arm] = $v->arm;
+				}
+				
+				asort($default_weapons);
+				$data['weapons'] = $default_weapons;
+				if(null!=$this->input->post('weapons')){
+					$weapons_input = $this->input->post('weapons');
+					$weapons = array();
+					foreach($weapons_input as $k=>$v){
+						if(isset($default_weapons[$v])){
+							$weapons[$v] = $default_weapons[$v];
+						}
+					}
+				}else{
+					$weapons = $default_weapons;
+				}
+				asort($weapons);
+				$data['selected_weapons'] = $weapons;
+				$data['types']= $this->getWeaponStatusForWeaponFigurePage();
+				$types = $data['types'];
+				if(null!=$this->input->post('type')){
+					if(isset($data['types'][$this->input->post('type')])){
+						$selected_type = $this->input->post('type');
+					}else{
+						$selected_type = 'holding';
+					}
+				}else{
+					$selected_type = 'holding';
+				}
+				$data['default_type'] = $selected_type;
+				//initialize
+				$weapon_figures = $this->initialize_weapon_figures($battalions,$weapons,$types,$selected_type);
+				//calculations 
+				$weapon_figure_data = $this->Weapon_model->get_weapon_figure_data($battalions,$weapons,$types,$selected_type);
+				$weapon_figures = $this->calculate_weapon_figures_data($weapon_figure_data,$weapon_figures,$battalions,$weapons,$types,$selected_type);
+				//skip zero
+				if(null!=$this->input->post('hideZeroWeapons')){
+						$weapons_and_battalions = $this->skip_zero_battalion_weapon_figure($weapon_figures,$battalions,$weapons,$types,$selected_type);
+						$data['selected_weapons'] = $weapons_and_battalions['weapons'];
+				}
+				if(null!=$this->input->post('download')){
+					$this->download_weapon_figure($weapon_figures,$battalions,$weapons,$types,$selected_type,$data['default_type'],$data['selected_weapons'],$columns,$data['types'][$selected_type],$data['units'][$selected_unit]);
+				}
+				//dowlnload
+				$data['weapon_figures'] = $weapon_figures;
+			}elseif($pageType =='CONSOLIDATE'){
+				$data['subpage'] = 'consolidate.php';
+				//weapons
+				$weapon_objects = $this->Weapon_model->weaponlist();			//fetching all weapons name/name
+				$default_weapons = array();
+				foreach($weapon_objects as $k=>$v){
+					$v->arm = trim($v->arm);
+					$default_weapons[$v->arm] = $v->arm;
+				}
+				
+				asort($default_weapons);
+				$data['weapons'] = $default_weapons;
+				
+				if(null!=$this->input->post('weapon')){
+					$weapons_input = $this->input->post('weapon');
+					$weapons = array();
+					foreach($weapons_input as $k=>$v){
+						if(isset($default_weapons[$v])){
+							$weapons[$v] = $default_weapons[$v];
+						}
+					}
+				}else{
+					$weapons = $default_weapons;
+				}
+				asort($weapons);
+				$data['selected_weapons'] = $weapons;
+				// selection type
+				$data['types']= $this->getWeaponStatusForWeaponFigurePage();
+				
+				$types = $data['types'];
+				if(null!=$this->input->post('type')){
+					if(isset($data['types'][$this->input->post('type')])){
+						$selected_type = $this->input->post('type');
+					}else{
+						$selected_type = 'holding';
+					}
+				}else{
+					$selected_type = 'holding';
+				}
+				$data['default_type'] = $selected_type;
+				
+				//units
+				$data['units'] = $units = array('pap'=>'PAP','irb'=>'IRB','cdo'=>'CDO');	//all the units
+				//initialization
+				$data['weapon_consolidate_figures'] = $this->initialize_consolidate_weapons($weapons,$units,$data['types']);
+				//var_dump($data['weapon_consolidate_figures']);
+				
+				$battalion_objects = $this->Weapon_model->getBattalions();
+				$default_battalions = array();
+				foreach($battalion_objects as $k=>$v){
+					$default_battalions[$v->users_id] = $v->user_name;
+				}
+				$default_battalions = $this->sortBattalions($default_battalions);
+				
+				$weapon_figure_data = $this->Weapon_model->get_weapon_figures_for_consolidate_data($default_battalions,$weapons);
+				$data['all_status'] = $all_status = $this->getWeaponStatus2();//a
+				$data['weapon_consolidate_figures'] = $this->calculate_consolidate_weapons($weapon_figure_data,$data['weapon_consolidate_figures'],$weapons,$units);
+				//var_dump($data['weapon_consolidate_figures']);
+				if(null!=($this->input->post('hideZeroWeapons'))){
+					$data1 = $this->skip_zero_consolidate_weapons($data['weapon_consolidate_figures'], $weapons, $units,$data['default_type']);
+					$data['selected_weapons']=$data1;
+				}
+				if(null!=$this->input->post('download_cons_wep')){
+					$this->download_weapon_consolidate_figures($data['weapon_consolidate_figures'],$data['selected_weapons'], $units,$data['types'], $data['default_type']);
+				}
+			}
+			
+			$this->load->view('Weapon/weapon_report',$data);
+                }
+                public function weapon_list_report_for_battalion(){
+			$data = array();
+			$battalion_objects = $this->Weapon_model->getBattalionById($this->session->userdata('userid'));
+			$default_battalions = array();
+			foreach($battalion_objects as $k=>$v){
+				$default_battalions[$v->users_id] = $v->user_name;
+			}
+			$default_battalions = $this->sortBattalions($default_battalions);
+			$data['battalions'] = $default_battalions;	
+			if(null!=$this->input->post('battalions')){					//user has given battalion input from front end
+				$battalions_input = $this->input->post('battalions');
+				$battalions = array();
+				foreach($battalions_input as $k=>$v){
+					$battalions[$v] = $default_battalions[$v];
+				}
+			}else{
+				$battalions = $default_battalions;						//default
+			}
+			$battalions = $this->sortBattalions($battalions);
+			//var_dump($battalions);
+			$battalions = array($this->session->userdata('userid')=>$battalions[$this->session->userdata('userid')]);
+			//$data['battalions'] = $battalions;								
+			$data['battalion_id'] = $this->session->userdata('userid');
+			$weapon_objects = $this->Weapon_model->weaponlist();			//fetching all weapons name/name
+			$default_weapons = array();
+			foreach($weapon_objects as $k=>$v){
+				$default_weapons[$v->arm] = $v->arm;
+			}
+			asort($default_weapons);
+			$data['weapons'] = $default_weapons;
+			if(null!=$this->input->post('weapons')){
+				$weapons_input = $this->input->post('weapons');
+				$weapons = array();
+				foreach($weapons_input as $k=>$v){
+					if(isset($default_weapons[$v])){
+						$weapons[$v] = $default_weapons[$v];
+					}
+				}
+			}else{
+				$weapons = $default_weapons;
+			}
+			asort($weapons);
+			//$data['weapons'] = $weapons;//=  array('LMG 7.62 MM'=>'LMG 7.62 MM');									//default
+			//$data['weapons'] = $weapons =  array('AK-47'=>'AK-47');									//default
+			
+			$weapons_status = $this->getWeaponStatus();
+			
+			//initialization
+			$data_2 = $this->initialize_weapon_all_figures_for_battalion($weapons,$battalions,$weapons_status);
+			//var_dump($data_2);
+			$weapons_data = $data_2['weapons_data'];
+                        
+			$grand_total = $data_2['grand_total'];
+		
+			//calculations 
+                        $fetch_remarks= true;
+                        
+			$data1 = $this->Weapon_model->getWeaponData($battalions,$weapons);
+			$remarks = $this->Weapon_model->getWeaponRemarks($battalions,$weapons);
+                        //var_dump($data1);
+			foreach($data1 as $k=>$weapon){
+                            
+				if(isset($weapons_data[$weapon->tow])){
+                                        
+					$weapon->tow = trim($weapon->tow);
+					$weapons_data[$weapon->tow][$this->getStatusKey($weapon->staofserv)]++;
+					$weapons_data[$weapon->tow]['total']++;
+					$weapons_data[$weapon->tow]['sanction']=0;
+                                        //$weapons_data[$weapon->tow]['remarks'] = $weapon->remarkwep;
+                                        //$weapons_data[$weapon->tow]['sanction'] = $weapon->sun;
+					$grand_total[$this->getStatusKey($weapon->staofserv)]++;
+					$grand_total['total']++;
+                                        
+                                        
+				}else{
+                                    
+                                }
+			}
+                        foreach($remarks as $k=>$weapon){
+				if(isset($weapons_data[$weapon->wep])){
+                                    $grand_total['sanction'] += $weapon->sun;
+                                    $weapons_data[$weapon->wep]['remarks'] = $weapon->remarkwep;
+                                    $weapons_data[$weapon->wep]['sanction'] = (int)$weapon->sun;
+				}
+			}
+			if(null!=$this->input->post('submit') || null!=$this->input->post('download')){
+                            if(null!=$this->input->post('hideZeroWeapons')){
+                                $wdszb = $this->skipZeroBattalionsInAllFiguresForBattalion($weapons_data,$grand_total);
+                                $weapons_data = $wdszb['weapons_data'];
+                                $grand_total = $wdszb['grand_total'];
+
+                            }
+                            if(null!=$this->input->post('download')){
+                                $this->downloadWeaponReportForBattalion($weapons_data,$grand_total,$battalions,$weapons);
+                            }
+                        }else{
+                            $wdszb = $this->skipZeroBattalionsInAllFiguresForBattalion($weapons_data,$grand_total);
+                            $weapons_data = $wdszb['weapons_data'];
+                            $grand_total = $wdszb['grand_total'];
+                            
+                        }
+			$data['weapons_data'] = $weapons_data;
+			
+			$data['grand_total'] = $grand_total;
+			$this->load->view('Weapon/weapon_bat_report',$data);
+		}
+	}	

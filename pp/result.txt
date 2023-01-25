@@ -1,0 +1,22 @@
+On branch master
+Changes not staged for commit:
+  (use "git add <file>..." to update what will be committed)
+  (use "git restore <file>..." to discard changes in working directory)
+	modified:   app/config/routes.php
+	modified:   app/controllers/Osi.php
+	modified:   app/controllers/Postings.php
+	modified:   app/models/Posting_model.php
+	modified:   app/views/Btalion/material/alotpmaterial.php
+	modified:   app/views/Ca/posting/edit.php
+	modified:   app/views/Osi/search/search2_bat.php
+	modified:   app/views/Postings/employee_history.php
+	modified:   lib/database/drivers/mysqli/mysqli_result.php
+	modified:   nbproject/private/private.xml
+	modified:   webroot/css/style.default.css
+
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+	app/libraries/AdditionalPosting_lib.php
+	result.txt
+
+no changes added to commit (use "git add" and/or "git commit -a")

@@ -1,0 +1,16 @@
+/*!
+ *  Font anmollipi 1.0 by @anmol - http://fontawesome.io - @fontawesome
+ *  License - http://fontawesome.io/license (Font: SIL OFL 1.1, CSS: MIT License)
+ */
+ 
+ @font-face {
+    font-family: 'AnmolLipi';
+    src:url('../fonts/anmollipi/Anmol_.ttf');
+    src:url('../fonts/lato/Lato-BlaIta-webfontd41d.eot?#iefix') format('embedded-opentype');
+    src:url('../fonts/lato/Lato-BlaIta-webfont.woff') format('woff');
+    src:url('../fonts/anmollipi/Anmol_.ttf') format('truetype');
+    src:url('../fonts/lato/Lato-BlaIta-webfont.svg#LatoBlackItalic') format('svg');
+    font-weight: normal;
+    font-style: normal;
+
+}
