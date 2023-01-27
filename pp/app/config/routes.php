@@ -1125,3 +1125,9 @@ $route['ajaxGetAdditionalPostingInfo'] = 'Postings/ajaxGetAdditionalPostingInfo'
 $route['present-strength'] = 'Osi/getPresentStrength';
 $route['getNotification'] = 'Osi/getNotification';
 $route['udpateBeltNo'] = 'Osi/udpateBeltNo';
+
+
+$route['postings/getbeltnumbers2'] = 'BPTController/getBeltNumbers';
+$route['BPTDemo'] = 'BPTController/index';
+$route['BPT/addEmployee'] = 'BPTController/AddEmployeeToBPT';
+$route['BPT/editEmployee/(:num)'] = 'BPTController/EditEmployeeInBPT/$1';
