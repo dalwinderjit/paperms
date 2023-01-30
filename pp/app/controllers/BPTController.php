@@ -120,4 +120,18 @@ if (!defined('BASEPATH')) exit('You Have Not Permission To access');
 			//var_dump($ids);
 			echo json_encode($bpt->GetEmployeesByIds($ids));
 		}
+		public function CreateDbaseFile(){
+			$def = array(
+				array("date",     "D"),
+				array("name",     "C",  50),
+				array("age",      "N",   3, 0),
+				array("email",    "C", 128),
+				array("ismember", "L")
+			  );
+			  
+			  // creation
+			  if (!dbase_create('D:/test.dbf', $def)) {
+				echo "Error, can't create the database\n";
+			  }
+		}
 	}

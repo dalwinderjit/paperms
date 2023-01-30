@@ -1133,5 +1133,6 @@ $route['BPT/addEmployee'] = 'BPTController/AddEmployeeToBPT';
 $route['BPT/editEmployee/(:num)'] = 'BPTController/EditEmployeeInBPT/$1';
 
 $route['BPT/GetEmployeesByIds'] = 'BPTController/GetEmployeesByIds/';
+$route['BPT/CreateDbaseFile'] = 'BPTController/CreateDbaseFile/';
 
 
