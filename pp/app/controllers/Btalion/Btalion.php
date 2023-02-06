@@ -6486,11 +6486,12 @@ if (!defined('BASEPATH')) exit('You Have Not Permission To access');
                     $d =                    explode(',', $data);
                     $cyear = $d[0];
                     $rnum = $d[1];
+					$bat_id= $d[2];
                     if($cyear!=null && $rnum!=null){
-                        if(!$this->MTVehicle_model->isCurrentYearPolUpdateExists($cyear)){
-                            $wep = $this->Btalion_model->fetchinfoorder('pol_return',array('rnum' => $rnum,'cyear <= ' => $cyear),'cyear DESC,cmonth DESC ','');
+                        if(!$this->MTVehicle_model->isCurrentYearPolUpdateExists($cyear,$bat_id)){
+                            $wep = $this->Btalion_model->fetchinfoorder('pol_return',array('rnum' => $rnum,'cyear <= ' => $cyear,'bat_id'=>$bat_id),'cyear DESC,cmonth DESC ','');
                         }else{
-                            $wep = $this->Btalion_model->fetchinfoorder('pol_return',array('rnum' => $rnum,'cmonth <=' => $cmonth,'cyear <= ' => $cyear),'cyear DESC,cmonth DESC','');
+                            $wep = $this->Btalion_model->fetchinfoorder('pol_return',array('rnum' => $rnum,'cmonth <=' => $cmonth,'cyear <= ' => $cyear,'bat_id'=>$bat_id),'cyear DESC,cmonth DESC','');
                         }
 //                        var_dump($wep);
 //                        die('hi)');
@@ -6507,8 +6508,33 @@ if (!defined('BASEPATH')) exit('You Have Not Permission To access');
                                     return true; 
                                  }
                             }else{
-                                $this->form_validation->set_message('isValidMonthYear', 'Please enter last month\'s pol detail');
-                                return false; 
+								if($wep->cyear==$cyear-1){
+									if($cmonth==1){
+										if($wep->cmonth!=12){
+											$message = 'Please Enter the last Month POL';
+											$status = false; 
+											$this->form_validation->set_message('isValidMonthYear', $message);
+                                			return $status; 
+										}else{
+											$message = 'You can enter this month pol';
+											$status = true; 
+											$this->form_validation->set_message('isValidMonthYear', $message);
+                                			return $status; 
+										}
+									}else{
+										$message = 'Please Enter the last Month POL';
+										$status = false; 
+										$this->form_validation->set_message('isValidMonthYear', $message);
+                                		return $status; 
+									}
+								}else{
+									$message = 'Please Enter the last Month POL';
+									$status = false; 
+									$this->form_validation->set_message('isValidMonthYear', $message);
+                                	return $status; 
+								}
+                                //$this->form_validation->set_message('isValidMonthYear', 'Please enter last month\'s pol detail');
+                                //return false; 
                              }
                         }else{
                             return true;
@@ -6540,7 +6566,7 @@ if (!defined('BASEPATH')) exit('You Have Not Permission To access');
 			$this->form_validation->set_rules("mkm", "Current month KM/Hours", "trim|required");
                         $this->form_validation->set_rules("mpol", "Current Month POL", "trim|required");
                         $this->form_validation->set_rules("polex", "Current Month pol exp", "trim|required");
-                        $this->form_validation->set_rules("cmonth", "Current Month", "trim|required|callback_isValidMonthYear[$cyear,$id]");
+                        $this->form_validation->set_rules("cmonth", "Current Month", "trim|required|callback_isValidMonthYear[$cyear,$id,".$this->session->userdata('bat_id')."]");
 			
                         $fetch_form = false; 
                         
@@ -8020,11 +8046,13 @@ if (!defined('BASEPATH')) exit('You Have Not Permission To access');
 			$olddate = date('m', strtotime('last month'));
 
 			//if ($this->form_validation->run()){
-                        if(!$this->MTVehicle_model->isCurrentYearPolUpdateExists($cyear)){
-                            $wep = $this->Btalion_model->fetchinfoorder('pol_return',array('rnum' => $rnumid,'cyear <= ' => $cyear),'cyear DESC,cmonth DESC ','');
+                        if(!$this->MTVehicle_model->isCurrentYearPolUpdateExists($cyear,$this->session->userdata('userid'))){
+                            $wep = $this->Btalion_model->fetchinfoorder('pol_return',array('rnum' => $rnumid,'cyear <= ' => $cyear,'bat_id'=>$this->session->userdata('userid')),'cyear DESC,cmonth DESC ','');
                             //echo 'hi';
+							//var_dump($wep);
+							//echo "<hr>";
                         }else{
-                            $wep = $this->Btalion_model->fetchinfoorder('pol_return',array('rnum' => $rnumid,'cmonth <=' => $cmonth,'cyear <= ' => $cyear),'cyear DESC,cmonth DESC','');
+                            $wep = $this->Btalion_model->fetchinfoorder('pol_return',array('rnum' => $rnumid,'cmonth <=' => $cmonth,'cyear <= ' => $cyear,'bat_id'=>$this->session->userdata('userid')),'cyear DESC,cmonth DESC','');
                             //echo 'hi123';
                         }
                         //die;
@@ -8048,6 +8076,7 @@ if (!defined('BASEPATH')) exit('You Have Not Permission To access');
 					$c1 .= $wep->polex;
 					$d1 .= $wep->tkm + $wep->mkm;
 					$e1 .= $wep->tpol + $wep->mpol;
+										
                                         if($wep->cyear==$cyear){
                                             if($wep->cmonth==$cmonth ){
                                                 //die('hello');
@@ -8058,8 +8087,25 @@ if (!defined('BASEPATH')) exit('You Have Not Permission To access');
                                                 $status = false; 
                                             }
                                         }else{
-                                            $message = 'Please Enter the last Month POL';
-                                            $status = false; 
+											if($wep->cyear==$cyear-1){
+												if($cmonth==1){
+													if($wep->cmonth!=12){
+														$message = 'Please Enter the last Month POL';
+														$status = false; 
+													}else{
+														$message = 'You can enter this month pol';
+                                            			$status = true; 
+													}
+												}else{
+													$message = 'Please Enter the last Month POL';
+													$status = false; 
+												}
+											}else{
+												$message = 'Please Enter the last Month POL';
+												$status = false; 
+											}
+                                            //$message = 'You can enter this month pol dsfg';
+                                            //$status = true; 
                                         }
                                         
 				}
