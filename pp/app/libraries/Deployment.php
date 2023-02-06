@@ -315,7 +315,7 @@ class Deployment {
                 $total++;
                 if($val->posting_id==2306 && false){
 					$i++;
-					echo $i.',';
+					//echo $i.',';
 				}
                 $employee_ids[] = $val->employee_id;
 
@@ -390,7 +390,7 @@ class Deployment {
                 $total++;
                 if($val->posting_id==2306 && true){
 					$i++;
-					echo $i.',';
+					//echo $i.',';
 				}
                 $employee_ids[] = $val->employee_id;
 
