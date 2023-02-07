@@ -8089,6 +8089,7 @@ if (!defined('BASEPATH')) exit('You Have Not Permission To access');
                                         }else{
 											if($wep->cyear==$cyear-1){
 												if($cmonth==1){
+													//ok
 													if($wep->cmonth!=12){
 														$message = 'Please Enter the last Month POL';
 														$status = false; 
@@ -8097,8 +8098,8 @@ if (!defined('BASEPATH')) exit('You Have Not Permission To access');
                                             			$status = true; 
 													}
 												}else{
-													$message = 'Please Enter the last Month POL';
-													$status = false; 
+													$message = 'Go Ahead enter this month pol';
+													$status = true; 
 												}
 											}else{
 												$message = 'Please Enter the last Month POL';
