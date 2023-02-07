@@ -80,9 +80,11 @@ if (!defined('BASEPATH')) exit('You Have Not Permission To access');
 			$this->load->helper('security');
 			$this->load->helper('osi');
 			$this->load->helper('date');
+			$this->load->model("Osi_model");
+			$this->load->library("BPT_lib");
 			$data = [];
 			//get the candidate info
-			$curl = curl_init();
+			/*$curl = curl_init();
 			curl_setopt_array($curl, array(
 				CURLOPT_URL => API_URL."getCandidateInBPTById",
 				CURLOPT_RETURNTRANSFER => true,
@@ -97,7 +99,9 @@ if (!defined('BASEPATH')) exit('You Have Not Permission To access');
 			$response = curl_exec($curl);
 			$err = curl_error($curl);
 			curl_close($curl);
-			$data_ = json_decode($response);
+			$data_ = json_decode($response);*/
+			$bpt = new BPT_lib();
+			$data_= $bpt->GetCandidateInBPTById($id);
 			if($data_->status==true){
 				$data['employee'] = $data_->employee;
 				$data['candidate'] = $data_->candidate;
@@ -107,6 +111,9 @@ if (!defined('BASEPATH')) exit('You Have Not Permission To access');
 			}
 			//var_dump($data['employee']);die;
 			//get the employee info from man_id
+			$this->units = $data['uname'] = $this->Osi_model->fetchinfo('users', array('user_log' => 4));
+			$data['categories'] = array('' => '--Select--',  'GEN' => 'GEN', 'SCM' => 'SCM','SCO' => 'SCO', 'BC' => 'BC','OBC' => 'OBC', 'ST' => 'ST','SCBM' => 'SCBM', 'EWS' => 'EWS');;
+			$data['maritialstatus'] = [''=>'--select Status','Married'=>'Married','Unmarried'=>'Unmarried'];
 			$this->load->view('BPT/updateEmployee',$data);
 		}
 		public function EmployeeListInBPT(){
@@ -130,7 +137,7 @@ if (!defined('BASEPATH')) exit('You Have Not Permission To access');
 			  );
 			  
 			  // creation
-			  if (!dbase_create('D:/test.dbf', $def)) {
+			  if (!dbase_create('D:/test.DBF', $def)) {
 				echo "Error, can't create the database\n";
 			  }
 		}

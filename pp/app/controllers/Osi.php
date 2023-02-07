@@ -1800,7 +1800,11 @@ SEEHISTORY;
 			180 => '5 - CDO',
 			//215=>'IGP - CDO',
 			198 => 'CTC - BG',
-			213=> 'CCR BHG'
+			213=> 'CCR BHG',
+			228=> 'PRTC Jahan Khelan',
+			229=> 'PPA PHILLAUR',
+			
+			
 			//92 => 'ARP - PAP'
 		);
 		return $battalionOrder;
