@@ -16,7 +16,7 @@ if (!defined('BASEPATH')) exit('You Have Not Permission To access');
 			//var_dump($this->input->post('term'));
 			$curl = curl_init();
 			curl_setopt_array($curl, array(
-				CURLOPT_URL => "http://localhost/api.paperms/public/api/getUserByBeltNo",
+				CURLOPT_URL => API_URL."getUserByBeltNo",
 				CURLOPT_RETURNTRANSFER => true,
 				CURLOPT_TIMEOUT => 30,
 				CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
@@ -35,6 +35,7 @@ if (!defined('BASEPATH')) exit('You Have Not Permission To access');
 		}
 		public function AddEmployeeToBPT(){
 			$this->load->library('form_validation');
+			$this->load->library('BPT_lib');
 			$this->load->helper('common');
 			$this->load->helper('security');
 			$this->load->helper('osi');
@@ -43,48 +44,34 @@ if (!defined('BASEPATH')) exit('You Have Not Permission To access');
 			$this->load->helper('date');
 			$data =[];
 			$selected_employees = $this->input->post('selectedEmployees');
+			//var_dump($selected_employees);die;
+			$bpt_lib = new BPT_lib();
+			$bpt_list = $bpt_lib->getBPTListFromAPI();
+			$bpts = [];
+			$bpt_id = 1;
+			if($this->input->post('bpt_id')!=null){
+				$bpt_id = $this->input->post('bpt_id');
+			}
+			foreach($bpt_list as $k=>$val){
+				$bpts[$val->id] = $val->title;
+			}
 			if($this->input->post('submit')){
-				//var_dump($selected_employees);
-				$curl = curl_init();
-				curl_setopt_array($curl, array(
-					CURLOPT_URL => "http://localhost/api.paperms/public/api/addCandidatesToBPT",
-					CURLOPT_RETURNTRANSFER => true,
-					CURLOPT_TIMEOUT => 30,
-					CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-					CURLOPT_CUSTOMREQUEST => "POST",
-					CURLOPT_POSTFIELDS=>http_build_query(["selected_employees"=>explode(',',$selected_employees),'bpt_id'=>1]),
-					CURLOPT_HTTPHEADER => array(
-					"cache-control: no-cache"
-					),
-				));
-				$response = curl_exec($curl);
-				$err = curl_error($curl);
-				curl_close($curl);
-				$json_data = json_decode($response);
-				if($json_data->status==true){
+				$json_data = $bpt_lib->AddCandidateToBPT($selected_employees,$bpt_id);
+				
+				if($json_data!=null && $json_data->status==true){
 					$this->session->set_flashdata('success_msg', $json_data->message);
 				}else{
-					$this->session->set_flashdata('error_msg', $json_data->message);
+					if($json_data!=null){
+						$this->session->set_flashdata('error_msg', $json_data->message);
+					}else{
+						$this->session->set_flashdata('error_msg', "Empty Response");	
+					}
 				}
 			}
-			$employees = [];
-			$bpt_id = 1;
-			$curl = curl_init();
-				curl_setopt_array($curl, array(
-					CURLOPT_URL => "http://localhost/api.paperms/public/api/getBPTCandidates",
-					CURLOPT_RETURNTRANSFER => true,
-					CURLOPT_TIMEOUT => 30,
-					CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-					CURLOPT_CUSTOMREQUEST => "POST",
-					CURLOPT_POSTFIELDS=>http_build_query(['bpt_id'=>$bpt_id]),
-					CURLOPT_HTTPHEADER => array(
-					"cache-control: no-cache"
-					),
-				));
-				$response = curl_exec($curl);
-				$err = curl_error($curl);
-				curl_close($curl);
-			$data['employees'] = json_decode($response);
+			
+			$data['employees'] = json_decode($bpt_lib->getBPTCandidates($bpt_id));
+			$data['bpt'] = $bpts;
+			$data['selected_employees'] = $selected_employees;
 			$this->load->view('BPT/addEmployee',$data);
 		}
 		public function EditEmployeeInBPT($id){
@@ -97,7 +84,7 @@ if (!defined('BASEPATH')) exit('You Have Not Permission To access');
 			//get the candidate info
 			$curl = curl_init();
 			curl_setopt_array($curl, array(
-				CURLOPT_URL => "http://localhost/api.paperms/public/api/getCandidateInBPTById",
+				CURLOPT_URL => API_URL."getCandidateInBPTById",
 				CURLOPT_RETURNTRANSFER => true,
 				CURLOPT_TIMEOUT => 30,
 				CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
@@ -125,5 +112,26 @@ if (!defined('BASEPATH')) exit('You Have Not Permission To access');
 		public function EmployeeListInBPT(){
 			$this->load->view('BPT/list',$data);
 		}
+		public function GetEmployeesByIds(){
+			$this->load->library('BPT_lib');
+			$bpt = new BPT_lib();
+			$ids = $this->input->post('ids');
+			
+			//var_dump($ids);
+			echo json_encode($bpt->GetEmployeesByIds($ids));
+		}
+		public function CreateDbaseFile(){
+			$def = array(
+				array("date",     "D"),
+				array("name",     "C",  50),
+				array("age",      "N",   3, 0),
+				array("email",    "C", 128),
+				array("ismember", "L")
+			  );
+			  
+			  // creation
+			  if (!dbase_create('D:/test.dbf', $def)) {
+				echo "Error, can't create the database\n";
+			  }
+		}
 	}
-?>

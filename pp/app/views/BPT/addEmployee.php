@@ -71,6 +71,21 @@
                             <div class="panel-body">
                                 <div class="tab-content" style="border:1px solid #d8dbde;">
                                     <div class="form-group">
+                                        <?php //echo http_build_query(["selected_employees"=>explode(',','1,2,3'),'bpt_id'=>1]); 
+                                        ?>
+                                        <label class="col-sm-3 control-label">Select BPT(<span class="mandatory red">*</span>)</label>
+                                        <div class="col-sm-9">
+                                            <?php
+                                            //$bpt_id = array('' => '--Select--',  'Single' => 'Single', 'Married' => 'Married', 'Unmarried' => 'Unmarried', 'Divorced' => 'Divorced', 'Widow/ Widower' => 'Widow/ Widower');
+                                            /*newarea Textfield*/
+                                            echo form_dropdown('bpt_id', $bpt, set_value('bpt_id', 1), 'id="bpt_id" data-placeholder="Choose One" title="Please select at least 1 value" class="select2"');
+                                            echo form_error('bpt_id');
+                                            /*----End newarea Textfield----*/
+                                            ?>
+                                            <label for="bpt_id" class="error"></label>
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
                                         <label class="col-sm-3 control-label">Select Official By Entering Belt No(<span class="mandatory red">*</span>)</label>
                                         <div class="col-sm-9">
                                             <?php
@@ -83,7 +98,7 @@
                                             <label for="selectedEmployees" class="error"></label>
                                         </div>
                                     </div>
-                                    
+
                                 </div>
                                 <div>
                                     <table class="table">
@@ -97,19 +112,19 @@
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            <?php 
-                                            $sno =1;
-                                                foreach($employees->data as $k=>$val){
-                                                    echo 
-                                                    "<tr>".
-                                                        "<td>{$sno}</td>".
-                                                        "<td>".$val->name."</td>".
-                                                        "<td>".$val->rank."</td>".
-                                                        "<td>".$val->depttno."</td>".
-                                                        "<td><a href='".base_url()."BPT/editEmployee'>Edit Info</a> | Remove</td>".
+                                            <?php
+                                            $sno = 1;
+                                            foreach ($employees->data as $k => $val) {
+                                                echo
+                                                "<tr>" .
+                                                    "<td>{$sno}</td>" .
+                                                    "<td>" . $val->name . "</td>" .
+                                                    "<td>" . $val->rank . "</td>" .
+                                                    "<td>" . $val->depttno . "</td>" .
+                                                    "<td><a href='" . base_url() . "BPT/editEmployee/{$val->id}'>Edit Info</a> | Delete</td>" .
                                                     "</tr>";
-                                                    $sno++;
-                                                }
+                                                $sno++;
+                                            }
                                             ?>
                                         </tbody>
                                     </table>
@@ -408,39 +423,71 @@
 
     <script src="<?php echo base_url(); ?>webroot/js/custom.js"></script>
     <script type="text/javascript">
-        
-        
-        jQuery('#selectedEmployees').select2({
-        'width': '100%',
-        multiple: true,
-        ajax: {
-          url: '<?php echo base_url();?>postings/getbeltnumbers2',
-          type:'POST',
-          dataType: 'json',
-          data: function(params, page) {
-            var query = {
-              term: params,
-              type: 'public',
-              page: page,
-              bat_id: $('#ito').val()
-            }
-            return query;
-          },
-          results: function(data, page) {
-            return {
-              results: data.results,
-              more: data.more
-            }
-          }
-          // Additional AJAX parameters go here; see the end of this chapter for the full code of this example
-        },
-        /*formatResult: topicFormatResult,
-        formatSelection: formatRepoSelection,*/
-        escapeMarkup: function(m) {
-          return m;
+        jQuery('#bpt_id').select2({
+            'width': '100%'
+        });
+        var select;
+        var Temp_Data;
+        begin();
+        var selected_employees = '<?php echo json_decode($selected_employees); ?>';
+        async function begin() {
+            Temp_Data = await getInitialData();
+            console.log("TEMPDATE", Temp_Data);
+            select = await jQuery('#selectedEmployees').select2({
+                'width': '100%',
+                multiple: true,
+                ajax: {
+                    url: '<?php echo base_url(); ?>postings/getbeltnumbers2',
+                    type: 'POST',
+                    dataType: 'json',
+                    data: function(params, page) {
+                        var query = {
+                            term: params,
+                            type: 'public',
+                            page: page,
+                            bat_id: $('#ito').val()
+                        }
+                        return query;
+                    },
+                    results: function(data, page) {
+                        return {
+                            results: data.results,
+                            more: data.more
+                        }
+                    }
+                    // Additional AJAX parameters go here; see the end of this chapter for the full code of this example
+                },
+                initSelection: function(element, callback) {
+                    callback(Temp_Data);
+                },
+                /*formatResult: topicFormatResult,
+                formatSelection: formatRepoSelection,*/
+                escapeMarkup: function(m) {
+                    return m;
+                }
+            });
+            $('#selectedEmployees').val($('#selectedEmployees').val()).trigger('change');
         }
-      });
-  </script>
+        async function getInitialData() {
+            console.log("IDS",$('#selectedEmployees').val());
+            console.log("IDS",<?php echo json_encode(explode(',',$selected_employees)); ?>);
+            var ids = JSON.parse('<?php echo json_encode(explode(',',$selected_employees)); ?>');
+            console.log('ids',ids);
+            let data = { ids : ids};
+            var temp_Data = await $.ajax({
+                url: '<?php echo base_url(); ?>BPT/GetEmployeesByIds',
+                type: 'POST',
+                dataType: 'json',
+                data:data,
+                success: function(status, response) {
+                    console.log(response);
+                    return response;
+                }
+            })
+            
+            return temp_Data;
+        }
+    </script>
 
 </body>
 

@@ -89,18 +89,21 @@
 			$result = $query->result();
 			return $query->result();*/
 		}
-                public function isCurrentYearPolUpdateExists($year){
-                    $this->db->select('count(*) as total');
-                    $this->db->where('cyear',$year);
-                    $query = $this->db->get('pol_return');
-                    //echo $this->db->last_query(); die();
-                    $info = $query->row();
-                    if($info->total==0){
-                        return false;
-                    }else{
-                        return true;
-                    }
-                }/*Close*/
+		public function isCurrentYearPolUpdateExists($year,$bat_id=null){
+			$this->db->select('count(*) as total');
+			$this->db->where('cyear',$year);
+			if($bat_id!=null){
+				$this->db->where('bat_id',$bat_id);
+			}
+			$query = $this->db->get('pol_return');
+			//echo $this->db->last_query(); //die();
+			$info = $query->row();
+			if($info->total==0){
+				return false;
+			}else{
+				return true;
+			}
+		}/*Close*/
 	}
 	
 	/* echo '<table border=1>';
