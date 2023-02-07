@@ -8052,7 +8052,7 @@ if (!defined('BASEPATH')) exit('You Have Not Permission To access');
 							//var_dump($wep);
 							//echo "<hr>";
                         }else{
-                            $wep = $this->Btalion_model->fetchinfoorder('pol_return',array('rnum' => $rnumid,'cmonth <=' => $cmonth,'cyear <= ' => $cyear,'bat_id'=>$this->session->userdata('userid')),'cyear DESC,cmonth DESC','');
+                            $wep = $this->Btalion_model->fetchinfoorder('pol_return',array('rnum' => $rnumid/*,'cmonth <=' => $cmonth*/,'cyear <= ' => $cyear,'bat_id'=>$this->session->userdata('userid')),'cyear DESC,cmonth DESC','');
                             //echo 'hi123';
                         }
                         //die;
@@ -8098,8 +8098,8 @@ if (!defined('BASEPATH')) exit('You Have Not Permission To access');
                                             			$status = true; 
 													}
 												}else{
-													$message = 'Go Ahead enter this month pol';
-													$status = true; 
+													$message = 'Please Enter the last Month POL';
+													$status = false; 
 												}
 											}else{
 												$message = 'Please Enter the last Month POL';
