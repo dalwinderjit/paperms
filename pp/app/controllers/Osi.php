@@ -1309,7 +1309,7 @@ SEEHISTORY;
 		}
 		$posting_employee_ids = null;
 		
-		if ($selected_posting_ids != null && trim($selected_posting_ids) != '') {
+		if ($selected_posting_ids != null && (is_array($selected_posting_ids) || trim($selected_posting_ids) != '')) {
 			//get employees with this posting
 			$posting_history_objs = $this->Posting_model->getPostingHistoryIGP($ito, (new DateTime())->format('Y-m-d'), null, null, $selected_posting_ids);
 			//$battalions,$before_date=null,$ranks=null,$rank_category=null,$posting_id=null){
