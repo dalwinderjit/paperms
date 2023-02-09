@@ -188,4 +188,5 @@ defined('EXCEL_EXTENSION') OR define('EXCEL_EXTENSION','xls');
 define("IGP_CDO_ID",211);
  define("IGP_IRB_ID",209);
  define("API_URL","http://localhost/api.paperms/public/api/");
+ define("API_PUBLIC_URL","http://localhost/api.paperms/storage/app/public/");
 /*Close Table*/

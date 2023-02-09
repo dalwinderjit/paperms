@@ -133,4 +133,69 @@ class BPT_lib
         $data_ = json_decode($response);
         return $data_;
     }
+    public function getBeltNumbers($term,$pageNo){
+        $curl = curl_init();
+        
+        curl_setopt_array($curl, array(
+            CURLOPT_URL => API_URL."getUserByBeltNo",
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_TIMEOUT => 30,
+            CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+            CURLOPT_CUSTOMREQUEST => "POST",
+            CURLOPT_POSTFIELDS=>http_build_query(["depttno"=>$term,"pageNo"=>$pageNo]),
+            CURLOPT_HTTPHEADER => array(
+                "cache-control: no-cache"
+            ),
+            ));
+            
+            $response = curl_exec($curl);
+            $err = curl_error($curl);
+            curl_close($curl);
+            return $response;
+    }
+    public function EditEmployeeInBPT($data){
+        $curl = curl_init();
+        //data
+        //echo '<HR>FILES<HR>';
+        //var_dump($_FILES);
+        if(isset($_FILES['profile_pic']) && $_FILES['profile_pic']['error']==0){
+            //echo 'hi 00202';
+            $cfile = curl_file_create($_FILES['profile_pic']['tmp_name'],$_FILES['profile_pic']['type'],$_FILES['profile_pic']['name']);
+            $data['profile_pic']= $cfile;
+        }else{
+            //$data['profile_pic'] = null;
+        }
+        //die;
+        //var_dump($_FILES['profile_pic']);
+        //var_dump($data);
+        //echo '<HR>';
+        curl_setopt_array($curl, array(
+            CURLOPT_URL => API_URL."updateCandidateToBPT",
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_TIMEOUT => 30,
+            CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+            CURLOPT_CUSTOMREQUEST => "POST",
+            CURLOPT_POSTFIELDS=>$data,
+            //CURLOPT_RETURNTRANSFER=>true,
+            CURLOPT_HTTPHEADER => array(
+                "cache-control: no-cache"
+            ),
+        ));
+        try{
+
+            $response = curl_exec($curl);
+        }catch(Exception $err){
+            //echo 'Exception';
+            //var_dump($err);
+            //die;
+        }
+        //echo 'ERROR';
+        $err = curl_error($curl);
+        //var_dump($err);
+        curl_close($curl);
+        //echo 'response ';
+        ////var_dumP($response);die;
+        return json_decode($response);
+    }
+
 }
