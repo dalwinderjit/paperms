@@ -6347,7 +6347,9 @@ if (!defined('BASEPATH')) exit('You Have Not Permission To access');
 
 		public function update_vichel($id){
 			$this->load->library('form_validation');
-			$this->load->helper('security');$this->load->helper('common_helper');
+			$this->load->helper('security');
+			$this->load->helper('common_helper');
+			$this->load->helper('vehicle_helper');
 			$cov = $this->input->post("cov",TRUE);
 			$rnum = $this->input->post("rnum",TRUE);
 			$vc = $this->input->post("vc",TRUE);
@@ -6432,7 +6434,7 @@ if (!defined('BASEPATH')) exit('You Have Not Permission To access');
 					redirect('bt-update-vehicle/'.$id);
 				}	
 			}
-
+			$data['vehicles'] = vehicles_GetAllVehicles();
 			$data['vichel'] = $this->Btalion_model->fetchinfo('newmt',array('bat_id' =>$this->session->userdata('userid')));
 			$data['uname'] = $this->Btalion_model->fetchinfo('users',array('user_log' => 6 ));
 			$this->load->view(F_BTALION.'vehicles/updateve',$data);
