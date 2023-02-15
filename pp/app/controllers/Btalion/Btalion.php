@@ -5954,6 +5954,7 @@ if (!defined('BASEPATH')) exit('You Have Not Permission To access');
 		public function add_vehicle(){
 			$this->load->library('form_validation');
 			$this->load->helper('security');
+			$this->load->helper('vehicle_helper');
 			$cov = $this->input->post("cov",TRUE);
 			$chno = $this->input->post("chno",TRUE);
 			$vc = $this->input->post("vc",TRUE);
@@ -6015,6 +6016,7 @@ if (!defined('BASEPATH')) exit('You Have Not Permission To access');
 			$this->form_validation->set_rules("vcon", "vcon", "trim");
 			$this->form_validation->set_rules("lsd", "lsd", "trim");
 			$this->form_validation->set_rules("lid", "lid", "trim");
+			$available_vehicles = vehicles_GetAllVehicles();
 			if ($this->form_validation->run()){
 				$add_web = $this->Btalion_model->add_vechicle($cov,$chno,$vc,$dob1,$engno,$Chasis,$moa,$rn,$vcn,$sr,$ftype,$rcfrm,$rno,$rm,$rv,$rcdt,$rcd,$vcon,$lsd,$lid,$tyremake1,$tyreSerial1,$TyreCondition1,$tyremake2,$tyreSerial2,$TyreCondition2,$tyremake3,$tyreSerial3,$TyreCondition3,$tyremake4,$tyreSerial4,$TyreCondition4,$tyremake5,$tyreSerial5,$TyreCondition5,$tyremake6,$tyreSerial6,$TyreCondition6,$tyremake7,$tyreSerial7,$TyreCondition7,$sswi,$bp);	
 				if($add_web == 1){
@@ -6026,7 +6028,7 @@ if (!defined('BASEPATH')) exit('You Have Not Permission To access');
 				}	
 			}
 			$data['statelist'] = $this->Btalion_model->fetchinfo('state_list',array('state_status' => 1 ));
-			
+			$data['vehicles'] = $available_vehicles;
 			$data['uname'] = $this->Btalion_model->fetchinfo('users',array('user_log' => 6 ));
 
 			
