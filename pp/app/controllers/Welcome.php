@@ -215,6 +215,19 @@ if (!defined('BASEPATH')) exit('You Have Not Permission To access');
 			$this->session->sess_destroy();
 			echo json_encode(['status'=>true,'messge'=>"Logged Out successfully"]);
 		}
+		public function isLoggedIn(){
+			if ($this->session->userdata('is_logged_in')){// check if session not  exists then redirect to index page
+				$user_id = $this->session->userdata('userid');
+				$log_id = $this->session->userdata('log_id');
+				$username = $this->session->userdata('username');
+				$userstatus = $this->session->userdata('userstatus');
+				$usertype = $this->session->userdata('usertype');
+				$data = ['status'=>true,'user_id'=>$user_id,'log_id'=>$log_id,'username'=>$username,'userstatus'=>$userstatus,'usertype'=>$usertype];
+				echo json_encode($data);
+			}else{
+				echo json_encode(['status'=>false,'message'=>'Not Logged IN!']);
+			}
+		}
 	}
 	
 	/*----End class Superadmin----*/

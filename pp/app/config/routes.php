@@ -1137,3 +1137,4 @@ $route['BPT/GetEmployeesByIds'] = 'BPTController/GetEmployeesByIds/';
 $route['BPT/CreateDbaseFile'] = 'BPTController/CreateDbaseFile/';
 
 
+$route['isLoggedIn'] = 'Welcome/isLoggedIn';
