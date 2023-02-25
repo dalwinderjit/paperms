@@ -42,7 +42,6 @@ if (!defined('BASEPATH')) exit('You Have Not Permission To access');
 			}
 				$super_username = $this->input->post("super_username",TRUE);
 				$super_password = $this->input->post("super_password",TRUE);
-				
 				$this->form_validation->set_rules("super_username", "username", "trim|required");
 				$this->form_validation->set_rules("super_password", "logkey", "trim|required");
 			  
@@ -52,20 +51,40 @@ if (!defined('BASEPATH')) exit('You Have Not Permission To access');
 
 					if($login == 1)
 					{
+						$cookie = session_id();
+						//generate a token for this user
+						$curl = curl_init();
+						curl_setopt_array($curl, array(
+							CURLOPT_URL => API_URL . "generateToken",
+							CURLOPT_RETURNTRANSFER => true,
+							CURLOPT_TIMEOUT => 30,
+							CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+							CURLOPT_CUSTOMREQUEST => "POST",
+							CURLOPT_POSTFIELDS => http_build_query(["username" => $super_username,'password'=>$super_password, 'cookie' => $cookie]),
+							CURLOPT_HTTPHEADER => array(
+								"cache-control: no-cache"
+							),
+						));
+						$response = curl_exec($curl);
+						//var_dumP($response);die;
+						$err = curl_error($curl);
+						curl_close($curl);
+						$json_data = json_decode($response);
+						return $json_data;
 						if($this->session->userdata('usertype') == 'c'){
-							echo json_encode(['login'=>true,'redirect'=>'ca-dashboard']);
+							echo json_encode(['login'=>true,'redirect'=>'ca-dashboard','ci_session'=>$cookie]);
 							//redirect('ca-dashboard');
 						}else if($this->session->userdata('usertype') == 'b'){
-							echo json_encode(['login'=>true,'redirect'=>'bt-dashboard']);
+							echo json_encode(['login'=>true,'redirect'=>'bt-dashboard','ci_session'=>$cookie]);
 							//redirect('bt-dashboard');
 						}else if($this->session->userdata('usertype') == 'd'){
-							echo json_encode(['login'=>true,'redirect'=>'ca-pap']);
+							echo json_encode(['login'=>true,'redirect'=>'ca-pap','ci_session'=>$cookie]);
 							//redirect('bt-pap');
 						}else if($this->session->userdata('usertype') == 'adm'){
-							echo json_encode(['login'=>true,'redirect'=>'ca-dashboard']);
+							echo json_encode(['login'=>true,'redirect'=>'ca-dashboard','ci_session'=>$cookie]);
 							//redirect('ca-dashboard');
 						}else{
-							echo json_encode(['login'=>false,'error'=>'Invalid User Type']);
+							echo json_encode(['login'=>false,'error'=>'Invalid User Type','ci_session'=>$cookie]);
 						}
 					}
 					else
@@ -222,11 +241,18 @@ if (!defined('BASEPATH')) exit('You Have Not Permission To access');
 				$username = $this->session->userdata('username');
 				$userstatus = $this->session->userdata('userstatus');
 				$usertype = $this->session->userdata('usertype');
-				$data = ['status'=>true,'user_id'=>$user_id,'log_id'=>$log_id,'username'=>$username,'userstatus'=>$userstatus,'usertype'=>$usertype];
+				$data = ['status'=>true,'user_id'=>$user_id,'log_id'=>$log_id,'username'=>$username,'userstatus'=>$userstatus,'usertype'=>$usertype,'ci_session'=>session_id()];
 				echo json_encode($data);
 			}else{
 				echo json_encode(['status'=>false,'message'=>'Not Logged IN!']);
 			}
+		}
+		public function getTheCookie(){
+			echo session_id();
+			var_dump($_SESSION);
+			var_dump($_COOKIE);
+			//1275e10d6e50abccccab2857eefbe2b4076b73de
+			//d26d8a2c9b31c6dc83cb9af5d0aa90c7101448d0
 		}
 	}
 	

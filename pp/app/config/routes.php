@@ -1138,3 +1138,4 @@ $route['BPT/CreateDbaseFile'] = 'BPTController/CreateDbaseFile/';
 
 
 $route['isLoggedIn'] = 'Welcome/isLoggedIn';
+$route['getTheCookie'] = 'Welcome/getTheCookie';
