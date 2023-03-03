@@ -866,11 +866,12 @@ class Posting_model extends CI_Model
 		//echo $this->db->last_query();
 		//return $result;
 	}
+	//used in deployment for counters
 	public function getPostingHistoryIGP($battalions, $before_date = null, $ranks = null, $rank_category = null, $posting_ids= null)
 	{
 		$this->db->select(array('id', 'posting_id', 'posting_date', 'employee_id', 'posting_history.bat_id as phbat_id'));
 		if ($before_date != null) {
-			$this->db->where('posting_history.posting_date <=', $before_date);
+			$this->db->where('posting_history.posting_date <=', $before_date.' 23:59:59');
 		}
 		//$this->db->where('posting_history.posting_id',2306);
 		if ($posting_ids != null) {
@@ -880,6 +881,7 @@ class Posting_model extends CI_Model
 				$this->db->where('posting_id', $posting_ids);
 			}
 		}
+		
 		$this->db->from('posting_history');
 		$this->db->order_by('posting_date', 'desc');
 		$this->db->limit('18446744073709551615', 0);
@@ -887,6 +889,7 @@ class Posting_model extends CI_Model
 
 		$this->db->select('id,posting_id,concat_ws("",permanent_rank,cminirank,cmedirank,ccprank,cccrank) as current_rank, posting_date, employee_id, inductionmode, phbat_id, newosi.bat_id as nosbat_id');
 		//$ranks = array('ASI','SI/LR','SI/CR');
+		//$ranks = array('SI','INSP/LR','INSP/CR');
 		if ($ranks != null) {
 			$this->db->where_in('concat_ws("",permanent_rank,cminirank,cmedirank,ccprank,cccrank)', $ranks);
 		}
@@ -900,7 +903,7 @@ class Posting_model extends CI_Model
 		if ($rank_category != null) {
 			$this->db->where_in('newosi.presentrank', $rank_category);
 		}
-		$this->db->group_by('Y.employee_id');
+		//$this->db->group_by('Y.employee_id');
 		$this->db->order_by('Y.posting_date', 'desc');
 		$outerSelect = $this->db->get_compiled_select();
 		$this->db->select('*');
@@ -909,6 +912,7 @@ class Posting_model extends CI_Model
 		if ($battalions != null && is_array($battalions)) {
 			$this->db->where_in('Z.phbat_id', $battalions);
 		}
+		$this->db->group_by('Z.employee_id');
 		$outerSelect1 = $this->db->get_compiled_select();
 		//echo $outerSelect;
 		$query = $this->db->query($outerSelect1);
@@ -916,6 +920,7 @@ class Posting_model extends CI_Model
 		//echo $this->db->last_query();
 		return $result;
 	}
+	//used this one in osi consolidate 
 	public function getPostingHistoryIGP3($battalions, $before_date = null, $ranks = null, $rank_category = null, $posting_ids= null)
 	{
 		$this->db->select('*');
@@ -1487,6 +1492,7 @@ class Posting_model extends CI_Model
 		//echo $this->db->last_query();
 		return $result;
 	}
+	
 	/**
 	 * 
 	 * @param type $selected_ids = selected Posting
@@ -1781,7 +1787,7 @@ class Posting_model extends CI_Model
 		//echo $this->db->last_query();
 		return $result[0]->total;
 	}
-	public function getTotalEmployeesFromPostingHistoryIGP2($selected_ids, $selected_rank, $search, $battalions, $before_date, $rank_category = null, $selected_permanent_rank = null, $permanent_ranks = null)
+	public function getTotalEmployeesFromPostingHistoryIGP($selected_ids, $selected_rank, $search, $battalions, $before_date, $rank_category = null, $selected_permanent_rank = null, $permanent_ranks = null)
 	{
 		$this->db->select(array( 'employee_id','bat_id'));
 		if ($before_date != null) {
@@ -1908,8 +1914,10 @@ class Posting_model extends CI_Model
 					}
 				}
 			}else{
+				
 				if(count($emp_ids)>250){
-					$ids_ = array_chunk($employee_ids,250);
+					//$ids_ = array_chunk($employee_ids,250);
+					$ids_ = array_chunk($emp_ids,250);
 					$this->db->group_start();
 					foreach($ids_ as $k=>$val){
 						$this->db->or_where_in('man_id',$val);
@@ -1921,6 +1929,171 @@ class Posting_model extends CI_Model
 					$this->db->group_end();
 				}
 			}
+			$this->db->where('bat_id != 0');
+			//$this->db->where_in('concat_ws(" ",permanent_rank,cminirank,cmedirank,ccprank,cccrank)',$ranks);
+			//$this->db->from('(' . $innerSelect . ') as Y');
+			//$this->db->where('newosi.bat_id','Y.phbat_id');
+			//$this->db->join('newosi', 'Y.employee_id = newosi.man_id and newosi.bat_id != 0 and newosi.bat_id = Y.phbat_id'); //CHECK
+			if ($battalions != null && is_array($battalions) &&  count($battalions) > 0) {
+				$this->db->where_in('newosi.bat_id', $battalions);
+			}
+			if ($rank_category != null) {
+				$this->db->where_in('newosi.presentrank', $rank_category);
+			}
+			//$this->db->group_by('Y.employee_id');
+			//$this->db->order_by('Y.posting_date', 'desc');
+			//$outerSelect = $this->db->get_compiled_select();
+			$employees_obj = $this->db->get('newosi')->result();
+			if($show==true)
+			echo $this->db->last_query();
+			return $employees_obj[0]->total;
+			
+		}else{
+			return 0;
+		}
+	}
+	public function getTotalFilteredEmployeesFromPostingHistoryIGP($selected_ids, $selected_rank, $search, $battalions, $before_date, $rank_category = null, $selected_permanent_rank = null, $permanent_ranks = null)
+	{
+		$this->db->select(array( 'employee_id','bat_id'));
+		if ($before_date != null) {
+			$this->db->where('posting_history.posting_date <=', $before_date);
+		}
+		if ($selected_ids != null) {
+			if(is_array($selected_ids)){
+				if(count($selected_ids)>0){
+					$this->db->where_in('posting_id', $selected_ids);
+				}
+			}else{
+				$this->db->where('posting_id', $selected_ids);
+			}
+			
+		}
+
+		$this->db->where_in('bat_id',$battalions);
+		$this->db->from('posting_history');
+		$this->db->order_by('posting_date', 'desc');
+		$this->db->limit('18446744073709551615', 0);
+		$query1 = $this->db->get_compiled_select();
+		//fetch postings
+		$this->db->select('*');
+		$this->db->from("({$query1}) as Y");
+		$this->db->group_by('Y.employee_id');
+		$posting_data = $this->db->get()->result();
+		$show = false;
+		if($this->input->post('show')!=null && $this->input->post('show')=="true"){
+			var_dump($this->input->post('show'));
+			$show=true;
+		}
+		if($show==true)
+			echo $this->db->last_query();
+		//fetch employees
+		//get the employee ids
+		//need thos employees whose other posting exists
+
+		$employee_ids =[];
+		$total = 0;
+		$emp_ids = [];
+		foreach($posting_data as $k=>$val){
+			if(!isset($employee_ids[$val->bat_id]))
+				$employee_ids[$val->bat_id]=[];
+			$employee_ids[$val->bat_id][] = $val->employee_id;
+			$emp_ids[$val->employee_id] = $val->employee_id;
+		}
+		if($show==true){
+			var_dump($emp_ids);
+		}
+		if(true){
+			$this->db->select('bat_id,posting_id,employee_id');
+			$this->db->from('posting_history');
+			$this->db->where_in('employee_id',$emp_ids);
+			$this->db->order_by('posting_date','desc');
+			$this->db->limit('18446744073709551615', 0);
+			$sub_query = $this->db->get_compiled_select();
+
+			$this->db->select('*');
+			$this->db->from("({$sub_query}) as Y");
+			$this->db->group_by('Y.employee_id');
+			$data_ = $this->db->get()->result();
+			if($show==true){
+				echo $this->db->last_query();
+			}
+			foreach($data_ as $k=>$val){
+				if($show==true)
+					var_dump($val);
+				if(!in_array($val->posting_id,$selected_ids)){
+					unset($emp_ids[$val->employee_id]);
+				}
+			}
+		}
+		if(count($employee_ids)>0 || count($emp_ids)>0){
+			$this->db->select('count(*) as total');
+			//$ranks = array('ASI','SI/LR','SI/CR');
+			if ($rank_category != null) {
+				$RankRankre = $rank_category;
+				if ($RankRankre != '') {
+					$this->db->where('newosi.presentrank', $RankRankre);
+					if ($RankRankre == 'Executive Staff') {
+						if ($selected_permanent_rank != null) {
+							$this->db->where('newosi.permanent_rank', $selected_permanent_rank);
+						} else if ($permanent_ranks != null) {
+							$this->db->where_in('newosi.permanent_rank', $permanent_ranks);
+						}
+					} else if ($RankRankre == 'Ministerial Staff') {
+						if ($selected_rank != null && !in_array($selected_rank, ['total'])) {
+							//var_dump($selected_rank);
+							$this->db->where('newosi.cminirank', $selected_permanent_rank);
+						}
+					} else if ($RankRankre == 'Class-IV (C)') {
+						if ($selected_rank != null && !in_array($selected_rank, ['total'])) {
+							//var_dump($selected_rank);
+							$this->db->where('newosi.cccrank', $selected_permanent_rank);
+						}
+					} else if ($RankRankre == 'Class-IV (P)') {
+						if ($selected_rank != null && !in_array($selected_rank, ['total'])) {
+							//var_dump($selected_rank);
+							$this->db->where('newosi.ccprank', $selected_permanent_rank);
+						}
+					} else if ($RankRankre == 'Medical Staff') {
+						if ($selected_rank != null && !in_array($selected_rank, ['total'])) {
+							//var_dump($selected_rank);
+							$this->db->where('newosi.cmedirank', $selected_permanent_rank);
+						}
+					}
+					
+				}
+			}
+			if(false){
+				foreach($employee_ids as $bat_Id=>$empIDS){
+					if(count($empIDS)>250){
+						$ids_ = array_chunk($employee_ids,250);
+						$this->db->group_start();
+						foreach($ids_ as $k=>$val){
+							$this->db->or_where_in('man_id',$val);
+						}
+						$this->db->group_end();
+					}else{
+						$this->db->group_start();
+						$this->db->where_in('man_id',$empIDS);
+						$this->db->where('bat_id',$bat_Id);
+						$this->db->group_end();
+					}
+				}
+			}else{
+				
+				if(count($emp_ids)>250){
+					$ids_ = array_chunk($emp_ids,250);
+					$this->db->group_start();
+					foreach($ids_ as $k=>$val){
+						$this->db->or_where_in('man_id',$val);
+					}
+					$this->db->group_end();
+				}else{
+					$this->db->group_start();
+					$this->db->where_in('man_id',$emp_ids);
+					$this->db->group_end();
+				}
+			}
+			$this->db->group_start()->like('newosi.name', $search)->or_like('newosi.depttno', $search)->or_like('newosi.phono1', $search)->group_end();
 			$this->db->where('bat_id != 0');
 			//$this->db->where_in('concat_ws(" ",permanent_rank,cminirank,cmedirank,ccprank,cccrank)',$ranks);
 			//$this->db->from('(' . $innerSelect . ') as Y');
@@ -2108,350 +2281,8 @@ class Posting_model extends CI_Model
 		//echo $this->db->last_query();
 		return $result[0]->total;
 	}
-	public function getTotalEmployeesFromPostingHistoryIGP($selected_ids, $selected_rank, $search, $battalions, $before_date, $rank_category = null, $selected_permanent_rank = null, $permanent_ranks = null)
-	{
-		if (true) {
-			$this->db->select(array('id', 'posting_id', 'posting_date', 'employee_id', 'posting_history.bat_id as phbat_id', 'order_no', 'order_date'));
-			if ($before_date != null) {
-				$this->db->where('posting_history.posting_date <=', $before_date);
-			}
-
-			$this->db->from('posting_history');
-			$this->db->order_by('posting_date', 'desc');
-			$this->db->limit('18446744073709551615', 0);
-			$innerSelect =  $this->db->get_compiled_select();
-			//echo $innerSelect;
-
-			$this->db->select('id,posting_id,concat_ws(" ",permanent_rank,cminirank,cmedirank,ccprank,cccrank) as rank_, posting_date, employee_id, inductionmode, phbat_id, cexrank, newosi.name, newosi.bat_id as bat_id, newosi.depttno, newosi.phono1, Y.order_no, Y.order_date');
-			if ($rank_category != null) {
-				$RankRankre = $rank_category;
-				if ($RankRankre != '') {
-					$this->db->where('newosi.presentrank', $RankRankre);
-					if ($RankRankre == 'Executive Staff') {
-						if ($selected_permanent_rank != null) {
-							$this->db->where('newosi.permanent_rank', $selected_permanent_rank);
-						} else if ($permanent_ranks != null) {
-							$this->db->where_in('newosi.permanent_rank', $permanent_ranks);
-						}
-					} else if ($RankRankre == 'Ministerial Staff') {
-						if ($selected_rank != null && !in_array($selected_rank, ['total'])) {
-							//var_dump($selected_rank);
-							$this->db->where('newosi.cminirank', $selected_permanent_rank);
-						}
-					} else if ($RankRankre == 'Class-IV (C)') {
-						if ($selected_rank != null && !in_array($selected_rank, ['total'])) {
-							//var_dump($selected_rank);
-							$this->db->where('newosi.cccrank', $selected_permanent_rank);
-						}
-					} else if ($RankRankre == 'Class-IV (P)') {
-						if ($selected_rank != null && !in_array($selected_rank, ['total'])) {
-							//var_dump($selected_rank);
-							$this->db->where('newosi.ccprank', $selected_permanent_rank);
-						}
-					} else if ($RankRankre == 'Medical Staff') {
-						if ($selected_rank != null && !in_array($selected_rank, ['total'])) {
-							//var_dump($selected_rank);
-							$this->db->where('newosi.cmedirank', $selected_permanent_rank);
-						}
-					}
-					/*if($RankRankre == 'Executive Staff'){
-                                    $this->db->where_in('newosi.cexrank', $ranks);
-				}
-				elseif($RankRankre == 'Ministerial Staff'){
-                                    $this->db->where_in('newosi.cminirank', $ranks);
-				}
-				elseif($RankRankre == 'Medical Staff'){
-                                    $this->db->where_in('newosi.cmedirank', $ranks);
-				}
-				elseif($RankRankre == 'Class-IV (P)'){
-                                    $this->db->where_in('newosi.ccprank', $ranks);
-				}
-				elseif($RankRankre == 'Class-IV (C)'){
-                                    $this->db->where_in('newosi.cccrank', $ranks);
-				}*/
-				}
-			}
-			/*switch($selected_rank){
-				case 'insp':
-					$ranks = array('INSP','DSP/CR');
-					$this->db->where_in('concat_ws(" ",permanent_rank,cminirank,cmedirank,ccprank,cccrank)',$ranks);
-					break;
-				case 'si':
-					$ranks = array('SI','INSP/LR','INSP/CR');
-					$this->db->where_in('concat_ws(" ",permanent_rank,cminirank,cmedirank,ccprank,cccrank)',$ranks);
-					break;
-				case 'asi':
-					$ranks = array('ASI','SI/LR','SI/CR');
-					$this->db->where_in('concat_ws(" ",permanent_rank,cminirank,cmedirank,ccprank,cccrank)',$ranks);
-					break;
-				case 'hc':
-					$ranks =array('HC','ASI/LR','ASI/CR','ASI/ORP');
-					$this->db->where_in('concat_ws(" ",permanent_rank,cminirank,cmedirank,ccprank,cccrank)',$ranks);
-					break;
-				case 'ct':
-					$ranks = array('CT','Sr. Const', 'Sr.Const', 'C-II', 'HC/LR', 'HC/PR', 'HC/CR');
-					$this->db->where_in('concat_ws(" ",permanent_rank,cminirank,cmedirank,ccprank,cccrank)',$ranks);
-					break;
-				case 'total':
-					//$ranks = array('INSP','DSP/CR','SI','INSP/LR','INSP/CR', 'ASI','SI/LR','SI/CR','HC','ASI/LR','ASI/CR','ASI/ORP','CT','Sr. Const', 'Sr.Const', 'C-II', 'HC/LR', 'HC/PR', 'HC/CR');
-					//get the all records
-					break;
-				case 'otherRank':
-					$ranks = array('INSP','DSP/CR','SI','INSP/LR','INSP/CR', 'ASI','SI/LR','SI/CR','HC','ASI/LR','ASI/CR','ASI/ORP','CT','Sr. Const', 'Sr.Const', 'C-II', 'HC/LR', 'HC/PR', 'HC/CR');
-					$this->db->where_not_in('concat_ws(" ",permanent_rank,cminirank,cmedirank,ccprank,cccrank)',$ranks);
-					break;
-				default:
-					
-					break;
-			}*/
-			//$this->db->group_start()->like('newosi.name',$search)->or_like('newosi.depttno',$search)->or_like('newosi.phono1',$search)->group_end();
-			$this->db->from('(' . $innerSelect . ') as Y');
-			if ($battalions != null && count($battalions) > 0) {
-				$this->db->where_in('newosi.bat_id', $battalions);
-			}
-			$this->db->join('newosi', 'Y.employee_id = newosi.man_id and newosi.bat_id != 0 and newosi.bat_id = phbat_id');
-			$this->db->group_by('Y.employee_id');
-			$this->db->order_by('Y.posting_date', 'desc');
-			$outerSelect = $this->db->get_compiled_select();
-			$this->db->select('count(*) as total');
-			$this->db->from('(' . $outerSelect . ') as Z');
-			if ($battalions != null && is_array($battalions)) {
-				$this->db->where_in('Z.phbat_id', $battalions);
-				//$this->db->where_in('newosi.bat_id',$battalions);
-			}
-			// $this->db->order_by('Z.posting_date','desc');
-			if ($selected_ids != null && count($selected_ids) > 0) {
-				$this->db->where_in('Z.posting_id', $selected_ids);
-			}
-			$outerSelect1 = $this->db->get_compiled_select();
-			$query = $this->db->query($outerSelect1);
-			$result = $query->result();
-			//echo $this->db->last_query();
-			return $result[0]->total;
-		}
-	}
-	public function getTotalFilteredEmployeesFromPostingHistoryIGP2($selected_ids, $selected_rank, $search, $battalions, $before_date, $rank_category = null, $selected_permanent_rank = null, $permanent_ranks = null)
-	{
-		$this->db->select(array( 'employee_id'));
-		if ($before_date != null) {
-			$this->db->where('posting_history.posting_date <=', $before_date);
-		}
-		if ($selected_ids != null) {
-			if(is_array($selected_ids)){
-				if(count($selected_ids)>0){
-					$this->db->where_in('posting_id', $selected_ids);
-				}
-			}else{
-				$this->db->where('posting_id', $selected_ids);
-			}
-			
-		}
-
-		$this->db->where_in('bat_id',$battalions);
-		$this->db->from('posting_history');
-		$this->db->group_by('employee_id');//multiple employee entry removed
-		//$this->db->order_by('posting_date', 'desc');
-		$this->db->limit('18446744073709551615', 0);
-		//fetch postings
-		$posting_data = $this->db->get()->result();
-		//fetch employees
-		//get the employee ids
-		$employee_ids =[];
-		$total = 0;
-		foreach($posting_data as $k=>$val){
-			
-			$employee_ids[] = $val->employee_id;
-		}
-		if(count($employee_ids)>0){
-			$this->db->select('count(*) as total');
-			//$ranks = array('ASI','SI/LR','SI/CR');
-			if ($rank_category != null) {
-				$RankRankre = $rank_category;
-				if ($RankRankre != '') {
-					$this->db->where('newosi.presentrank', $RankRankre);
-					if ($RankRankre == 'Executive Staff') {
-						if ($selected_permanent_rank != null) {
-							$this->db->where('newosi.permanent_rank', $selected_permanent_rank);
-						} else if ($permanent_ranks != null) {
-							$this->db->where_in('newosi.permanent_rank', $permanent_ranks);
-						}
-					} else if ($RankRankre == 'Ministerial Staff') {
-						if ($selected_rank != null && !in_array($selected_rank, ['total'])) {
-							//var_dump($selected_rank);
-							$this->db->where('newosi.cminirank', $selected_permanent_rank);
-						}
-					} else if ($RankRankre == 'Class-IV (C)') {
-						if ($selected_rank != null && !in_array($selected_rank, ['total'])) {
-							//var_dump($selected_rank);
-							$this->db->where('newosi.cccrank', $selected_permanent_rank);
-						}
-					} else if ($RankRankre == 'Class-IV (P)') {
-						if ($selected_rank != null && !in_array($selected_rank, ['total'])) {
-							//var_dump($selected_rank);
-							$this->db->where('newosi.ccprank', $selected_permanent_rank);
-						}
-					} else if ($RankRankre == 'Medical Staff') {
-						if ($selected_rank != null && !in_array($selected_rank, ['total'])) {
-							//var_dump($selected_rank);
-							$this->db->where('newosi.cmedirank', $selected_permanent_rank);
-						}
-					}
-					
-				}
-			}
-			
-			if(count($employee_ids)>250){
-				$ids_ = array_chunk($employee_ids,250);
-				$this->db->group_start();
-				foreach($ids_ as $k=>$val){
-					$this->db->or_where_in('man_id',$val);
-				}
-				$this->db->group_end();
-			}else{
-				$this->db->where_in('man_id',$employee_ids);
-			}
-			$this->db->where('bat_id != 0');
-			//$this->db->where_in('concat_ws(" ",permanent_rank,cminirank,cmedirank,ccprank,cccrank)',$ranks);
-			//$this->db->from('(' . $innerSelect . ') as Y');
-			//$this->db->where('newosi.bat_id','Y.phbat_id');
-			//$this->db->join('newosi', 'Y.employee_id = newosi.man_id and newosi.bat_id != 0 and newosi.bat_id = Y.phbat_id'); //CHECK
-			if ($battalions != null && is_array($battalions) &&  count($battalions) > 0) {
-				$this->db->where_in('newosi.bat_id', $battalions);
-			}
-			if ($rank_category != null) {
-				$this->db->where_in('newosi.presentrank', $rank_category);
-			}
-			//$this->db->group_by('Y.employee_id');
-			//$this->db->order_by('Y.posting_date', 'desc');
-			//$outerSelect = $this->db->get_compiled_select();
-			$employees_obj = $this->db->get('newosi')->result();
-			return $employees_obj[0]->total;
-			
-		}else{
-			return 0;
-		}
-	}
-	public function getTotalFilteredEmployeesFromPostingHistoryIGP($selected_ids, $selected_rank, $search, $battalions, $before_date, $rank_category = null, $selected_permanent_rank = null, $permanent_ranks = null)
-	{
-		//var_dump($permanent_ranks);
-		$this->db->select(array('id', 'posting_id', 'posting_date', 'employee_id', 'posting_history.bat_id as phbat_id', 'order_no', 'order_date'));
-		if ($before_date != null) {
-			$this->db->where('posting_history.posting_date <=', $before_date);
-		}
-
-		$this->db->from('posting_history');
-		$this->db->order_by('posting_date', 'desc');
-		$this->db->limit('18446744073709551615', 0);
-		$innerSelect =  $this->db->get_compiled_select();
-		//echo $innerSelect;
-
-		$this->db->select('id,posting_id,concat_ws(" ",permanent_rank,cminirank,cmedirank,ccprank,cccrank) as rank_, posting_date, employee_id, inductionmode, phbat_id, cexrank, newosi.name, newosi.bat_id as bat_id, newosi.depttno, newosi.phono1, Y.order_no, Y.order_date');
-		if ($rank_category != null) {
-			$RankRankre = $rank_category;
-			if ($RankRankre != '') {
-				$this->db->where('newosi.presentrank', $RankRankre);
-				if ($RankRankre == 'Executive Staff') {
-					if ($selected_permanent_rank != null) {
-						$this->db->where('newosi.permanent_rank', $selected_permanent_rank);
-					} else if ($permanent_ranks != null) {
-						$this->db->where_in('newosi.permanent_rank', $permanent_ranks);
-					}
-				} else if ($RankRankre == 'Ministerial Staff') {
-					//var_dump($selected_rank);
-					if ($selected_rank != null && !in_array($selected_rank, ['total'])) {
-						$this->db->where('newosi.cminirank', $selected_permanent_rank);
-					}
-				} else if ($RankRankre == 'Class-IV (C)') {
-					if ($selected_rank != null && !in_array($selected_rank, ['total'])) {
-						//var_dump($selected_rank);
-						$this->db->where('newosi.cccrank', $selected_permanent_rank);
-					}
-				} else if ($RankRankre == 'Class-IV (P)') {
-					if ($selected_rank != null && !in_array($selected_rank, ['total'])) {
-						//var_dump($selected_rank);
-						$this->db->where('newosi.ccprank', $selected_permanent_rank);
-					}
-				}
-				/*if($RankRankre == 'Executive Staff'){
-                                    $this->db->where_in('newosi.cexrank', $ranks);
-				}
-				elseif($RankRankre == 'Ministerial Staff'){
-                                    $this->db->where_in('newosi.cminirank', $ranks);
-				}
-				elseif($RankRankre == 'Medical Staff'){
-                                    $this->db->where_in('newosi.cmedirank', $ranks);
-				}
-				elseif($RankRankre == 'Class-IV (P)'){
-                                    $this->db->where_in('newosi.ccprank', $ranks);
-				}
-				elseif($RankRankre == 'Class-IV (C)'){
-                                    $this->db->where_in('newosi.cccrank', $ranks);
-				}*/
-			}
-		}
-		/*switch($selected_rank){
-				case 'insp':
-					$ranks = array('INSP','DSP/CR');
-					$this->db->where_in('concat_ws(" ",permanent_rank,cminirank,cmedirank,ccprank,cccrank)',$ranks);
-					break;
-				case 'si':
-					$ranks = array('SI','INSP/LR','INSP/CR');
-					$this->db->where_in('concat_ws(" ",permanent_rank,cminirank,cmedirank,ccprank,cccrank)',$ranks);
-					break;
-				case 'asi':
-					$ranks = array('ASI','SI/LR','SI/CR');
-					$this->db->where_in('concat_ws(" ",permanent_rank,cminirank,cmedirank,ccprank,cccrank)',$ranks);
-					break;
-				case 'hc':
-					$ranks =array('HC','ASI/LR','ASI/CR','ASI/ORP');
-					$this->db->where_in('concat_ws(" ",permanent_rank,cminirank,cmedirank,ccprank,cccrank)',$ranks);
-					break;
-				case 'ct':
-					$ranks = array('CT','Sr. Const', 'Sr.Const', 'C-II', 'HC/LR', 'HC/PR', 'HC/CR');
-					$this->db->where_in('concat_ws(" ",permanent_rank,cminirank,cmedirank,ccprank,cccrank)',$ranks);
-					break;
-				case 'total':
-					//$ranks = array('INSP','DSP/CR','SI','INSP/LR','INSP/CR', 'ASI','SI/LR','SI/CR','HC','ASI/LR','ASI/CR','ASI/ORP','CT','Sr. Const', 'Sr.Const', 'C-II', 'HC/LR', 'HC/PR', 'HC/CR');
-					//get the all records
-					break;
-				case 'otherRank':
-					$ranks = array('INSP','DSP/CR','SI','INSP/LR','INSP/CR', 'ASI','SI/LR','SI/CR','HC','ASI/LR','ASI/CR','ASI/ORP','CT','Sr. Const', 'Sr.Const', 'C-II', 'HC/LR', 'HC/PR', 'HC/CR');
-					$this->db->where_not_in('concat_ws(" ",permanent_rank,cminirank,cmedirank,ccprank,cccrank)',$ranks);
-					break;
-				default:
-					
-					break;
-			}*/
-		$this->db->group_start()->like('newosi.name', $search)->or_like('newosi.depttno', $search)->or_like('newosi.phono1', $search)->group_end();
-		$this->db->from('(' . $innerSelect . ') as Y');
-		if ($battalions != null && count($battalions) > 0) {
-			$this->db->where_in('newosi.bat_id', $battalions);
-		}
-		$this->db->join('newosi', 'Y.employee_id = newosi.man_id and newosi.bat_id != 0 and newosi.bat_id = phbat_id');
-		$this->db->group_by('Y.employee_id');
-		$this->db->order_by('Y.posting_date', 'desc');
-		$outerSelect = $this->db->get_compiled_select();
-		$this->db->select('count(*) as total');
-		$this->db->from('(' . $outerSelect . ') as Z');
-		if ($battalions != null && is_array($battalions)) {
-			$this->db->where_in('Z.phbat_id', $battalions);
-			//$this->db->where_in('newosi.bat_id',$battalions);
-		}
-		//$this->db->order_by('Z.posting_date','desc');
-		/*if(isset($_POST['length']) && $_POST["length"] != -1){
-				$this->db->limit($_POST["length"], $_POST["start"]);
-			}else{
-				//$this->db->limit(5, 0);
-			}*/
-		if ($selected_ids != null && count($selected_ids) > 0) {
-			$this->db->where_in('Z.posting_id', $selected_ids);
-		}
-		$outerSelect1 = $this->db->get_compiled_select();
-		$query = $this->db->query($outerSelect1);
-		$result = $query->result();
-		//echo $this->db->last_query();
-		return $result[0]->total;
-	}
+	
+	
 	public function getOSIBattalions()
 	{
 		$this->db->select('*');
@@ -3315,4 +3146,252 @@ class Posting_model extends CI_Model
 		$this->db->from($this->table_posting_history);
 		return $this->db->get()->result();
 	}
+	/*public function getTotalEmployeesFromPostingHistoryIGP($selected_ids, $selected_rank, $search, $battalions, $before_date, $rank_category = null, $selected_permanent_rank = null, $permanent_ranks = null)
+	{
+		if (true) {
+			$this->db->select(array('id', 'posting_id', 'posting_date', 'employee_id', 'posting_history.bat_id as phbat_id', 'order_no', 'order_date'));
+			if ($before_date != null) {
+				$this->db->where('posting_history.posting_date <=', $before_date);
+			}
+
+			$this->db->from('posting_history');
+			$this->db->order_by('posting_date', 'desc');
+			$this->db->limit('18446744073709551615', 0);
+			$innerSelect =  $this->db->get_compiled_select();
+			//echo $innerSelect;
+
+			$this->db->select('id,posting_id,concat_ws(" ",permanent_rank,cminirank,cmedirank,ccprank,cccrank) as rank_, posting_date, employee_id, inductionmode, phbat_id, cexrank, newosi.name, newosi.bat_id as bat_id, newosi.depttno, newosi.phono1, Y.order_no, Y.order_date');
+			if ($rank_category != null) {
+				$RankRankre = $rank_category;
+				if ($RankRankre != '') {
+					$this->db->where('newosi.presentrank', $RankRankre);
+					if ($RankRankre == 'Executive Staff') {
+						if ($selected_permanent_rank != null) {
+							$this->db->where('newosi.permanent_rank', $selected_permanent_rank);
+						} else if ($permanent_ranks != null) {
+							$this->db->where_in('newosi.permanent_rank', $permanent_ranks);
+						}
+					} else if ($RankRankre == 'Ministerial Staff') {
+						if ($selected_rank != null && !in_array($selected_rank, ['total'])) {
+							//var_dump($selected_rank);
+							$this->db->where('newosi.cminirank', $selected_permanent_rank);
+						}
+					} else if ($RankRankre == 'Class-IV (C)') {
+						if ($selected_rank != null && !in_array($selected_rank, ['total'])) {
+							//var_dump($selected_rank);
+							$this->db->where('newosi.cccrank', $selected_permanent_rank);
+						}
+					} else if ($RankRankre == 'Class-IV (P)') {
+						if ($selected_rank != null && !in_array($selected_rank, ['total'])) {
+							//var_dump($selected_rank);
+							$this->db->where('newosi.ccprank', $selected_permanent_rank);
+						}
+					} else if ($RankRankre == 'Medical Staff') {
+						if ($selected_rank != null && !in_array($selected_rank, ['total'])) {
+							//var_dump($selected_rank);
+							$this->db->where('newosi.cmedirank', $selected_permanent_rank);
+						}
+					}
+					
+				}
+			}
+			
+			//$this->db->group_start()->like('newosi.name',$search)->or_like('newosi.depttno',$search)->or_like('newosi.phono1',$search)->group_end();
+			$this->db->from('(' . $innerSelect . ') as Y');
+			if ($battalions != null && count($battalions) > 0) {
+				$this->db->where_in('newosi.bat_id', $battalions);
+			}
+			$this->db->join('newosi', 'Y.employee_id = newosi.man_id and newosi.bat_id != 0 and newosi.bat_id = phbat_id');
+			$this->db->group_by('Y.employee_id');
+			$this->db->order_by('Y.posting_date', 'desc');
+			$outerSelect = $this->db->get_compiled_select();
+			$this->db->select('count(*) as total');
+			$this->db->from('(' . $outerSelect . ') as Z');
+			if ($battalions != null && is_array($battalions)) {
+				$this->db->where_in('Z.phbat_id', $battalions);
+				//$this->db->where_in('newosi.bat_id',$battalions);
+			}
+			// $this->db->order_by('Z.posting_date','desc');
+			if ($selected_ids != null && count($selected_ids) > 0) {
+				$this->db->where_in('Z.posting_id', $selected_ids);
+			}
+			$outerSelect1 = $this->db->get_compiled_select();
+			$query = $this->db->query($outerSelect1);
+			$result = $query->result();
+			//echo $this->db->last_query();
+			return $result[0]->total;
+		}
+	}
+	public function getTotalFilteredEmployeesFromPostingHistoryIGP2($selected_ids, $selected_rank, $search, $battalions, $before_date, $rank_category = null, $selected_permanent_rank = null, $permanent_ranks = null)
+	{
+		$this->db->select(array( 'employee_id'));
+		if ($before_date != null) {
+			$this->db->where('posting_history.posting_date <=', $before_date);
+		}
+		if ($selected_ids != null) {
+			if(is_array($selected_ids)){
+				if(count($selected_ids)>0){
+					$this->db->where_in('posting_id', $selected_ids);
+				}
+			}else{
+				$this->db->where('posting_id', $selected_ids);
+			}
+			
+		}
+
+		$this->db->where_in('bat_id',$battalions);
+		$this->db->from('posting_history');
+		$this->db->group_by('employee_id');//multiple employee entry removed
+		//$this->db->order_by('posting_date', 'desc');
+		$this->db->limit('18446744073709551615', 0);
+		//fetch postings
+		$posting_data = $this->db->get()->result();
+		//fetch employees
+		//get the employee ids
+		$employee_ids =[];
+		$total = 0;
+		foreach($posting_data as $k=>$val){
+			
+			$employee_ids[] = $val->employee_id;
+		}
+		if(count($employee_ids)>0){
+			$this->db->select('count(*) as total');
+			//$ranks = array('ASI','SI/LR','SI/CR');
+			if ($rank_category != null) {
+				$RankRankre = $rank_category;
+				if ($RankRankre != '') {
+					$this->db->where('newosi.presentrank', $RankRankre);
+					if ($RankRankre == 'Executive Staff') {
+						if ($selected_permanent_rank != null) {
+							$this->db->where('newosi.permanent_rank', $selected_permanent_rank);
+						} else if ($permanent_ranks != null) {
+							$this->db->where_in('newosi.permanent_rank', $permanent_ranks);
+						}
+					} else if ($RankRankre == 'Ministerial Staff') {
+						if ($selected_rank != null && !in_array($selected_rank, ['total'])) {
+							//var_dump($selected_rank);
+							$this->db->where('newosi.cminirank', $selected_permanent_rank);
+						}
+					} else if ($RankRankre == 'Class-IV (C)') {
+						if ($selected_rank != null && !in_array($selected_rank, ['total'])) {
+							//var_dump($selected_rank);
+							$this->db->where('newosi.cccrank', $selected_permanent_rank);
+						}
+					} else if ($RankRankre == 'Class-IV (P)') {
+						if ($selected_rank != null && !in_array($selected_rank, ['total'])) {
+							//var_dump($selected_rank);
+							$this->db->where('newosi.ccprank', $selected_permanent_rank);
+						}
+					} else if ($RankRankre == 'Medical Staff') {
+						if ($selected_rank != null && !in_array($selected_rank, ['total'])) {
+							//var_dump($selected_rank);
+							$this->db->where('newosi.cmedirank', $selected_permanent_rank);
+						}
+					}
+					
+				}
+			}
+			
+			if(count($employee_ids)>250){
+				$ids_ = array_chunk($employee_ids,250);
+				$this->db->group_start();
+				foreach($ids_ as $k=>$val){
+					$this->db->or_where_in('man_id',$val);
+				}
+				$this->db->group_end();
+			}else{
+				$this->db->where_in('man_id',$employee_ids);
+			}
+			$this->db->where('bat_id != 0');
+			//$this->db->where_in('concat_ws(" ",permanent_rank,cminirank,cmedirank,ccprank,cccrank)',$ranks);
+			//$this->db->from('(' . $innerSelect . ') as Y');
+			//$this->db->where('newosi.bat_id','Y.phbat_id');
+			//$this->db->join('newosi', 'Y.employee_id = newosi.man_id and newosi.bat_id != 0 and newosi.bat_id = Y.phbat_id'); //CHECK
+			if ($battalions != null && is_array($battalions) &&  count($battalions) > 0) {
+				$this->db->where_in('newosi.bat_id', $battalions);
+			}
+			if ($rank_category != null) {
+				$this->db->where_in('newosi.presentrank', $rank_category);
+			}
+			//$this->db->group_by('Y.employee_id');
+			//$this->db->order_by('Y.posting_date', 'desc');
+			//$outerSelect = $this->db->get_compiled_select();
+			$employees_obj = $this->db->get('newosi')->result();
+			return $employees_obj[0]->total;
+			
+		}else{
+			return 0;
+		}
+	}
+	public function getTotalFilteredEmployeesFromPostingHistoryIGP($selected_ids, $selected_rank, $search, $battalions, $before_date, $rank_category = null, $selected_permanent_rank = null, $permanent_ranks = null)
+	{
+		//var_dump($permanent_ranks);
+		$this->db->select(array('id', 'posting_id', 'posting_date', 'employee_id', 'posting_history.bat_id as phbat_id', 'order_no', 'order_date'));
+		if ($before_date != null) {
+			$this->db->where('posting_history.posting_date <=', $before_date);
+		}
+
+		$this->db->from('posting_history');
+		$this->db->order_by('posting_date', 'desc');
+		$this->db->limit('18446744073709551615', 0);
+		$innerSelect =  $this->db->get_compiled_select();
+		//echo $innerSelect;
+
+		$this->db->select('id,posting_id,concat_ws(" ",permanent_rank,cminirank,cmedirank,ccprank,cccrank) as rank_, posting_date, employee_id, inductionmode, phbat_id, cexrank, newosi.name, newosi.bat_id as bat_id, newosi.depttno, newosi.phono1, Y.order_no, Y.order_date');
+		if ($rank_category != null) {
+			$RankRankre = $rank_category;
+			if ($RankRankre != '') {
+				$this->db->where('newosi.presentrank', $RankRankre);
+				if ($RankRankre == 'Executive Staff') {
+					if ($selected_permanent_rank != null) {
+						$this->db->where('newosi.permanent_rank', $selected_permanent_rank);
+					} else if ($permanent_ranks != null) {
+						$this->db->where_in('newosi.permanent_rank', $permanent_ranks);
+					}
+				} else if ($RankRankre == 'Ministerial Staff') {
+					//var_dump($selected_rank);
+					if ($selected_rank != null && !in_array($selected_rank, ['total'])) {
+						$this->db->where('newosi.cminirank', $selected_permanent_rank);
+					}
+				} else if ($RankRankre == 'Class-IV (C)') {
+					if ($selected_rank != null && !in_array($selected_rank, ['total'])) {
+						//var_dump($selected_rank);
+						$this->db->where('newosi.cccrank', $selected_permanent_rank);
+					}
+				} else if ($RankRankre == 'Class-IV (P)') {
+					if ($selected_rank != null && !in_array($selected_rank, ['total'])) {
+						//var_dump($selected_rank);
+						$this->db->where('newosi.ccprank', $selected_permanent_rank);
+					}
+				}
+				
+			}
+		}
+		
+		$this->db->group_start()->like('newosi.name', $search)->or_like('newosi.depttno', $search)->or_like('newosi.phono1', $search)->group_end();
+		$this->db->from('(' . $innerSelect . ') as Y');
+		if ($battalions != null && count($battalions) > 0) {
+			$this->db->where_in('newosi.bat_id', $battalions);
+		}
+		$this->db->join('newosi', 'Y.employee_id = newosi.man_id and newosi.bat_id != 0 and newosi.bat_id = phbat_id');
+		$this->db->group_by('Y.employee_id');
+		$this->db->order_by('Y.posting_date', 'desc');
+		$outerSelect = $this->db->get_compiled_select();
+		$this->db->select('count(*) as total');
+		$this->db->from('(' . $outerSelect . ') as Z');
+		if ($battalions != null && is_array($battalions)) {
+			$this->db->where_in('Z.phbat_id', $battalions);
+			//$this->db->where_in('newosi.bat_id',$battalions);
+		}
+		
+		if ($selected_ids != null && count($selected_ids) > 0) {
+			$this->db->where_in('Z.posting_id', $selected_ids);
+		}
+		$outerSelect1 = $this->db->get_compiled_select();
+		$query = $this->db->query($outerSelect1);
+		$result = $query->result();
+		//echo $this->db->last_query();
+		return $result[0]->total;
+	}
+	*/
 }
