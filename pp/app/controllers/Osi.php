@@ -566,7 +566,6 @@ class Osi extends CI_Controller
 	}
 	public function ajax_osi_users_data()
 	{
-
 		$this->load->library('form_validation');
 		$this->load->helper('security');
 		$this->load->library('pagination');
@@ -577,14 +576,12 @@ class Osi extends CI_Controller
 		$this->load->model('Posting_model');
 		$this->load->model('CourseMember_model');
 		$data['uname'] = $this->Osi_model->fetchinfo('users', array('user_log' => 4));
-
 		$ito = [];
 		if (null != $this->input->post("ito", TRUE)) {
 			$ito = $this->input->post("ito", TRUE);
 		}			//battalion
 		if ($this->session->userdata('user_log') == 4) {		//battalion login
 			$ito = array($this->session->userdata('userid'));
-			
 		}
 		//var_dump($ito);
 		if (count($ito) > 0) {
@@ -592,8 +589,6 @@ class Osi extends CI_Controller
 				$ito[$k] = (int)$val;
 			}
 		}
-		//var_dump($ito);
-		//$ito = [0];
 		$mobno = $this->input->post("mobno", TRUE);
 		$name = $this->input->post("name", TRUE);
 		$bloodgroup = $this->input->post("bloodgroup", TRUE);
@@ -814,7 +809,7 @@ class Osi extends CI_Controller
 		if ($selected_posting_ids != null ) {
 			//get employees with this posting
 
-			$posting_history_objs = $this->Posting_model->getPostingHistoryIGP($ito, (new DateTime())->format('Y-m-d'), null, null, $selected_posting_ids);
+			$posting_history_objs = $this->Posting_model->getPostingHistoryIGP3($ito, (new DateTime())->format('Y-m-d'), null, null, $selected_posting_ids);
 			//$battalions,$before_date=null,$ranks=null,$rank_category=null,$posting_id=null){
 			$posting_employee_ids = [];
 			foreach ($posting_history_objs as $k => $val) {
@@ -1311,12 +1306,34 @@ SEEHISTORY;
 		
 		if ($selected_posting_ids != null && (is_array($selected_posting_ids) || trim($selected_posting_ids) != '')) {
 			//get employees with this posting
-			$posting_history_objs = $this->Posting_model->getPostingHistoryIGP($ito, (new DateTime())->format('Y-m-d'), null, null, $selected_posting_ids);
-			//$battalions,$before_date=null,$ranks=null,$rank_category=null,$posting_id=null){
+			// fetch all the postings
+			//iterate
+			//it will fetch only first record
+			$posting_history_objs = $this->Posting_model->getPostingHistoryIGP3($ito, (new DateTime())->format('Y-m-d'), null, null,$selected_posting_ids);
 			$posting_employee_ids = [];
+			//$employees_parsed = [];
+			//$allowed_posting_objects = [];
 			foreach ($posting_history_objs as $k => $val) {
 				$posting_employee_ids[] = $val->employee_id;
 			}
+			//var_dumP($posting_employee_ids);
+			/*foreach($all_posting_history_objs as $k=>$val){
+				if(!in_array($val->employee_id,$employees_parsed)){
+					$employees_parsed[] = $val->employee_id;
+					if(in_array($val->posting_id,$selected_posting_ids)){
+						$$posting_employee_ids[] = $val->employee_id;
+						$allowed_posting_objects[] = $val;
+					}
+				}
+			}*/
+			//$all_posting_history_objs = $this->Posting_model->getPostingHistoryIGP5($ito, (new DateTime())->format('Y-m-d'), null, null,$posting_employee_ids);
+			//echo count($posting_employee_ids);
+			//var_dump($posting_employee_ids);
+			/*$posting_history_objs = $this->Posting_model->getPostingHistoryIGP($ito, (new DateTime())->format('Y-m-d'), null, null, $selected_posting_ids);
+			//$battalions,$before_date=null,$ranks=null,$rank_category=null,$posting_id=null){
+			foreach ($posting_history_objs as $k => $val) {
+				$posting_employee_ids[] = $val->employee_id;
+			}*/
 		}
 		if($posting_employee_ids!=null && is_array($posting_employee_ids) && count($posting_employee_ids)>0){
 			$employee_ids2 = [];
@@ -1330,6 +1347,7 @@ SEEHISTORY;
 				$employee_ids = $posting_employee_ids;
 			}
 		}
+		//var_dump($employee_ids);die;
 		$basic_training_center = $this->input->post('basic_training_center');
 		$batch_number = $this->input->post('batch_number');
 		$passoutyear = $this->input->post('passoutyear');

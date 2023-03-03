@@ -7,6 +7,7 @@ class Posting_model extends CI_Model
 	var $order_column = array(null, "name", "parent_posting_id", null);
 	var $order_column2 = array(null, "name", "parent_posting_id", 'nick', 'shown_in', 'view', null);
 	private $table = 'postings';
+	private $table_posting_history = 'posting_history';
 	/*
 			$name name of posting
 			$root parent posting
@@ -808,6 +809,7 @@ class Posting_model extends CI_Model
 		$this->db->from("(".$innerSelect.") as Y");
 		$this->db->group_by('employee_id');//multiple employee entry removed
 		//fetch postings
+		//echo $this->db->last_query();
 		$posting_data = $this->db->get()->result();
 		//fetch employees
 		//get the employee ids
@@ -909,6 +911,97 @@ class Posting_model extends CI_Model
 		}
 		$outerSelect1 = $this->db->get_compiled_select();
 		//echo $outerSelect;
+		$query = $this->db->query($outerSelect1);
+		$result = $query->result();
+		//echo $this->db->last_query();
+		return $result;
+	}
+	public function getPostingHistoryIGP3($battalions, $before_date = null, $ranks = null, $rank_category = null, $posting_ids= null)
+	{
+		$this->db->select('*');
+		$this->db->from('posting_history');
+		if ($before_date != null) {
+			$this->db->where('posting_history.posting_date <=', $before_date.' 23:59:59');
+		}
+		$this->db->join('newosi', 'posting_history.employee_id = newosi.man_id and newosi.bat_id != 0 and newosi.bat_id = posting_history.bat_id'); //CHECK
+		if ($battalions != null && is_array($battalions) &&  count($battalions) > 0) {
+			$this->db->where_in('newosi.bat_id', $battalions);
+		}
+		if ($rank_category != null) {
+			$this->db->where_in('newosi.presentrank', $rank_category);
+		}
+		//$this->db->where('employee_id',13571);
+		$this->db->order_by('posting_date','desc');
+		$query = $this->db->get();
+		$result = $query->result();
+		$posting_employee_ids = [];
+		$employees_parsed = [];
+		//$allowed_posting_objects = [];
+		foreach($result as $k=>$val){
+			if(!in_array($val->employee_id,$employees_parsed)){
+				$employees_parsed[] = $val->employee_id;
+				if(in_array($val->posting_id,$posting_ids)){
+					$posting_employee_ids[] = $val->employee_id;
+					//$allowed_posting_objects[] = $val;
+				}
+			}
+		}
+		//var_dump($posting_employee_ids);
+		//die('hiello');
+		$this->db->select(array('id', 'posting_id', 'posting_date', 'employee_id', 'posting_history.bat_id as phbat_id'));
+		if ($before_date != null) {
+			$this->db->where('posting_history.posting_date <=', $before_date.' 23:59:59');
+		}
+		if(count($posting_employee_ids)>100){
+			$this->db->group_start();
+			$chunked_employee_ids = array_chunk($posting_employee_ids,100);
+			for($i=0;$i<count($chunked_employee_ids);$i++){
+				$this->db->or_where_in('employee_id',$chunked_employee_ids[$i]);
+			}
+			$this->db->group_end();
+		}else{
+			$this->db->where_in('employee_id',$posting_employee_ids);
+		}
+		//$this->db->where('posting_history.posting_id',2306);
+		/*if ($posting_ids != null) {
+			if(is_array($posting_ids) && count($posting_ids)){
+				$this->db->where_in('posting_id', $posting_ids);
+			}else{
+				$this->db->where('posting_id', $posting_ids);
+			}
+		}*/
+		$this->db->from('posting_history');
+		//$this->db->order_by('posting_date', 'desc');
+		//$this->db->limit('18446744073709551615', 0);
+		$innerSelect =  $this->db->get_compiled_select();
+
+		$this->db->select('id,posting_id,concat_ws("",permanent_rank,cminirank,cmedirank,ccprank,cccrank) as current_rank, posting_date, employee_id, inductionmode, phbat_id, newosi.bat_id as nosbat_id');
+		//$ranks = array('ASI','SI/LR','SI/CR');
+		if ($ranks != null) {
+			$this->db->where_in('concat_ws("",permanent_rank,cminirank,cmedirank,ccprank,cccrank)', $ranks);
+		}
+		//$this->db->where_in('concat_ws(" ",permanent_rank,cminirank,cmedirank,ccprank,cccrank)',$ranks);
+		$this->db->from('(' . $innerSelect . ') as Y');
+		//$this->db->where('newosi.bat_id','Y.phbat_id');
+		$this->db->join('newosi', 'Y.employee_id = newosi.man_id and newosi.bat_id != 0 and newosi.bat_id = Y.phbat_id'); //CHECK
+		if ($battalions != null && is_array($battalions) &&  count($battalions) > 0) {
+			$this->db->where_in('newosi.bat_id', $battalions);
+		}
+		if ($rank_category != null) {
+			$this->db->where_in('newosi.presentrank', $rank_category);
+		}
+		//$this->db->group_by('Y.employee_id');
+		//$this->db->order_by('Y.posting_date', 'desc');
+		$outerSelect = $this->db->get_compiled_select();
+		$this->db->select('*');
+
+		$this->db->from('(' . $outerSelect . ') as Z');
+		if ($battalions != null && is_array($battalions)) {
+			$this->db->where_in('Z.phbat_id', $battalions);
+		}
+		$this->db->order_by('Z.posting_date', 'desc');
+		$outerSelect1 = $this->db->get_compiled_select();
+		//echo $outerSelect1;die;
 		$query = $this->db->query($outerSelect1);
 		$result = $query->result();
 		//echo $this->db->last_query();
@@ -3214,5 +3307,12 @@ class Posting_model extends CI_Model
 			$query->free_result();
 			return $res;
 		}
+	}
+	public function GetPostingHistoryRecordsByEmployeeId($employee_id){
+		$this->db->select('*');
+		$this->db->where('employee_id',$employee_id);
+		$this->db->order_by('created','desc');
+		$this->db->from($this->table_posting_history);
+		return $this->db->get()->result();
 	}
 }

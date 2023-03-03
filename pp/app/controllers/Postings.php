@@ -1025,12 +1025,12 @@ class Postings extends CI_Controller
 						$employee_ids_cannot_be_added[] = $v;
 					}
 				}
-
+				
 				$data['employee_ids_cannot_be_added'] = $employee_ids_cannot_be_added;
 				$data['employee_ids_can_be_added'] = $employee_ids_can_be_added;
 				//var_dump($employee_ids_can_be_added);
 				if (count($employee_ids_can_be_added) > 0) {
-					$no_of_records_inserted = $this->Posting_model->addPostingInBulk($posting_id, $employee_ids_can_be_added, $order_number, $posting_date, $order_date, $additional_posting_id);
+					$no_of_records_inserted = $this->Posting_model->addPostingInBulk($posting_id, array_unique($employee_ids_can_be_added), $order_number, $posting_date, $order_date, $additional_posting_id);
 				} else {
 					$no_of_records_inserted = 0;
 				}
@@ -1453,13 +1453,11 @@ class Postings extends CI_Controller
 	}
 	public function view_employee_posting_IGP()
 	{
-
 		$data = array();
 		$this->load->helper('osi');
 		$this->load->library('Deployment');
 		$this->load->model('RankGroups_model');
 		$this->load->library('session');
-
 		$skipZero = false;
 		if (isset($_POST['submitForm'])) {
 			if (isset($_POST['skipZero'])) {
@@ -8477,5 +8475,31 @@ class Postings extends CI_Controller
 
 		$objects = $this->Posting_model->getAdditionalPostings($parent_ids, $filters);
 		echo json_encode(['data' => $objects]);
+	}
+	public function GetPostingHistoryRecordsByEmployeeId(){
+		$this->load->model('Posting_model');
+		$employee_id = 5962;
+		//$data_objs = $this->Posting_model->GetPostingHistoryRecordsByEmployeeId($employee_id);
+		//$history = [];
+		/*foreach($data_objs as $k=>$val){
+
+		}*/
+		$data = [];
+		//$data['history'] = $data_objs;
+		$this->load->view('Ca/posting/getPostingHistoryRecords', $data);
+	}
+	public function AjaxGetPostingHistoryRecordsByEmployeeId(){
+		$this->load->model('Posting_model');
+		$employee_id = 5962;
+		$data_objs = $this->Posting_model->GetPostingHistoryRecordsByEmployeeId($employee_id);
+		$history = [];
+		foreach($data_objs as $k=>$val){
+
+		}
+		$data['data'] = $data_objs;
+		$data['totalRecords'] = 100;
+		$data['filteredRecords'] = 100;
+		echo json_encode($data);
+		//$this->load->view('Ca/posting/getPostingHistoryRecords', $data);
 	}
 }
