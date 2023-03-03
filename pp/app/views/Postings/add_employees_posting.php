@@ -166,6 +166,8 @@
 							//'action'=>'Postings/add_employee_posting',
 						);
 						echo form_open_multipart("add-employees-posting", $attributes);
+						
+
 						$this->form_validation->set_error_delimiters('<div class="text-danger">', '</div>');
 						?>
 						<div class="col-md-9">
@@ -328,6 +330,7 @@
 							<?php //echo validation_errors(); 
 							?>
 							<div class="col-md-12" id="additional_posting_info_div">
+								<input type="hidden" name="<?php echo $this->security->get_csrf_token_name();?>" class="csrfHash" value="<?php echo $this->security->get_csrf_hash();?>"/>
 								<div class="form-group">
 									<select class="select select2" id="additional_posting_info" name="additional_posting_id">
 										<option value="">Optional</option>
@@ -490,16 +493,24 @@
 				'pageNumber': pagination.currentPageNumber,
 				'includePosting': pagination.includePosting,
 				'id': pagination.selectedPostingId,
-				'bat_id': <?php echo $this->session->userdata('userid'); ?>
+				[$('.csrfHash').attr('name')]:getCookies().csrf_cookie_name,
+				'bat_id': <?php echo $this->session->userdata('userid'); ?>,
 				//'id':current_posting.id
 			};
-
+			//alert('hi');
+			//alert($('#csrfHash').val());
 			$.ajax({
 				url: "<?php echo base_url(); ?>search-posting",
 				type: "POST",
+				xhrFields: { withCredentials: true },
 				data: data,
-				success: function(response) {
+				success: function(response,data1,xhr) {
 					console.log(response);
+					console.log(xhr);
+					//console.log(xhr.getResponseHeader());
+					var myCookies = getCookies();
+					//myCookies.csrf_cookie_name; // "do not tell you"
+					$('.csrfHash').val(myCookies.csrf_cookie_name);
 					var obj = JSON.parse(response);
 					console.log(obj['postings']);
 					insertDataInPostingList2(obj['postings']);
@@ -512,7 +523,15 @@
 
 			//alert( search_text + "Enter button presed." );
 		}
-
+		var getCookies = function(){
+			var pairs = document.cookie.split(";");
+			var cookies = {};
+			for (var i=0; i<pairs.length; i++){
+				var pair = pairs[i].split("=");
+				cookies[(pair[0]+'').trim()] = unescape(pair.slice(1).join('='));
+			}
+			return cookies;
+		}
 		var detailRows = [];
 		<?php
 		if (null != $this->input->post('selectedEmployeesIds')) {

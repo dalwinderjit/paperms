@@ -1023,7 +1023,9 @@ $route['ca-khc-ajax-get-weapon-body-numbers'] = 'Weapon/Weapon/ajaxGetWeaponBody
 
 $route['ca-khc-weapon-sub-category-list-ajax2'] = 'Weapon/Weapon/weapon_sub_category_list_ajax_2';
 $route['ca-khc-weapon-under-sub-category-list-ajax'] = 'Weapon/Weapon/getWeaponsUnderSubCategoryAjax';
-
+//ca deployment posting management
+$route['ca-posting-history-records'] = 'Postings/GetPostingHistoryRecordsByEmployeeId';
+$route['ajax-posting-history-records'] = 'Postings/AjaxGetPostingHistoryRecordsByEmployeeId';
 $route['khc-figures-category-wise'] = 'Weapon/Weapon/khcFigureCategoryWise';
 
 //OSI ajax for fetchin data
